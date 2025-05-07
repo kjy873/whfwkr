@@ -14,5 +14,5 @@ class TBD_API ANPC_AIController : public AAIController
 {
 	GENERATED_BODY()
 public:
-	explicit ANPC_AIController(FObjectInitializer const& ObjectInitializer);
+	//explicit ANPC_AIController(FObjectInitializer const& ObjectInitializer);
 };

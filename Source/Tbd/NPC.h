@@ -2,10 +2,11 @@
 
 #pragma once
 
+
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "NPC.generated.h"
 #include <BehaviorTree/BehaviorTree.h>
+#include "NPC.generated.h"
 
 UCLASS()
 class TBD_API ANPC : public ACharacter
