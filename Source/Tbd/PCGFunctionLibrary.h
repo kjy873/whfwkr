@@ -23,8 +23,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "PCG")
 	static ALandscape* FindLandscape(UWorld* world);
 
-	UFUNCTION(BlueprintCallable, Category = "PCG")
-	static void ApplyHeightMap(ALandscape* Landscape, TArray<int32>& HeightMap, int32 Width, int32 Height);
+	/*UFUNCTION(BlueprintCallable, Category = "PCG")
+	static void ApplyHeightMap(ALandscape* Landscape, TArray<int32>& HeightMap, int32 Width, int32 Height);*/
 
 	UFUNCTION(BlueprintCallable, Category = "PCG")
 	static void GenerateHeightMap(TArray<int32>& HeightMap, int32& Width, int32& Height, float Scale);

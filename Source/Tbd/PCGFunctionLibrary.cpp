@@ -19,46 +19,46 @@ ALandscape* UPCGFunctionLibrary::FindLandscape(UWorld* world) {
 	return nullptr;
 }
 
-void UPCGFunctionLibrary::ApplyHeightMap(ALandscape* Landscape, TArray<int32>& HeightMap, int32 Width, int32 Height) {
-
-	if (!Landscape)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ApplyHeightMap: Landscape is NULL!"));
-		return;
-	}
-
-	TArray<uint16> HeightMapUint16;
-	HeightMapUint16.SetNum(HeightMap.Num());
-
-	for (int32 i = 0; i < HeightMap.Num(); i++)
-	{
-		HeightMapUint16[i] = static_cast<uint16>(FMath::Clamp(HeightMap[i], 0, 65535));  // uint16 범위로 변환
-	}
-
-
-	if (!Landscape || HeightMap.Num() == 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Invalid Landscape or HeightMap data!"));
-		return;
-	}
-
-	ULandscapeInfo* LandscapeInfo = Landscape->GetLandscapeInfo();
-
-	if (!LandscapeInfo)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ApplyHeightMap: LandscapeInfo is NULL!"));
-		return;
-	}
-
-	FLandscapeEditDataInterface LandscapeEditer(LandscapeInfo);
-	LandscapeEditer.SetHeightData(0, 0, Width - 1, Height - 1, HeightMapUint16.GetData(), 0, true);
-	LandscapeEditer.Flush();
-	Landscape->MarkPackageDirty();
-	//Landscape->UpdateAllComponentMaterialInstances();
-	//Landscape->FlushGrassComponents();
-	//Landscape->RecreateCollisionComponents();
-	Landscape->RecreateCollisionComponents();
-}
+//void UPCGFunctionLibrary::ApplyHeightMap(ALandscape* Landscape, TArray<int32>& HeightMap, int32 Width, int32 Height) {
+//
+//	if (!Landscape)
+//	{
+//		UE_LOG(LogTemp, Error, TEXT("ApplyHeightMap: Landscape is NULL!"));
+//		return;
+//	}
+//
+//	TArray<uint16> HeightMapUint16;
+//	HeightMapUint16.SetNum(HeightMap.Num());
+//
+//	for (int32 i = 0; i < HeightMap.Num(); i++)
+//	{
+//		HeightMapUint16[i] = static_cast<uint16>(FMath::Clamp(HeightMap[i], 0, 65535));  // uint16 범위로 변환
+//	}
+//
+//
+//	if (!Landscape || HeightMap.Num() == 0)
+//	{
+//		UE_LOG(LogTemp, Warning, TEXT("Invalid Landscape or HeightMap data!"));
+//		return;
+//	}
+//
+//	ULandscapeInfo* LandscapeInfo = Landscape->GetLandscapeInfo();
+//
+//	if (!LandscapeInfo)
+//	{
+//		UE_LOG(LogTemp, Error, TEXT("ApplyHeightMap: LandscapeInfo is NULL!"));
+//		return;
+//	}
+//
+//	FLandscapeEditDataInterface LandscapeEditer(LandscapeInfo);
+//	LandscapeEditer.SetHeightData(0, 0, Width - 1, Height - 1, HeightMapUint16.GetData(), 0, true);
+//	LandscapeEditer.Flush();
+//	Landscape->MarkPackageDirty();
+//	//Landscape->UpdateAllComponentMaterialInstances();
+//	//Landscape->FlushGrassComponents();
+//	//Landscape->RecreateCollisionComponents();
+//	Landscape->RecreateCollisionComponents();
+//}
 
 void UPCGFunctionLibrary::GenerateHeightMap(TArray<int32>& HeightMap, int32& Width, int32& Height, float Scale) {
 	HeightMap.SetNum(Width * Height);
