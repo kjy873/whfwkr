@@ -10,7 +10,7 @@
 #include "PrimeCharacter.generated.h"
 
 UCLASS()
-class TBD_API APrimeCharacter : public ACharacter, public IAbilitySystemInterface
+class TBD_API APrimeCharacter : public ACharacter, public IAbilitySystemInterface, public IGameplayTagAssetInterface
 {
 	GENERATED_BODY()
 
@@ -38,5 +38,11 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+
+	// IGameplayTagAssetInterface을(를) 통해 상속됨
+	void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override;
+
+	
 
 };

@@ -40,7 +40,7 @@ void APrimeCharacter::InitializeAttributes()
 {
 	if (AbilitySystemComponent && AttributeSet)
 	{
-
+		AbilitySystemComponent->InitAbilityActorInfo(this, this);
 	}
 }
 // Called every frame
@@ -55,5 +55,12 @@ void APrimeCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+void APrimeCharacter::GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const
+{
+	if (AbilitySystemComponent) {
+		AbilitySystemComponent->GetOwnedGameplayTags(TagContainer);
+	}
 }
 

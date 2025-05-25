@@ -4,7 +4,7 @@
 #include "PrimeAttributeSet.h"
 
 UPrimeAttributeSet::UPrimeAttributeSet() :
-	Health(100.f), MaxHealth(100.f), Mana(100.f), MaxMana(100.f), Defense(4.f), Strength(3.f), Stamina(100.f), MaxStamina(100.f), MoveSpeed(600.f)
+	Health(100.f), MaxHealth(100.f), Mana(100.f), MaxMana(100.f), Defense(4.f), Strength(3.f), Stamina(100.f), MaxStamina(100.f), MoveSpeed(600.f), AttackDamage(10.f)
 {
 
 }
@@ -53,6 +53,11 @@ void UPrimeAttributeSet::OnRep_MaxStamina(const FGameplayAttributeData& OldMaxSt
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UPrimeAttributeSet, MaxStamina, OldMaxStamina);
 }
 
+void UPrimeAttributeSet::OnRep_AttackDamage(const FGameplayAttributeData& OldAttackDamage)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UPrimeAttributeSet, AttackDamage, OldAttackDamage);
+}
+
 void UPrimeAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {
 
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -66,5 +71,6 @@ void UPrimeAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	DOREPLIFETIME_CONDITION_NOTIFY(UPrimeAttributeSet, Defense, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UPrimeAttributeSet, Strength, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UPrimeAttributeSet, MoveSpeed, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UPrimeAttributeSet, AttackDamage, COND_None, REPNOTIFY_Always);
 
 }
