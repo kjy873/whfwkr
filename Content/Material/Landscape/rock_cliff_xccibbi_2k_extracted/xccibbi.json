@@ -1,0 +1,591 @@
+{
+  "assetCategories": {
+    "surface": {
+      "rock": {
+        "cliff": {},
+        "rough": {}
+      }
+    }
+  },
+  "averageColor": "#000000",
+  "categories": [
+    "surface",
+    "rock",
+    "cliff"
+  ],
+  "comp_version": 1,
+  "description": "",
+  "displacementBias": 0.571509,
+  "displacementCalibrationAccuracy": 0.970897,
+  "displacementScale": 3.763328,
+  "environment": {
+    "biome": "industrial",
+    "region": "Africa"
+  },
+  "highest_available_res": 8192,
+  "id": "xccibbi",
+  "json": {
+    "contentLength": 12422,
+    "uri": "xccibbi.json"
+  },
+  "maps": [
+    {
+      "averageColor": "#D8D8D8",
+      "bitDepth": 32,
+      "colorSpace": "sRGB",
+      "contentLength": 91314367,
+      "maxIntensity": 255,
+      "mimeType": "image/x-exr",
+      "minIntensity": 132,
+      "name": "AO",
+      "physicalSize": "1x1",
+      "resolution": "8192x8192",
+      "type": "ao",
+      "uri": "xccibbi_8K_AO.exr"
+    },
+    {
+      "averageColor": "#D8D8D8",
+      "bitDepth": 8,
+      "colorSpace": "sRGB",
+      "contentLength": 28981230,
+      "maxIntensity": 255,
+      "mimeType": "image/jpeg",
+      "minIntensity": 132,
+      "name": "AO",
+      "physicalSize": "1x1",
+      "resolution": "8192x8192",
+      "type": "ao",
+      "uri": "xccibbi_8K_AO.jpg"
+    },
+    {
+      "averageColor": "#494139",
+      "bitDepth": 16,
+      "colorSpace": "sRGB",
+      "contentLength": 111602498,
+      "maxIntensity": 114,
+      "mimeType": "image/x-exr",
+      "minIntensity": 0,
+      "name": "Basecolor",
+      "physicalSize": "1x1",
+      "resolution": "8192x8192",
+      "type": "basecolor",
+      "uri": "xccibbi_8K_Basecolor.exr"
+    },
+    {
+      "averageColor": "#494139",
+      "bitDepth": 8,
+      "colorSpace": "sRGB",
+      "contentLength": 43851994,
+      "maxIntensity": 114,
+      "mimeType": "image/jpeg",
+      "minIntensity": 0,
+      "name": "Basecolor",
+      "physicalSize": "1x1",
+      "resolution": "8192x8192",
+      "type": "basecolor",
+      "uri": "xccibbi_8K_Basecolor.jpg"
+    },
+    {
+      "averageColor": "#808080",
+      "bitDepth": 32,
+      "colorSpace": "Linear",
+      "contentLength": 208075891,
+      "maxIntensity": 255,
+      "mimeType": "image/x-exr",
+      "minIntensity": 0,
+      "name": "Bump",
+      "physicalSize": "1x1",
+      "resolution": "8192x8192",
+      "type": "bump",
+      "uri": "xccibbi_8K_Bump.exr"
+    },
+    {
+      "averageColor": "#808080",
+      "bitDepth": 8,
+      "colorSpace": "Linear",
+      "contentLength": 22281810,
+      "maxIntensity": 255,
+      "mimeType": "image/jpeg",
+      "minIntensity": 0,
+      "name": "Bump",
+      "physicalSize": "1x1",
+      "resolution": "8192x8192",
+      "type": "bump",
+      "uri": "xccibbi_8K_Bump.jpg"
+    },
+    {
+      "averageColor": "#FFFFFF",
+      "bitDepth": 32,
+      "colorSpace": "sRGB",
+      "contentLength": 213753959,
+      "maxIntensity": 255,
+      "mimeType": "image/x-exr",
+      "minIntensity": 255,
+      "name": "Cavity",
+      "physicalSize": "1x1",
+      "resolution": "8192x8192",
+      "type": "cavity",
+      "uri": "xccibbi_8K_Cavity.exr"
+    },
+    {
+      "averageColor": "#FFFFFF",
+      "bitDepth": 8,
+      "colorSpace": "sRGB",
+      "contentLength": 51487079,
+      "maxIntensity": 255,
+      "mimeType": "image/jpeg",
+      "minIntensity": 255,
+      "name": "Cavity",
+      "physicalSize": "1x1",
+      "resolution": "8192x8192",
+      "type": "cavity",
+      "uri": "xccibbi_8K_Cavity.jpg"
+    },
+    {
+      "averageColor": "#818181",
+      "bitDepth": 32,
+      "colorSpace": "Linear",
+      "contentLength": 255645365,
+      "maxIntensity": 227,
+      "mimeType": "image/x-exr",
+      "minIntensity": 35,
+      "name": "Displacement",
+      "physicalSize": "1x1",
+      "resolution": "8192x8192",
+      "type": "displacement",
+      "uri": "xccibbi_8K_Displacement.exr"
+    },
+    {
+      "averageColor": "#818181",
+      "bitDepth": 8,
+      "colorSpace": "Linear",
+      "contentLength": 4790077,
+      "maxIntensity": 227,
+      "mimeType": "image/jpeg",
+      "minIntensity": 35,
+      "name": "Displacement",
+      "physicalSize": "1x1",
+      "resolution": "8192x8192",
+      "type": "displacement",
+      "uri": "xccibbi_8K_Displacement.jpg"
+    },
+    {
+      "averageColor": "#242424",
+      "bitDepth": 32,
+      "colorSpace": "Linear",
+      "contentLength": 78873442,
+      "maxIntensity": 45,
+      "mimeType": "image/x-exr",
+      "minIntensity": 22,
+      "name": "Gloss",
+      "physicalSize": "1x1",
+      "resolution": "8192x8192",
+      "type": "gloss",
+      "uri": "xccibbi_8K_Gloss.exr"
+    },
+    {
+      "averageColor": "#242424",
+      "bitDepth": 8,
+      "colorSpace": "Linear",
+      "contentLength": 14730140,
+      "maxIntensity": 45,
+      "mimeType": "image/jpeg",
+      "minIntensity": 22,
+      "name": "Gloss",
+      "physicalSize": "1x1",
+      "resolution": "8192x8192",
+      "type": "gloss",
+      "uri": "xccibbi_8K_Gloss.jpg"
+    },
+    {
+      "averageColor": "#8181F1",
+      "bitDepth": 16,
+      "colorSpace": "Linear",
+      "contentLength": 133246474,
+      "maxIntensity": 207,
+      "mimeType": "image/x-exr",
+      "minIntensity": 80,
+      "name": "Normal",
+      "physicalSize": "1x1",
+      "resolution": "8192x8192",
+      "type": "normal",
+      "uri": "xccibbi_8K_Normal.exr"
+    },
+    {
+      "averageColor": "#8181F1",
+      "bitDepth": 8,
+      "colorSpace": "Linear",
+      "contentLength": 89399223,
+      "maxIntensity": 207,
+      "mimeType": "image/jpeg",
+      "minIntensity": 80,
+      "name": "Normal",
+      "physicalSize": "1x1",
+      "resolution": "8192x8192",
+      "type": "normal",
+      "uri": "xccibbi_8K_Normal.jpg"
+    },
+    {
+      "averageColor": "#DBDBDB",
+      "bitDepth": 32,
+      "colorSpace": "Linear",
+      "contentLength": 73357836,
+      "maxIntensity": 233,
+      "mimeType": "image/x-exr",
+      "minIntensity": 210,
+      "name": "Roughness",
+      "physicalSize": "1x1",
+      "resolution": "8192x8192",
+      "type": "roughness",
+      "uri": "xccibbi_8K_Roughness.exr"
+    },
+    {
+      "averageColor": "#DBDBDB",
+      "bitDepth": 8,
+      "colorSpace": "Linear",
+      "contentLength": 13846615,
+      "maxIntensity": 233,
+      "mimeType": "image/jpeg",
+      "minIntensity": 210,
+      "name": "Roughness",
+      "physicalSize": "1x1",
+      "resolution": "8192x8192",
+      "type": "roughness",
+      "uri": "xccibbi_8K_Roughness.jpg"
+    },
+    {
+      "averageColor": "#383838",
+      "bitDepth": 16,
+      "colorSpace": "sRGB",
+      "contentLength": 248484143,
+      "maxIntensity": 56,
+      "mimeType": "image/x-exr",
+      "minIntensity": 56,
+      "name": "Specular",
+      "physicalSize": "1x1",
+      "resolution": "8192x8192",
+      "type": "specular",
+      "uri": "xccibbi_8K_Specular.exr"
+    },
+    {
+      "averageColor": "#383838",
+      "bitDepth": 8,
+      "colorSpace": "sRGB",
+      "contentLength": 33768806,
+      "maxIntensity": 56,
+      "mimeType": "image/jpeg",
+      "minIntensity": 56,
+      "name": "Specular",
+      "physicalSize": "1x1",
+      "resolution": "8192x8192",
+      "type": "specular",
+      "uri": "xccibbi_8K_Specular.jpg"
+    }
+  ],
+  "meta": [
+    {
+      "key": "scanArea",
+      "name": "Scan Area",
+      "value": "1x1 m"
+    },
+    {
+      "key": "height",
+      "name": "Height",
+      "value": "0.151 m"
+    },
+    {
+      "key": "tileable",
+      "name": "Tileable",
+      "value": true
+    },
+    {
+      "key": "tiling_directions",
+      "name": "Tiling Directions",
+      "value": [
+        "x",
+        "y"
+      ]
+    },
+    {
+      "key": "texelDensity",
+      "name": "Texel Density",
+      "value": "8192 px/m"
+    },
+    {
+      "key": "calibration",
+      "name": "Calibration",
+      "value": "GretagMacbeth ColorChecker Color Rendition Chart"
+    },
+    {
+      "key": "scanner",
+      "name": "Scanner",
+      "value": "MKX"
+    }
+  ],
+  "models": [],
+  "name": "Rock Cliff",
+  "pack": null,
+  "physicalSize": null,
+  "points": 2,
+  "previews": {
+    "images": [
+      {
+        "contentLength": 256947,
+        "resolution": "360x360",
+        "tags": [
+          "thumb"
+        ],
+        "uri": "xccibbi_Grid_360.png"
+      },
+      {
+        "contentLength": 347330,
+        "resolution": "420x420",
+        "tags": [
+          "thumb"
+        ],
+        "uri": "xccibbi_Grid_420.png"
+      },
+      {
+        "contentLength": 1020132,
+        "resolution": "720x720",
+        "tags": [
+          "thumb",
+          "retina"
+        ],
+        "uri": "xccibbi_Grid_720.png"
+      },
+      {
+        "contentLength": 1391578,
+        "resolution": "840x840",
+        "tags": [
+          "thumb",
+          "retina"
+        ],
+        "uri": "xccibbi_Grid_840.png"
+      },
+      {
+        "contentLength": 3075564,
+        "resolution": "1440x768",
+        "tags": [
+          "preview",
+          "clay"
+        ],
+        "uri": "xccibbi_PopupClay_1440.png"
+      },
+      {
+        "contentLength": 5748390,
+        "resolution": "1920x1080",
+        "tags": [
+          "preview",
+          "clay"
+        ],
+        "uri": "xccibbi_PopupClay_1920.png"
+      },
+      {
+        "contentLength": 12319824,
+        "resolution": "2880x1536",
+        "tags": [
+          "preview",
+          "clay",
+          "retina"
+        ],
+        "uri": "xccibbi_PopupClay_2880.png"
+      },
+      {
+        "contentLength": 23453295,
+        "resolution": "3840x2160",
+        "tags": [
+          "preview",
+          "clay",
+          "retina"
+        ],
+        "uri": "xccibbi_PopupClay_3840.png"
+      },
+      {
+        "contentLength": 3090000,
+        "resolution": "1440x768",
+        "tags": [
+          "preview",
+          "tiled"
+        ],
+        "uri": "xccibbi_PopupTiled_1440.png"
+      },
+      {
+        "contentLength": 5767221,
+        "resolution": "1920x1080",
+        "tags": [
+          "preview",
+          "tiled"
+        ],
+        "uri": "xccibbi_PopupTiled_1920.png"
+      },
+      {
+        "contentLength": 12258500,
+        "resolution": "2880x1536",
+        "tags": [
+          "preview",
+          "tiled",
+          "retina"
+        ],
+        "uri": "xccibbi_PopupTiled_2880.png"
+      },
+      {
+        "contentLength": 23209190,
+        "resolution": "3840x2160",
+        "tags": [
+          "preview",
+          "tiled",
+          "retina"
+        ],
+        "uri": "xccibbi_PopupTiled_3840.png"
+      },
+      {
+        "contentLength": 3061007,
+        "resolution": "1440x768",
+        "tags": [
+          "preview"
+        ],
+        "uri": "xccibbi_Popup_1440.png"
+      },
+      {
+        "contentLength": 5720895,
+        "resolution": "1920x1080",
+        "tags": [
+          "preview"
+        ],
+        "uri": "xccibbi_Popup_1920.png"
+      },
+      {
+        "contentLength": 12211278,
+        "resolution": "2880x1536",
+        "tags": [
+          "preview",
+          "retina"
+        ],
+        "uri": "xccibbi_Popup_2880.png"
+      },
+      {
+        "contentLength": 23242564,
+        "resolution": "3840x2160",
+        "tags": [
+          "preview",
+          "retina"
+        ],
+        "uri": "xccibbi_Popup_3840.png"
+      }
+    ],
+    "relativeSize": "1x1",
+    "scaleReferences": []
+  },
+  "process_date": "2024-04-18 13:46:01",
+  "properties": [],
+  "referencePreviews": {
+    "maps": [],
+    "models": []
+  },
+  "references": [],
+  "revised": false,
+  "revision": 0,
+  "semanticTags": {
+    "architectural_style": {},
+    "asset_type": "surface",
+    "color": [
+      "Gray",
+      "Black",
+      "White"
+    ],
+    "contains": [
+      "Rock",
+      "Cracks",
+      "lichen"
+    ],
+    "country": "South Africa",
+    "descriptive": [
+      "jagged",
+      "sharp",
+      "rough",
+      "lichened"
+    ],
+    "environment": [
+      "industrial"
+    ],
+    "locations": {
+      "Africa": {
+        "South Africa": {}
+      }
+    },
+    "maxSize": 1,
+    "minSize": 1,
+    "name": "Rock Cliff",
+    "region": "Africa",
+    "state": [
+      "old",
+      "damaged"
+    ],
+    "theme": [
+      "hills",
+      "outdoors",
+      "cliffs",
+      "rock-face",
+      "mountains",
+      "quarry"
+    ]
+  },
+  "tags": [
+    "gray",
+    "brown",
+    "black",
+    "white",
+    "hills",
+    "outdoors",
+    "cliffs",
+    "rock-face",
+    "mountains",
+    "quarry",
+    "hillcrest",
+    "rock",
+    "cracks",
+    "lichen",
+    "jagged",
+    "sharp",
+    "rough",
+    "lichened"
+  ],
+  "texelDensity": 8192,
+  "texture_type": "basic",
+  "ue_plugin_archives": [
+    {
+      "contentLength": 307235190,
+      "gltfVersion": "2.0",
+      "tier": 0,
+      "type": "gltf",
+      "uri": "ue_plugin_archives/tier_0/xccibbi_tier_0.zip",
+      "version": 1
+    },
+    {
+      "contentLength": 93324510,
+      "gltfVersion": "2.0",
+      "tier": 1,
+      "type": "gltf",
+      "uri": "ue_plugin_archives/tier_1/xccibbi_tier_1.zip",
+      "version": 1
+    },
+    {
+      "contentLength": 23405759,
+      "gltfVersion": "2.0",
+      "tier": 2,
+      "type": "gltf",
+      "uri": "ue_plugin_archives/tier_2/xccibbi_tier_2.zip",
+      "version": 1
+    },
+    {
+      "contentLength": 2039473,
+      "gltfVersion": "2.0",
+      "tier": 3,
+      "type": "gltf",
+      "uri": "ue_plugin_archives/tier_3/xccibbi_tier_3.zip",
+      "version": 1
+    }
+  ],
+  "version": 2
+}
