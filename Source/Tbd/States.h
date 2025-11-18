@@ -6,7 +6,6 @@
 #include "States.generated.h"
 
 
-
 UENUM(BlueprintType)
 enum class EPlayerState : uint8
 {
@@ -27,7 +26,9 @@ enum class EDecision : uint8
 	Reject,
 	Interrupt,
 	Replace,
-	Queue
+	Queue,
+	Hold,
+	Release
 };
 
 USTRUCT(BlueprintType)
@@ -220,11 +221,15 @@ struct FActionRule
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FGameplayTagContainer RequiredTags;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FGameplayTagContainer BlockingTags;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) FGameplayTagContainer ProgressTags;
 	// 이 태그가 있을 때 인터럽트 가능, 태그 컨테이너로 확장 가능
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FGameplayTagContainer InterruptWindowTags;
 
 	// 현재 허용 불가 시 큐잉 가능 여부
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) bool bQueueable = true;
+
+	// 홀드 가능 여부
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) bool bHoldable = false;
 
 	// 쿨다운 태그, 시간
 	UPROPERTY(EditAnywhere, BlueprintReadWrite) FGameplayTag CooldownTag;
@@ -265,10 +270,12 @@ namespace ActionEvaluator {
 
 		// ActionRuleSet에 ActionTag에 해당하는 Rule이 있는지 검사, 없으면 거부
 		FActionRule const* ReferenceRule = ActionRuleSet->FindActionRuleByTag(ActionTag);
+
 		if (!ReferenceRule) return FActionDecision{ EDecision::Reject, "No Rule in ActionRuleSet", ActionTag};
 
 		// 쿨다운 시간 검사
-		if (ReferenceRule->CooldownTag.IsValid() && Current.HasTagExact(ReferenceRule->CooldownTag)) return FActionDecision{ EDecision::Reject, "Cooldown", ActionTag };
+		if (ReferenceRule->CooldownTag.IsValid() && Current.HasTagExact(ReferenceRule->CooldownTag)) 
+			return FActionDecision{ EDecision::Reject, "Cooldown", ActionTag };
 
 		// RequiredTags 검사
 		if (!Current.RuntimeTags.HasAll(ReferenceRule->RequiredTags)) return FActionDecision{ EDecision::Reject, "MissingRequired", ActionTag };
@@ -279,19 +286,22 @@ namespace ActionEvaluator {
 		// 위 조건을 만족했지만 다른 Action이 실행 중인 경우
 		if (Current.CurrentActionTag.IsValid() /*&& Current.CurrentActionTag != ActionTag*/) {
 			// 인터럽트 가능한지 검사
+
 			if (ReferenceRule->InterruptWindowTags.IsValid() && Current.RuntimeTags.HasAny(ReferenceRule->InterruptWindowTags)) {
+				if (Current.CurrentActionTag != ActionTag && ReferenceRule->bHoldable)
+					return FActionDecision{ EDecision::Interrupt, "InterruptHold", ActionTag };
 				return FActionDecision{ EDecision::Interrupt, "Interrupt", ActionTag };
 			}
-			// 인터럽트 불가, 큐잉 가능한지 검사
+
+			if ((Current.CurrentActionTag == ActionTag) && ReferenceRule->bHoldable) 
+				return FActionDecision{ EDecision::Release, "Release", ActionTag };
+
 			return ReferenceRule->bQueueable ? FActionDecision{ EDecision::Queue, "Busy", ActionTag }
-											 : FActionDecision{ EDecision::Reject, "Busy", ActionTag };
+			: FActionDecision{ EDecision::Reject, "Busy", ActionTag };
+
 		}
 
-		// 이미 같은 액션이 실행중인 경우, 거부, 추후에 각 Action의 정책에 따라 Replace/Reject를 결정하도록 변경 가능
-		if (Current.CurrentActionTag == ActionTag) {
-			return FActionDecision{ EDecision::Reject, "SameAction", ActionTag };
-		}
-
+		if (ReferenceRule->bHoldable) return FActionDecision{ EDecision::Hold, "Hold", ActionTag };
 		return FActionDecision{ EDecision::Accept, "OK", ActionTag };
 	}
 
@@ -309,7 +319,35 @@ struct FQueuedAction
 	UPROPERTY() FGameplayTag ActionTag = FGameplayTag::EmptyTag;
 	UPROPERTY() float ExpirationTime = 0.0f; // world seconds
 
-	bool IsValid(float WorldSeconds) const { return ActionTag.IsValid() && WorldSeconds <= ExpirationTime; }
-	void Reset() { ActionTag = FGameplayTag::EmptyTag; ExpirationTime = 0.0f; }
+public:
+	inline bool IsValid(float WorldSeconds) const { return ActionTag.IsValid() && WorldSeconds <= ExpirationTime; }
+	inline void Reset() { ActionTag = FGameplayTag::EmptyTag; ExpirationTime = 0.0f; }
+
 };
 
+
+
+//if (Current.CurrentActionTag != ActionTag) {
+//	if (ReferenceRule->InterruptWindowTags.IsValid() && Current.RuntimeTags.HasAny(ReferenceRule->InterruptWindowTags)) {
+//		if (ReferenceRule->bHoldable) return FActionDecision{ EDecision::Interrupt, "InterruptHold", ActionTag };
+//		return FActionDecision{ EDecision::Interrupt, "Interrupt", ActionTag };
+//	}
+//	// 인터럽트 불가, 큐잉 가능한지 검사
+//	return ReferenceRule->bQueueable ? FActionDecision{ EDecision::Queue, "Busy", ActionTag }
+//	: FActionDecision{ EDecision::Reject, "Busy", ActionTag };
+//}
+//
+//// 이미 같은 액션이 실행중인 경우, 거부, 추후에 각 Action의 정책에 따라 Replace/Reject를 결정하도록 변경 가능
+//else if (Current.CurrentActionTag == ActionTag) {
+//	if (ReferenceRule->bHoldable) return FActionDecision{ EDecision::Release, "Release", ActionTag };
+//
+//	if (ReferenceRule->InterruptWindowTags.IsValid() && Current.RuntimeTags.HasAny(ReferenceRule->InterruptWindowTags)) {
+//		if (ReferenceRule->bHoldable) return FActionDecision{ EDecision::Interrupt, "InterruptHold", ActionTag };
+//		return FActionDecision{ EDecision::Interrupt, "Interrupt", ActionTag };
+//	}
+//
+//	// 인터럽트 불가, 큐잉 가능한지 검사
+//	return ReferenceRule->bQueueable ? FActionDecision{ EDecision::Queue, "Busy", ActionTag }
+//	: FActionDecision{ EDecision::Reject, "SameAction", ActionTag };
+//
+//}

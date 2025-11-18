@@ -50,10 +50,19 @@ void UActionComponent::EnterState(EPlayerState NewState, FGameplayTag DestAction
 					FTimerDelegate::CreateUObject(this, &UActionComponent::RemoveStateTag, Rule->CooldownTag), Rule->CooldownTime, false);
 			});*/
 		}
+
+		if (Rule->ProgressTags.IsValid()) {
+			AddStateTags(Rule->ProgressTags);
+		}
 	}
 }
 
 void UActionComponent::ExitState() {
+
+	if (const FActionRule* Rule = ActionRuleSet->FindActionRuleByTag(CurrentState.CurrentActionTag)) {
+		if (Rule->ProgressTags.IsValid())
+			CurrentState.RuntimeTags.RemoveTags(Rule->ProgressTags);
+	}
 	CurrentState.ClearActionTag();
 }
 
@@ -101,5 +110,6 @@ void UActionComponent::DebugPrint(const FString& Message) {
 
 EPlayerState UActionComponent::ActionTagToState(const FGameplayTag& ActionTag) {
 	if (ActionTag == FGameplayTag::RequestGameplayTag("ActionTag.Knight.Attack1")) return EPlayerState::Attack;
+	if (ActionTag == FGameplayTag::RequestGameplayTag("ActionTag.Mage.Attack1")) return EPlayerState::Attack;
     else return EPlayerState::Idle;
 }

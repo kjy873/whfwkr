@@ -39,9 +39,15 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "State")
 	void AddStateTag(FGameplayTag Tag) { CurrentState.AddTag(Tag); }
+	
+	UFUNCTION(BlueprintCallable, Category = "State")
+	void AddStateTags(FGameplayTagContainer Tags) { CurrentState.RuntimeTags.AppendTags(Tags); }
 
 	UFUNCTION(BlueprintCallable, Category = "State")
 	void RemoveStateTag(FGameplayTag Tag) { CurrentState.RemoveTag(Tag); }
+
+	UFUNCTION(BlueprintCallable, Category = "State")
+	void RemoveStateTags(FGameplayTagContainer Tags) { CurrentState.RuntimeTags.RemoveTags(Tags); }
 
 	UFUNCTION(BlueprintCallable, Category = "State")
 	FGameplayTag GetCurrentActionTag() const { return CurrentState.GetActionTag(); }
@@ -89,7 +95,13 @@ public:
 	EPlayerState ActionTagToState(const FGameplayTag& ActionTag);
 
 	UFUNCTION(BlueprintCallable, Category = "ActionQueue")
-	bool QueuedActionIsValid(float WorldSeconds) const { return CurrentQueuedAction.IsValid(WorldSeconds); }
+	bool QueuedActionIsValid(float WorldSeconds) { 
+		if (!CurrentQueuedAction.IsValid(WorldSeconds)) {
+			CurrentQueuedAction.Reset();
+			return false;
+		}
+		return true;
+	}
 
 	UFUNCTION(BlueprintCallable, Category = "ActionQueue")
 	void PushQueuedAction(const FGameplayTag& ActionTag, float WorldSeconds, float MaxQueueTime) { CurrentQueuedAction = FQueuedAction{ ActionTag, WorldSeconds, MaxQueueTime }; }
