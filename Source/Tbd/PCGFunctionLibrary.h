@@ -37,4 +37,21 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "PCG")
 	static float GetHeight(ALandscape* Landscape, float x, float y);
+
+	UFUNCTION(BlueprintCallable, Category = "Landscape")
+	static bool SwitchLandscapeMaterial(ALandscape* TargetLandscape, UMaterialInterface* NewMaterial)
+	{
+		if (!TargetLandscape) return false;
+		
+		TArray<ULandscapeComponent*> LandscapeComponents;
+		TargetLandscape->GetComponents<ULandscapeComponent>(LandscapeComponents);
+
+		for (ULandscapeComponent* Component : LandscapeComponents)
+		{
+			Component->SetMaterial(0, NewMaterial);
+			Component->MarkRenderStateDirty();
+		}
+
+		return true;
+	}
 };
