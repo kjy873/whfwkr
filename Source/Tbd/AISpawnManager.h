@@ -25,9 +25,9 @@ struct FRegionData
 
 	TArray<AActor*> SpawnedEnemies;
 
-	FRegionData() : RangeX(FFloatRange::Empty()), RangeY(FFloatRange::Empty()), MaxEnemyCount(10), CurrentEnemyCount(0) {}
+	FRegionData() : RangeX(FFloatRange::Empty()), RangeY(FFloatRange::Empty()), MaxEnemyCount(5), CurrentEnemyCount(0) {}
 
-	FRegionData(FFloatRange x, FFloatRange y) : RangeX(x), RangeY(y), MaxEnemyCount(10), CurrentEnemyCount(0) {}
+	FRegionData(FFloatRange x, FFloatRange y) : RangeX(x), RangeY(y), MaxEnemyCount(5), CurrentEnemyCount(0) {}
 
 	FRegionData(FFloatRange x, FFloatRange y, int maxCount) : RangeX(x), RangeY(y), MaxEnemyCount(maxCount), CurrentEnemyCount(0) {}
 };
@@ -132,10 +132,18 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "AISpawnManager")
 	inline void DisableEnemy(AActor* EnemyActor) {
-		//E->SetActorHiddenInGame(true);
-		//E->SetActorEnableCollision(false);
+		EnemyActor->SetActorHiddenInGame(true);
+		EnemyActor->SetActorEnableCollision(false);
 		EnemyActor->SetActorTickEnabled(false);
 		//E->DisableComponentsSimulatePhysics();
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "AISpawnManager")
+	inline void EnableEnemy(AActor* EnemyActor) {
+		EnemyActor->SetActorHiddenInGame(false);
+		EnemyActor->SetActorEnableCollision(true);
+		EnemyActor->SetActorTickEnabled(true);
+		//E->EnableComponentsSimulatePhysics();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "AISpawnManager")

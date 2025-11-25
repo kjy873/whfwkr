@@ -88,7 +88,7 @@ bool AAISpawnManager::SpawnEnemies(const ECollisionChannel LandscapeChannel) {
 
 			if (SpawnedAI) {
 				SpawnedAI->AddActorWorldOffset(FVector(0.0f, 0.0f, -2000.0f), true);
-				//DisableEnemy(SpawnedAI);
+				DisableEnemy(SpawnedAI);
 				R.SpawnedEnemies.Add(SpawnedAI);
 				R.CurrentEnemyCount++;
 				TotalEnemyCount++;
@@ -121,6 +121,8 @@ void AAISpawnManager::DisableAllEnemies() {
 // 소프트 경계 내에 플레이어가 들어오면 일부 활성화
 
 void AAISpawnManager::UpdateRegionActivation() {
+
+	if (PlayerActors.IsEmpty()) return;
 	
 	for (const auto& Player : PlayerActors) {
 		const FVector PlayerLocation = Player->GetActorLocation();
@@ -135,6 +137,7 @@ void AAISpawnManager::UpdateRegionActivation() {
 				Regions[i].HardActivation = true;
 				for (auto& E : Regions[i].SpawnedEnemies) {
 					// 하드 활성화
+					EnableEnemy(E);
 				}
 
 				const int CoreRegionIndexX = i / RegionCountY;
@@ -157,7 +160,12 @@ void AAISpawnManager::UpdateRegionActivation() {
 
 							// 소프트 활성화
 							// 근데 소프트 활성화 하기 전에 하드 활성화가 이미 되어있는 지 검사해야함
-							if (!Regions[NeighborIndex].HardActivation) {} // 함수
+							// 함수
+							if (!Regions[NeighborIndex].HardActivation) {
+								for (auto& E : Regions[NeighborIndex].SpawnedEnemies) {
+									EnableEnemy(E);
+								}
+							} 
 						}
 
 					}
