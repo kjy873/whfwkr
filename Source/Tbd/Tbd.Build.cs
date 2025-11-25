@@ -8,8 +8,15 @@ public class Tbd : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "AIModule", "GameplayTasks", "NavigationSystem",
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "Sockets", "Networking","AIModule", "GameplayTasks", "NavigationSystem",
 															"Landscape", "Foliage", "GameplayTags"});
+
+		PrivateDependencyModuleNames.AddRange(new string[] { "ProtobufCore" });
+
+		PrivateIncludePaths.AddRange(new string[] { 
+			"Tbd/",
+			"Tbd/Network/",
+		});
 
         if (Target.bBuildEditor)
         {
