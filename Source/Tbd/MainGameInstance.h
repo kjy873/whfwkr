@@ -23,4 +23,16 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Game Settings")
 	void SetLandscapeMaterialQualityLevel(int NewQualityLevel) { LandscapeMaterialQualityLevel = NewQualityLevel; }
+
+public:
+	UFUNCTION(BlueprintCallable)
+	void ConnectToGameServer();
+
+	UFUNCTION(BlueprintCallable)
+	void DisconnectToGameServer();
+
+public:
+	class FSocket* Socket;
+	FString IpAddress = TEXT("127.0.0.1");
+	int16 Port = 7777;
 };
