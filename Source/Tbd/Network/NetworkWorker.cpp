@@ -60,7 +60,7 @@ bool RecvWorker::ReceivePacket(TArray<uint8>& OutPacket)
 	if (ReceiveDesiredBytes(HeaderBuffer.GetData(), HeaderSize) == false)
 		return false;
 
-	// ID, Size ÃßÃâ
+	// ID, Size ÃƒÃŸÃƒÃ¢
 	FPacketHeader Header;
 	{
 		FMemoryReader Reader(HeaderBuffer);
@@ -70,7 +70,7 @@ bool RecvWorker::ReceivePacket(TArray<uint8>& OutPacket)
 
 	OutPacket = HeaderBuffer;
 
-	// ÆĞÅ¶ ³»¿ë ÆÄ½Ì
+	// Ã†ÃÃ…Â¶ Â³Â»Â¿Ã« Ã†Ã„Â½ÃŒ
 	TArray<uint8> PayloadBuffer;
 	const int32 PayloadSize = Header.PacketSize - HeaderSize;
 	OutPacket.AddZeroed(PayloadSize);
