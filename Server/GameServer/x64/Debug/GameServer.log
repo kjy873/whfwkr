@@ -158,47 +158,47 @@ Protocol.proto(4,1): warning G1A4DC0EC: Import Enum.proto is unused.
   		return sendBuffer;
   	}
   };
-  D:Enum.pb.h
+  C:Enum.pb.h
   1개 파일이 복사되었습니다.
-  D:Enum.pb.cc
+  C:Enum.pb.cc
   1개 파일이 복사되었습니다.
-  D:Struct.pb.h
+  C:Struct.pb.h
   1개 파일이 복사되었습니다.
-  D:Struct.pb.cc
+  C:Struct.pb.cc
   1개 파일이 복사되었습니다.
-  D:Protocol.pb.h
+  C:Protocol.pb.h
   1개 파일이 복사되었습니다.
-  D:Protocol.pb.cc
+  C:Protocol.pb.cc
   1개 파일이 복사되었습니다.
-  D:ServerPacketHandler.h
+  C:ServerPacketHandler.h
   1개 파일이 복사되었습니다.
-  D:Enum.pb.h
+  C:Enum.pb.h
   1개 파일이 복사되었습니다.
-  D:Enum.pb.cc
+  C:Enum.pb.cc
   1개 파일이 복사되었습니다.
-  D:Struct.pb.h
+  C:Struct.pb.h
   1개 파일이 복사되었습니다.
-  D:Struct.pb.cc
+  C:Struct.pb.cc
   1개 파일이 복사되었습니다.
-  D:Protocol.pb.h
+  C:Protocol.pb.h
   1개 파일이 복사되었습니다.
-  D:Protocol.pb.cc
+  C:Protocol.pb.cc
   1개 파일이 복사되었습니다.
-  D:ClientPacketHandler.h
+  C:ClientPacketHandler.h
   1개 파일이 복사되었습니다.
-  D:Enum.pb.h
+  C:Enum.pb.h
   1개 파일이 복사되었습니다.
-  D:Enum.pb.cc
+  C:Enum.pb.cc
   1개 파일이 복사되었습니다.
-  D:Struct.pb.h
+  C:Struct.pb.h
   1개 파일이 복사되었습니다.
-  D:Struct.pb.cc
+  C:Struct.pb.cc
   1개 파일이 복사되었습니다.
-  D:Protocol.pb.h
+  C:Protocol.pb.h
   1개 파일이 복사되었습니다.
-  D:Protocol.pb.cc
+  C:Protocol.pb.cc
   1개 파일이 복사되었습니다.
-  D:ClientPacketHandler.h
+  C:ClientPacketHandler.h
   1개 파일이 복사되었습니다.
   계속하려면 아무 키나 누르십시오 . . . 
   pch.cpp
@@ -211,4 +211,4 @@ Protocol.proto(4,1): warning G1A4DC0EC: Import Enum.proto is unused.
   GameSessionManager.cpp
   ServerPacketHandler.cpp
   코드를 생성하고 있습니다...
-  GameServer.vcxproj -> D:\whfwkr\Server\Binaries\Debug\GameServer.exe
+  GameServer.vcxproj -> C:\Users\USER\Desktop\whfwkr\Server\Binaries\Debug\GameServer.exe
