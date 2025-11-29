@@ -26,6 +26,14 @@ public:
 	void HandleRecvPackets();
 
 	void SendPacket(SendBufferRef SendBuffer);
+
+public:
+	void HandleSpawn(const Protocol::PlayerInfo& PlayerInfo);
+	void HandleSpawn(const Protocol::S_ENTER_GAME& EnterGamePkt);
+	void HandleSpawn(const Protocol::S_SPAWN& SpawnPkt);
+
+	void HandleDespawn(uint64 ObjectId);
+	void HandleDespawn(const Protocol::S_DESPAWN& DespawnPkt);
 	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Settings")
@@ -42,4 +50,10 @@ public:
 	FString IpAddress = TEXT("127.0.0.1");
 	int16 Port = 7777;
 	TSharedPtr<class PacketSession> GameServerSession;
+
+public:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> PlayerClass;
+
+	TMap<uint64, AActor*> Players;
 };

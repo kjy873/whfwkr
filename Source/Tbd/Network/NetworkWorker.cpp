@@ -19,7 +19,6 @@ RecvWorker::~RecvWorker()
 bool RecvWorker::Init()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Recv Thread Init"));
-	UE_LOG(LogTemp, Warning, TEXT("Recv Thread Init"))
 
 	return true;
 }
@@ -38,7 +37,6 @@ uint32 RecvWorker::Run()
 			}
 		}
 	}
-
 	return 0;
 }
 
@@ -60,7 +58,7 @@ bool RecvWorker::ReceivePacket(TArray<uint8>& OutPacket)
 	if (ReceiveDesiredBytes(HeaderBuffer.GetData(), HeaderSize) == false)
 		return false;
 
-	// ID, Size ÃßÃâ
+	// ID, Size 추출
 	FPacketHeader Header;
 	{
 		FMemoryReader Reader(HeaderBuffer);
@@ -70,9 +68,11 @@ bool RecvWorker::ReceivePacket(TArray<uint8>& OutPacket)
 
 	OutPacket = HeaderBuffer;
 
-	// ÆÐÅ¶ ³»¿ë ÆÄ½Ì
 	TArray<uint8> PayloadBuffer;
 	const int32 PayloadSize = Header.PacketSize - HeaderSize;
+	if (PayloadSize == 0)
+		return true;
+
 	OutPacket.AddZeroed(PayloadSize);
 
 	if (ReceiveDesiredBytes(&OutPacket[HeaderSize], PayloadSize))

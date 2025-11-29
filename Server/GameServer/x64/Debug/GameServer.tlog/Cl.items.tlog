@@ -2,7 +2,11 @@ C:\Users\USER\Desktop\whfwkr\Server\GameServer\Enum.pb.cc;C:\Users\USER\Desktop\
 C:\Users\USER\Desktop\whfwkr\Server\GameServer\GameServer.cpp;C:\Users\USER\Desktop\whfwkr\Server\GameServer\x64\Debug\GameServer.obj
 C:\Users\USER\Desktop\whfwkr\Server\GameServer\GameSession.cpp;C:\Users\USER\Desktop\whfwkr\Server\GameServer\x64\Debug\GameSession.obj
 C:\Users\USER\Desktop\whfwkr\Server\GameServer\GameSessionManager.cpp;C:\Users\USER\Desktop\whfwkr\Server\GameServer\x64\Debug\GameSessionManager.obj
+C:\Users\USER\Desktop\whfwkr\Server\GameServer\ObjectUtils.cpp;C:\Users\USER\Desktop\whfwkr\Server\GameServer\x64\Debug\ObjectUtils.obj
 C:\Users\USER\Desktop\whfwkr\Server\GameServer\pch.cpp;C:\Users\USER\Desktop\whfwkr\Server\GameServer\x64\Debug\pch.obj
+C:\Users\USER\Desktop\whfwkr\Server\GameServer\Player.cpp;C:\Users\USER\Desktop\whfwkr\Server\GameServer\x64\Debug\Player.obj
 C:\Users\USER\Desktop\whfwkr\Server\GameServer\Protocol.pb.cc;C:\Users\USER\Desktop\whfwkr\Server\GameServer\x64\Debug\Protocol.pb.obj
+C:\Users\USER\Desktop\whfwkr\Server\GameServer\Room.cpp;C:\Users\USER\Desktop\whfwkr\Server\GameServer\x64\Debug\Room.obj
 C:\Users\USER\Desktop\whfwkr\Server\GameServer\ServerPacketHandler.cpp;C:\Users\USER\Desktop\whfwkr\Server\GameServer\x64\Debug\ServerPacketHandler.obj
 C:\Users\USER\Desktop\whfwkr\Server\GameServer\Struct.pb.cc;C:\Users\USER\Desktop\whfwkr\Server\GameServer\x64\Debug\Struct.pb.obj
+C:\Users\USER\Desktop\whfwkr\Server\GameServer\Utils.cpp;C:\Users\USER\Desktop\whfwkr\Server\GameServer\x64\Debug\Utils.obj
