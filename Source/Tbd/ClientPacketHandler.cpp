@@ -20,5 +20,7 @@ bool Handle_S_ENTER_GAME(PacketSessionRef& session, Protocol::S_ENTER_GAME& pkt)
 
 bool Handle_S_CHAT(PacketSessionRef& session, Protocol::S_CHAT& pkt)
 {
+	auto Msg = pkt.msg();
+
 	return true;
 }

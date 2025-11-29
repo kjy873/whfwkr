@@ -14,16 +14,6 @@ UCLASS()
 class TBD_API UMainGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
-	
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Settings")
-	int LandscapeMaterialQualityLevel = 0;
-
-	UFUNCTION(BlueprintCallable, Category = "Game Settings")
-	int GetLandscapeMaterialQualityLevel() const { return LandscapeMaterialQualityLevel; }
-
-	UFUNCTION(BlueprintCallable, Category = "Game Settings")
-	void SetLandscapeMaterialQualityLevel(int NewQualityLevel) { LandscapeMaterialQualityLevel = NewQualityLevel; }
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -36,6 +26,16 @@ public:
 	void HandleRecvPackets();
 
 	void SendPacket(SendBufferRef SendBuffer);
+	
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Settings")
+	int LandscapeMaterialQualityLevel = 0;
+
+	UFUNCTION(BlueprintCallable, Category = "Game Settings")
+	int GetLandscapeMaterialQualityLevel() const { return LandscapeMaterialQualityLevel; }
+
+	UFUNCTION(BlueprintCallable, Category = "Game Settings")
+	void SetLandscapeMaterialQualityLevel(int NewQualityLevel) { LandscapeMaterialQualityLevel = NewQualityLevel; }
 
 public:
 	class FSocket* Socket;
