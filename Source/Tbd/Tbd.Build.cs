@@ -16,6 +16,7 @@ public class Tbd : ModuleRules
 		PrivateIncludePaths.AddRange(new string[] { 
 			"Tbd/",
 			"Tbd/Network/",
+			"Tbd/Game/",
 		});
 
         if (Target.bBuildEditor)
