@@ -9,6 +9,8 @@
 #include "PacketSession.h"
 #include "Protocol.pb.h"
 #include "ClientPacketHandler.h"
+#include "Player/MyPlayerCharacter.h"
+#include "Player/UC_NetworkPlayerComponent.h"
 
 void UMainGameInstance::ConnectToGameServer()
 {
@@ -70,7 +72,7 @@ void UMainGameInstance::SendPacket(SendBufferRef SendBuffer)
 	GameServerSession->SendPacket(SendBuffer);
 }
 
-void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo)
+void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool IsMine)
 {
 	if (Socket == nullptr || GameServerSession == nullptr)
 		return;
@@ -84,21 +86,41 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo)
 		return;
 
 	FVector SpawnLocation(PlayerInfo.x(), PlayerInfo.y(), PlayerInfo.z());
-	AActor* Actor = World->SpawnActor(PlayerClass, &SpawnLocation);
 
-	Players.Add(PlayerInfo.object_id(), Actor);
+	if (IsMine)
+	{
+		auto PC = UGameplayStatics::GetPlayerController(this, 0);
+		APlayerCharacter* Player = Cast<APlayerCharacter>(PC->GetPawn());
+		if (Player == nullptr)
+			return;
+
+		MyPlayer = Player;
+		Players.Add(PlayerInfo.object_id(), Player);
+
+		if (UC_NetworkPlayerComponent* NetComp = Player->FindComponentByClass<UC_NetworkPlayerComponent>())
+		{
+			NetComp->SetObjectId(PlayerInfo.object_id());
+			UE_LOG(LogTemp, Warning, TEXT("My ObjectId Set: %llu"), PlayerInfo.object_id());
+		}
+	}
+	else
+	{
+		APlayerCharacter* Player = Cast<APlayerCharacter>(World->SpawnActor(OtherPlayerClass, &SpawnLocation));
+
+		Players.Add(PlayerInfo.object_id(), Player);
+	}
 }
 
 void UMainGameInstance::HandleSpawn(const Protocol::S_ENTER_GAME& EnterGamePkt)
 {
-	HandleSpawn(EnterGamePkt.player());
+	HandleSpawn(EnterGamePkt.player(), true);
 }
 
 void UMainGameInstance::HandleSpawn(const Protocol::S_SPAWN& SpawnPkt)
 {
 	for (auto& Player : SpawnPkt.players())
 	{
-		HandleSpawn(Player);
+		HandleSpawn(Player, false);
 	}
 }
 
@@ -111,7 +133,7 @@ void UMainGameInstance::HandleDespawn(uint64 ObjectId)
 	if (World == nullptr)
 		return;
 
-	AActor** FindActor = Players.Find(ObjectId);
+	APlayerCharacter** FindActor = Players.Find(ObjectId);
 	if (FindActor == nullptr)
 		return;
 

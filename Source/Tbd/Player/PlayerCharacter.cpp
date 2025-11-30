@@ -16,6 +16,7 @@ void APlayerCharacter::BeginPlay()
 }
 
 // Called every frame
+/*
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -28,4 +29,5 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 }
+*/
 

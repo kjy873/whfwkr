@@ -31,7 +31,7 @@ bool Handle_S_ENTER_GAME(PacketSessionRef& session, Protocol::S_ENTER_GAME& pkt)
 {
 	if (auto* GameInstance  = Cast<UMainGameInstance>(GWorld->GetGameInstance()))
 	{
-		GameInstance->HandleSpawn(pkt.player());
+		GameInstance->HandleSpawn(pkt);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Entered Game"));
 	}
 
@@ -63,6 +63,11 @@ bool Handle_S_DESPAWN(PacketSessionRef& session, Protocol::S_DESPAWN& pkt)
 		GameInstance->HandleDespawn(pkt);
 	}
 	return false;
+}
+
+bool Handle_S_MOVE(PacketSessionRef& session, Protocol::S_MOVE& pkt)
+{
+	return true;
 }
 
 bool Handle_S_CHAT(PacketSessionRef& session, Protocol::S_CHAT& pkt)
