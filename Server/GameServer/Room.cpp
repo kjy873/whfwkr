@@ -17,12 +17,14 @@ bool Room::HandleEnterPlayerLocked(PlayerRef player)
 {
 	WRITE_LOCK;
 
+	cout << "[SERVER] EnterPlayer object_id = "<< player->playerInfo->object_id() << endl;
+
 	bool success = EnterPlayer(player);
 
 	// 랜덤 위치 지정
 	player->playerInfo->set_x(Utils::GetRandom(0.f, 500.f));
 	player->playerInfo->set_y(Utils::GetRandom(0.f, 500.f));
-	player->playerInfo->set_z(Utils::GetRandom(0.f, 500.f));
+	player->playerInfo->set_z(100.f);
 	player->playerInfo->set_yaw(Utils::GetRandom(0.f, 100.f));
 
 	{
@@ -96,6 +98,28 @@ bool Room::HandleLeavePlayerLocked(PlayerRef player)
 	}
 
 	return success;
+}
+
+void Room::HandleMoveLocked(Protocol::C_MOVE& pkt)
+{
+	WRITE_LOCK;
+
+	const uint64 objectId = pkt.info().object_id();
+	if (_players.find(objectId) == _players.end())
+		return;
+
+	PlayerRef& player = _players[objectId];
+	player->playerInfo->CopyFrom(pkt.info());
+			
+	{
+		Protocol::S_MOVE movePkt;
+		{
+			Protocol::PlayerInfo* info = movePkt.mutable_info();
+			info->CopyFrom(pkt.info());
+		}
+		SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(movePkt);
+		Broadcast(sendBuffer);
+	}
 }
 
 bool Room::EnterPlayer(PlayerRef player)

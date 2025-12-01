@@ -6,6 +6,6 @@ public:
 	static PlayerRef CreatePlayer(GameSessionRef session);
 
 private:
-	static atomic<int64> s_idGenerator;
+	static atomic<uint64> s_idGenerator;
 };
 

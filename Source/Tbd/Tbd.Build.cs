@@ -17,7 +17,8 @@ public class Tbd : ModuleRules
 			"Tbd/",
 			"Tbd/Network/",
 			"Tbd/Game/",
-		});
+			"Tbd/Player/",
+        });
 
         if (Target.bBuildEditor)
         {

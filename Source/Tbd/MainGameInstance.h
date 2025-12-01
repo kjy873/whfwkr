@@ -7,7 +7,7 @@
 #include "Tbd.h"
 #include "MainGameInstance.generated.h"
 
-
+class AActor;
 class APlayerCharacter;
 /**
  * 
@@ -36,6 +36,8 @@ public:
 
 	void HandleDespawn(uint64 ObjectId);
 	void HandleDespawn(const Protocol::S_DESPAWN& DespawnPkt);
+
+	void HandleMove(const Protocol::S_MOVE& MovePkt);
 	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Settings")
@@ -54,7 +56,7 @@ public:
 	TSharedPtr<class PacketSession> GameServerSession;
 
 public:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<APlayerCharacter> OtherPlayerClass;
 
 	APlayerCharacter* MyPlayer;

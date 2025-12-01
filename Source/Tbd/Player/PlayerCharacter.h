@@ -2,6 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "InputActionValue.h"
+#include "Protocol.pb.h"
 #include "PlayerCharacter.generated.h"
 
 UCLASS()
@@ -10,18 +12,22 @@ class TBD_API APlayerCharacter : public ACharacter
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
 	APlayerCharacter();
+	virtual ~APlayerCharacter();
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	virtual void BeginPlay();
+	virtual void Tick(float DeltaSeconds) override;
 
-public:	
-	// Called every frame
-	//virtual void Tick(float DeltaTime) override;
+public:
+	bool IsMyPlayer();
 
-	// Called to bind functionality to input
-	//virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+public:
+	void SetPlayerInfo(const Protocol::PlayerInfo& Info);
+	void SetDestInfo(const Protocol::PlayerInfo& Info);
+	Protocol::PlayerInfo* GetPlayerInfo() { return PlayerInfo; }
 
+protected:
+	class Protocol::PlayerInfo* PlayerInfo; // 현재 위치
+	class Protocol::PlayerInfo* DestInfo; // 목적지
 };
