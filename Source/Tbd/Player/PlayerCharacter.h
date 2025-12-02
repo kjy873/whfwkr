@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Protocol.pb.h"
 #include "PlayerCharacter.generated.h"
 
 UCLASS()
@@ -10,18 +11,24 @@ class TBD_API APlayerCharacter : public ACharacter
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
 	APlayerCharacter();
+	virtual ~APlayerCharacter() override;
 
-protected:
-	// Called when the game starts or when spawned
+	virtual void Tick(float DeltaTime) override;
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	//virtual void Tick(float DeltaTime) override;
+	Protocol::PlayerInfo PlayerInfo;
+	Protocol::PlayerInfo DestInfo;
 
-	// Called to bind functionality to input
-	//virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Network")
+	bool bIsMine = false;
 
+	void SetPlayerInfo(const Protocol::PlayerInfo& Info);
+	void SetDestInfo(const Protocol::PlayerInfo& Info);
+
+	UFUNCTION(BlueprintCallable)
+	bool IsMyPlayer() const { return bIsMine; }
+
+private:
+	void ApplyNetworkPosition(float DeltaTime);
 };

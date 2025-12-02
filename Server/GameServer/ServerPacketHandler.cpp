@@ -52,7 +52,8 @@ bool Handle_C_LEAVE_GAME(PacketSessionRef& session, Protocol::C_LEAVE_GAME& pkt)
 	if ( player == nullptr )
 		return false;
 
-	RoomRef room = player->room.load().lock();
+	//RoomRef room = player->room.load().lock();
+	RoomRef room = player->room.lock();
 	if ( room == nullptr )
 		return false;
 
@@ -63,6 +64,19 @@ bool Handle_C_LEAVE_GAME(PacketSessionRef& session, Protocol::C_LEAVE_GAME& pkt)
 
 bool Handle_C_MOVE(PacketSessionRef& session, Protocol::C_MOVE& pkt)
 {
+	auto gameSession = static_pointer_cast<GameSession>(session);
+
+	PlayerRef player = gameSession->player.load();
+	if (player == nullptr)
+		return false;
+
+	//RoomRef room = player->room.load().lock();
+	RoomRef room = player->room.lock();
+	if (room == nullptr)
+		return false;
+
+	room->HandleMoveLocked(pkt);
+
 	return true;
 }
 

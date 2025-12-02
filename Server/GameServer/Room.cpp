@@ -17,13 +17,27 @@ bool Room::HandleEnterPlayerLocked(PlayerRef player)
 {
 	WRITE_LOCK;
 
+	cout << "[SERVER] EnterPlayer object_id = "<< player->playerInfo->object_id() << endl;
+
 	bool success = EnterPlayer(player);
 
 	// 랜덤 위치 지정
-	player->playerInfo->set_x(Utils::GetRandom(0.f, 500.f));
-	player->playerInfo->set_y(Utils::GetRandom(0.f, 500.f));
-	player->playerInfo->set_z(Utils::GetRandom(0.f, 500.f));
-	player->playerInfo->set_yaw(Utils::GetRandom(0.f, 100.f));
+	//player->playerInfo->set_x(Utils::GetRandom(0.f, 500.f));
+	//player->playerInfo->set_y(Utils::GetRandom(0.f, 500.f));
+	//player->playerInfo->set_z(100.f);
+	//player->playerInfo->set_yaw(Utils::GetRandom(0.f, 100.f));
+
+	// 스폰 중심 좌표 (PlayerStart 위치)
+	float centerX = 40025.f;
+	float centerY = 47369.f;
+	float centerZ = -689.f;
+
+	// ±300 범위 안 랜덤 스폰
+	player->playerInfo->set_x(centerX);
+	player->playerInfo->set_y(centerY);
+	player->playerInfo->set_z(centerZ); // Z는 고정
+	player->playerInfo->set_yaw(Utils::GetRandom(0.f, 360.f));
+
 
 	{
 		Protocol::S_ENTER_GAME enterGamePkt;
@@ -53,8 +67,11 @@ bool Room::HandleEnterPlayerLocked(PlayerRef player)
 
 		for (auto& item : _players)
 		{
-			Protocol::PlayerInfo* playerInfo = spawnPkt.add_players();
-			playerInfo->CopyFrom(*item.second->playerInfo);
+			if (item.first == player->playerInfo->object_id())
+				continue;
+
+			Protocol::PlayerInfo* info = spawnPkt.add_players();
+			info->CopyFrom(*item.second->playerInfo);
 		}
 
 		SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(spawnPkt);
@@ -98,6 +115,28 @@ bool Room::HandleLeavePlayerLocked(PlayerRef player)
 	return success;
 }
 
+void Room::HandleMoveLocked(Protocol::C_MOVE& pkt)
+{
+	WRITE_LOCK;
+
+	const uint64 objectId = pkt.info().object_id();
+	if (_players.find(objectId) == _players.end())
+		return;
+
+	PlayerRef& player = _players[objectId];
+	player->playerInfo->CopyFrom(pkt.info());
+			
+	{
+		Protocol::S_MOVE movePkt;
+		{
+			Protocol::PlayerInfo* info = movePkt.mutable_info();
+			info->CopyFrom(pkt.info());
+		}
+		SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(movePkt);
+		Broadcast(sendBuffer);
+	}
+}
+
 bool Room::EnterPlayer(PlayerRef player)
 {
 	if(_players.find(player->playerInfo->object_id()) != _players.end())
@@ -105,7 +144,9 @@ bool Room::EnterPlayer(PlayerRef player)
 
 	_players.insert(make_pair(player->playerInfo->object_id(), player));
 
-	player->room.store(shared_from_this());
+	//player->room.store(shared_from_this());
+	player->room = shared_from_this();
+
 
 	return true;
 }
@@ -116,7 +157,8 @@ bool Room::LeavePlayer(uint64 objectId)
 		return false;
 
 	PlayerRef player = _players[objectId];
-	player->room.store(weak_ptr<Room>());
+	//player->room.store(weak_ptr<Room>());
+	player->room.reset();
 
 	_players.erase(objectId);
 

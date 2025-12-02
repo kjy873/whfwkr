@@ -67,6 +67,10 @@ bool Handle_S_DESPAWN(PacketSessionRef& session, Protocol::S_DESPAWN& pkt)
 
 bool Handle_S_MOVE(PacketSessionRef& session, Protocol::S_MOVE& pkt)
 {
+	if (auto* GameInstance = Cast<UMainGameInstance>(GWorld->GetGameInstance()))
+	{
+		GameInstance->HandleMove(pkt);
+	}
 	return true;
 }
 

@@ -1,5 +1,9 @@
 #pragma once
 
+#include <memory>
+#include <atomic>
+#include "Protocol.pb.h"
+
 class GameSession;
 class Room;
 
@@ -14,6 +18,6 @@ public:
 	weak_ptr<GameSession> session;
 
 public:
-	atomic<weak_ptr<Room>> room;
+	weak_ptr<Room> room;
 };
 

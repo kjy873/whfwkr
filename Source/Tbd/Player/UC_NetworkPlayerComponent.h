@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Protocol.pb.h"
 #include "UC_NetworkPlayerComponent.generated.h"
 
 class UMainGameInstance;

@@ -3,7 +3,7 @@
 #include "Player.h"
 #include "GameSession.h"
 
-atomic<int64> ObjectUtils::s_idGenerator = 1;
+atomic<uint64> ObjectUtils::s_idGenerator = 1;
 
 PlayerRef ObjectUtils::CreatePlayer(GameSessionRef session)
 {

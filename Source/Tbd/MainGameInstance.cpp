@@ -85,7 +85,10 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 	if (Players.Find(ObjectId) != nullptr)
 		return;
 
-	FVector SpawnLocation(PlayerInfo.x(), PlayerInfo.y(), PlayerInfo.z());
+	FVector SpawnLocation(PlayerInfo.x(), PlayerInfo.y(), 200.f);
+	UE_LOG(LogTemp, Warning, TEXT("Spawn Pos: %f %f %f"),PlayerInfo.x(), PlayerInfo.y(), PlayerInfo.z());
+
+	UE_LOG(LogTemp, Warning, TEXT("HandleSpawn: id=%llu IsMine=%d"), PlayerInfo.object_id(), IsMine);
 
 	if (IsMine)
 	{
@@ -93,6 +96,9 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 		APlayerCharacter* Player = Cast<APlayerCharacter>(PC->GetPawn());
 		if (Player == nullptr)
 			return;
+
+		Player->bIsMine = true;
+		Player->SetPlayerInfo(PlayerInfo);
 
 		MyPlayer = Player;
 		Players.Add(PlayerInfo.object_id(), Player);
@@ -103,13 +109,26 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 			UE_LOG(LogTemp, Warning, TEXT("My ObjectId Set: %llu"), PlayerInfo.object_id());
 		}
 	}
+
 	else
 	{
-		APlayerCharacter* Player = Cast<APlayerCharacter>(World->SpawnActor(OtherPlayerClass, &SpawnLocation));
+		FRotator SpawnRotation(0.f, PlayerInfo.yaw(), 0.f);
+
+		APlayerCharacter* Player = World->SpawnActor<APlayerCharacter>(
+			OtherPlayerClass,
+			SpawnLocation,
+			SpawnRotation
+		);
+
+		if (Player == nullptr)
+			return;
+
+		Player->bIsMine = false;
 
 		Players.Add(PlayerInfo.object_id(), Player);
 	}
 }
+
 
 void UMainGameInstance::HandleSpawn(const Protocol::S_ENTER_GAME& EnterGamePkt)
 {
@@ -146,4 +165,27 @@ void UMainGameInstance::HandleDespawn(const Protocol::S_DESPAWN& DespawnPkt)
 	{
 		HandleDespawn(ObjectId);
 	}
+}
+
+void UMainGameInstance::HandleMove(const Protocol::S_MOVE& MovePkt)
+{
+	if (Socket == nullptr || GameServerSession == nullptr)
+		return;
+
+	auto* World = GetWorld();
+	if (World == nullptr)
+		return;
+
+	const uint64 ObjectId = MovePkt.info().object_id();
+
+	APlayerCharacter** FindActor = Players.Find(ObjectId);
+	if (FindActor == nullptr)
+		return;
+
+	APlayerCharacter* Player = (*FindActor);
+
+
+	Player->SetDestInfo(MovePkt.info());
+	//const Protocol::PlayerInfo& Info = MovePkt.info();
+	//Player->SetPlayerInfo(Info);
 }
