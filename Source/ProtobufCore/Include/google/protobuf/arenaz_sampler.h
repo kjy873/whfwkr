@@ -44,7 +44,10 @@ namespace protobuf {
 namespace internal {
 
 #if defined(PROTOBUF_ARENAZ_SAMPLE)
-struct ThreadSafeArenaStats;
+struct ThreadSafeArena
+    
+    
+    ;
 void RecordResetSlow(ThreadSafeArenaStats* info);
 void RecordAllocateSlow(ThreadSafeArenaStats* info, size_t requested,
                         size_t allocated, size_t wasted);
