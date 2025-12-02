@@ -34,6 +34,9 @@ void DoWorkerJob(ServerServiceRef& service)
 
 int main()
 {
+	SetConsoleOutputCP(CP_UTF8);
+	SetConsoleCP(CP_UTF8);
+
 	ServerPacketHandler::Init();
 
 	ServerServiceRef service = make_shared<ServerService>(

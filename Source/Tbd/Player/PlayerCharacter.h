@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "InputActionValue.h"
 #include "Protocol.pb.h"
 #include "PlayerCharacter.generated.h"
 
@@ -13,21 +12,23 @@ class TBD_API APlayerCharacter : public ACharacter
 
 public:
 	APlayerCharacter();
-	virtual ~APlayerCharacter();
+	virtual ~APlayerCharacter() override;
 
-protected:
-	virtual void BeginPlay();
-	virtual void Tick(float DeltaSeconds) override;
+	virtual void Tick(float DeltaTime) override;
+	virtual void BeginPlay() override;
 
-public:
-	bool IsMyPlayer();
+	Protocol::PlayerInfo PlayerInfo;
+	Protocol::PlayerInfo DestInfo;
 
-public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Network")
+	bool bIsMine = false;
+
 	void SetPlayerInfo(const Protocol::PlayerInfo& Info);
 	void SetDestInfo(const Protocol::PlayerInfo& Info);
-	Protocol::PlayerInfo* GetPlayerInfo() { return PlayerInfo; }
 
-protected:
-	class Protocol::PlayerInfo* PlayerInfo; // 현재 위치
-	class Protocol::PlayerInfo* DestInfo; // 목적지
+	UFUNCTION(BlueprintCallable)
+	bool IsMyPlayer() const { return bIsMine; }
+
+private:
+	void ApplyNetworkPosition(float DeltaTime);
 };
