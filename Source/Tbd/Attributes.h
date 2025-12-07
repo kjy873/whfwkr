@@ -42,6 +42,9 @@ struct FAttribute
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attribute")
 	int Intelligence;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attribute")
+	float BaseDamage;
+
 	FAttribute()
 		: Health(100.f)
 		, MaxHealth(100.f)
@@ -52,6 +55,8 @@ struct FAttribute
 		, Strength(1)
 		, Agility(1)
 		, Intelligence(1)
+		, BaseDamage(10.f)
+		
 	{
 	}
 
@@ -89,5 +94,14 @@ struct FUpgradeData : public FTableRowBase{
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade")
 	UTexture2D* Icon;
+
+	FUpgradeData() 
+		: CharacterType(ECharacterType::ECT_None)
+		, Name(NAME_None)
+		, DisplayName(FText::GetEmpty())
+		, Description(FText::GetEmpty())
+		, Icon(nullptr)
+	{
+	}
 
 };

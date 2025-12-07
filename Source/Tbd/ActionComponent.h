@@ -50,6 +50,9 @@ public:
 	void RemoveStateTags(FGameplayTagContainer Tags) { CurrentState.RuntimeTags.RemoveTags(Tags); }
 
 	UFUNCTION(BlueprintCallable, Category = "State")
+	bool HasStateTag(FGameplayTag Tag) const { return CurrentState.HasTag(Tag); }
+
+	UFUNCTION(BlueprintCallable, Category = "State")
 	FGameplayTag GetCurrentActionTag() const { return CurrentState.GetActionTag(); }
 
 	UFUNCTION(BlueprintCallable, Category = "State")

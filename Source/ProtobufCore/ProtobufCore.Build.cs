@@ -9,7 +9,9 @@ public class ProtobufCore : ModuleRules
 	{
 		Type = ModuleType.External;
 
-		PublicSystemIncludePaths.Add(Path.Combine(ModuleDirectory, "Include"));
+        System.Console.WriteLine("ModuleDirectory: " + ModuleDirectory);
+
+        PublicSystemIncludePaths.Add(Path.Combine(ModuleDirectory, "Include"));
 		PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "Include"));
 		PublicAdditionalLibraries.Add(Path.Combine(ModuleDirectory, "Lib", "Win64", "libprotobuf.lib"));
 

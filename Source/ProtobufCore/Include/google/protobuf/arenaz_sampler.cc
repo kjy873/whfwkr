@@ -47,7 +47,10 @@ ThreadSafeArenazSampler& GlobalThreadSafeArenazSampler() {
   return *sampler;
 }
 
-void UnsampleSlow(ThreadSafeArenaStats* info) {
+void UnsampleSlow(ThreadSafeArena
+    
+    
+    * info) {
   GlobalThreadSafeArenazSampler().Unregister(info);
 }
 

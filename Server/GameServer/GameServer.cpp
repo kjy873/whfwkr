@@ -5,9 +5,12 @@
 #include "Session.h"
 #include "GameSession.h"
 #include "GameSessionManager.h"
+#include "Room.h"
+#include "ObjectUtils.h"
 //#include "ClientPacketHandler.h"
 #include <tchar.h>
 #include "Job.h"
+#include "Protocol.pb.h"
 
 enum
 {
@@ -33,15 +36,28 @@ void DoWorkerJob(ServerServiceRef& service)
 
 int main()
 {
+	SetConsoleOutputCP(CP_UTF8);
+	SetConsoleCP(CP_UTF8);
+
 	ServerPacketHandler::Init();
+	
+	// 서버 시작 시 Room 초기화 및 ID 생성기 초기화
+	GRoom->Clear();
+	ObjectUtils::ResetIdGenerator();
 
 	ServerServiceRef service = make_shared<ServerService>(
 		NetAddress(L"127.0.0.1", 7777),
 		make_shared<IocpCore>(),
-		[=]() { return make_shared<GameSession>(); }, // TODO : SessionManager 등
-		100);
+		[=]() { return make_shared<GameSession>(); }, 100);
 
 	ASSERT_CRASH(service->Start());
+
+	if (!service->Start())
+	{
+		cout<< "Service Start Failed!" << endl;
+		return -1;
+	}
+	cout << "Server Start!" << endl;
 
 	for (int32 i = 0; i < 5; i++)
 	{
@@ -51,19 +67,10 @@ int main()
 			});
 	}
 
-	// Main Thread
-	//DoWorkerJob(service);
-
 	while (true)
 	{
-		Protocol::S_CHAT pkt;
-		pkt.set_msg("HelloWorld");
-		auto sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
-
-		GSessionManager.Broadcast(sendBuffer);
 		this_thread::sleep_for(1s);
 	}
-
 
 	GThreadManager->Join();
 }
