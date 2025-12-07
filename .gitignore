@@ -25,6 +25,11 @@
 *.la
 *.a
 
+*Tbd.sln
+Server/DummyClient/x64/
+Server/GameServer/x64/
+Server/ServerCore/x64/
+
 
 # Executables
 *.exe
