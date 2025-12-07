@@ -10,6 +10,8 @@ public:
 	bool HandleLeavePlayerLocked(PlayerRef player);
 
 	void HandleMoveLocked(Protocol::C_MOVE& pkt);
+	
+	void Clear(); // 모든 플레이어 제거
 
 private:
 	bool EnterPlayer(PlayerRef player);

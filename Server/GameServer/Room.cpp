@@ -13,6 +13,23 @@ Room::~Room()
 {
 }
 
+void Room::Clear()
+{
+	WRITE_LOCK;
+	
+	// ëª¨ë“  í”Œë ˆì´ì–´ì˜ room ì°¸ì¡° í•´ì œ
+	for (auto& item : _players)
+	{
+		PlayerRef player = item.second;
+		if (player != nullptr)
+		{
+			player->room.reset();
+		}
+	}
+	
+	_players.clear();
+}
+
 bool Room::HandleEnterPlayerLocked(PlayerRef player)
 {
 	WRITE_LOCK;
@@ -21,21 +38,18 @@ bool Room::HandleEnterPlayerLocked(PlayerRef player)
 
 	bool success = EnterPlayer(player);
 
-	// ·£´ı À§Ä¡ ÁöÁ¤
 	//player->playerInfo->set_x(Utils::GetRandom(0.f, 500.f));
 	//player->playerInfo->set_y(Utils::GetRandom(0.f, 500.f));
 	//player->playerInfo->set_z(100.f);
 	//player->playerInfo->set_yaw(Utils::GetRandom(0.f, 100.f));
 
-	// ½ºÆù Áß½É ÁÂÇ¥ (PlayerStart À§Ä¡)
 	float centerX = 40025.f;
 	float centerY = 47369.f;
 	float centerZ = -689.f;
 
-	// ¡¾300 ¹üÀ§ ¾È ·£´ı ½ºÆù
 	player->playerInfo->set_x(centerX);
 	player->playerInfo->set_y(centerY);
-	player->playerInfo->set_z(centerZ); // Z´Â °íÁ¤
+	player->playerInfo->set_z(centerZ); 
 	player->playerInfo->set_yaw(Utils::GetRandom(0.f, 360.f));
 
 
@@ -63,6 +77,7 @@ bool Room::HandleEnterPlayerLocked(PlayerRef player)
 	}
 
 	{
+		// ìƒˆ í”Œë ˆì´ì–´ì—ê²Œ ê¸°ì¡´ í”Œë ˆì´ì–´ë“¤ì˜ ì •ë³´ ì „ì†¡
 		Protocol::S_SPAWN spawnPkt;
 
 		for (auto& item : _players)
@@ -74,9 +89,12 @@ bool Room::HandleEnterPlayerLocked(PlayerRef player)
 			info->CopyFrom(*item.second->playerInfo);
 		}
 
-		SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(spawnPkt);
-		if (auto session = player->session.lock())
-			session->Send(sendBuffer);
+		if (spawnPkt.players_size() > 0)
+		{
+			SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(spawnPkt);
+			if (auto session = player->session.lock())
+				session->Send(sendBuffer);
+		}
 	}
 
 	

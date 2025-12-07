@@ -169,11 +169,9 @@ void Session::RegisterSend()
 			return;
 		}
 
+		// 큐에서 버퍼를 가져와서 sendEvent에 추가
 		_sendEvent.Init();
 		_sendEvent.owner = shared_from_this(); // ADD_REF
-
-	{
-		WRITE_LOCK;
 
 		int32 writeSize = 0;
 		while (_sendQueue.empty() == false)
@@ -197,11 +195,12 @@ void Session::RegisterSend()
 			needRegisterSend = true;
 		else
 		{
-			_sendEvent.owner = nullptr;
+			_sendEvent.owner = nullptr; // RELEASE_REF
 			_sendRegistered.store(false);
 		}
 	}
 
+	// 락 밖에서 RegisterSendInternal 호출
 	if (needRegisterSend)
 		RegisterSendInternal();
 }
@@ -402,6 +401,13 @@ int32 PacketSession::OnRecv(BYTE* buffer, int32 len)
 			break;
 
 		PacketHeader header = *(reinterpret_cast<PacketHeader*>(&buffer[processLen]));
+
+		// 패킷 크기 유효성 검사
+		if (header.size < sizeof(PacketHeader) || header.size > 0x10000)
+		{
+			// 잘못된 패킷 크기 - 연결 종료
+			return -1;
+		}
 
 		if (dataSize < header.size)
 			break;
