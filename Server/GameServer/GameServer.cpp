@@ -5,6 +5,8 @@
 #include "Session.h"
 #include "GameSession.h"
 #include "GameSessionManager.h"
+#include "Room.h"
+#include "ObjectUtils.h"
 //#include "ClientPacketHandler.h"
 #include <tchar.h>
 #include "Job.h"
@@ -38,6 +40,10 @@ int main()
 	SetConsoleCP(CP_UTF8);
 
 	ServerPacketHandler::Init();
+	
+	// 서버 시작 시 Room 초기화 및 ID 생성기 초기화
+	GRoom->Clear();
+	ObjectUtils::ResetIdGenerator();
 
 	ServerServiceRef service = make_shared<ServerService>(
 		NetAddress(L"127.0.0.1", 7777),

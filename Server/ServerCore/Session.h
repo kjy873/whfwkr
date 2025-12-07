@@ -26,7 +26,7 @@ public:
 	virtual ~Session();
 
 public:
-						/* ¿ÜºÎ¿¡¼­ »ç¿ë */
+						/* ï¿½ÜºÎ¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ */
 	void				Send(SendBufferRef sendBuffer);
 	bool				Connect();
 	void				Disconnect(const WCHAR* cause);
@@ -35,7 +35,7 @@ public:
 	void				SetService(shared_ptr<Service> service) { _service = service; }
 
 public:
-						/* Á¤º¸ °ü·Ã */
+						/* ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ */
 	void				SetNetAddress(NetAddress address) { _netAddress = address; }
 	NetAddress			GetAddress() { return _netAddress; }
 	SOCKET				GetSocket() { return _socket; }
@@ -43,16 +43,17 @@ public:
 	SessionRef			GetSessionRef() { return static_pointer_cast<Session>(shared_from_this()); }
 
 private:
-						/* ÀÎÅÍÆäÀÌ½º ±¸Çö */
+						/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì½ï¿½ ï¿½ï¿½ï¿½ï¿½ */
 	virtual HANDLE		GetHandle() override;
 	virtual void		Dispatch(class IocpEvent* iocpEvent, int32 numOfBytes = 0) override;
 
 private:
-						/* Àü¼Û °ü·Ã */
+						/* ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ */
 	bool				RegisterConnect();
 	bool				RegisterDisconnect();
 	void				RegisterRecv();
 	void				RegisterSend();
+	void				RegisterSendInternal();
 
 	void				ProcessConnect();
 	void				ProcessDisconnect();
@@ -62,7 +63,7 @@ private:
 	void				HandleError(int32 errorCode);
 
 protected:
-						/* ÄÁÅÙÃ÷ ÄÚµå¿¡¼­ ÀçÁ¤ÀÇ */
+						/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Úµå¿¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	virtual void		OnConnected() { }
 	virtual int32		OnRecv(BYTE* buffer, int32 len) { return len; }
 	virtual void		OnSend(int32 len) { }
@@ -76,15 +77,15 @@ private:
 
 private:
 	USE_LOCK;
-							/* ¼ö½Å °ü·Ã */
+							/* ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ */
 	RecvBuffer				_recvBuffer;
 
-							/* ¼Û½Å °ü·Ã */
+							/* ï¿½Û½ï¿½ ï¿½ï¿½ï¿½ï¿½ */
 	queue<SendBufferRef>	_sendQueue;
 	atomic<bool>			_sendRegistered = false;
 
 private:
-						/* IocpEvent Àç»ç¿ë */
+						/* IocpEvent ï¿½ï¿½ï¿½ï¿½ */
 	ConnectEvent		_connectEvent;
 	DisconnectEvent		_disconnectEvent;
 	RecvEvent			_recvEvent;
@@ -98,7 +99,7 @@ private:
 struct PacketHeader
 {
 	uint16 size;
-	uint16 id; // ÇÁ·ÎÅäÄÝID (ex. 1=·Î±×ÀÎ, 2=ÀÌµ¿¿äÃ»)
+	uint16 id; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ID (ex. 1=ï¿½Î±ï¿½ï¿½ï¿½, 2=ï¿½Ìµï¿½ï¿½ï¿½Ã»)
 };
 
 class PacketSession : public Session

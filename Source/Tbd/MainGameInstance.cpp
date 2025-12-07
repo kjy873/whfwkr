@@ -14,6 +14,28 @@
 
 void UMainGameInstance::ConnectToGameServer()
 {
+	// 이전 연결이 있으면 정리
+	if (GameServerSession.IsValid())
+	{
+		DisconnectToGameServer();
+		GameServerSession.Reset();
+	}
+
+	// 이전 플레이어들 정리
+	auto* World = GetWorld();
+	if (World != nullptr)
+	{
+		for (auto& Pair : Players)
+		{
+			if (Pair.Value != nullptr && Pair.Value != MyPlayer)
+			{
+				World->DestroyActor(Pair.Value);
+			}
+		}
+	}
+	Players.Empty();
+	MyPlayer = nullptr;
+
 	Socket = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(TEXT("Stream"), TEXT("Client Socket"));
 
 	FIPv4Address Ip;
@@ -82,10 +104,20 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 		return;
 
 	const uint64 ObjectId = PlayerInfo.object_id();
-	if (Players.Find(ObjectId) != nullptr)
-		return;
+	
+	// 이미 존재하는 플레이어가 있으면 제거하고 다시 스폰
+	APlayerCharacter** ExistingPlayer = Players.Find(ObjectId);
+	if (ExistingPlayer != nullptr && *ExistingPlayer != nullptr)
+	{
+		// MyPlayer가 아니면 제거
+		if (*ExistingPlayer != MyPlayer)
+		{
+			World->DestroyActor(*ExistingPlayer);
+		}
+		Players.Remove(ObjectId);
+	}
 
-	FVector SpawnLocation(PlayerInfo.x(), PlayerInfo.y(), 200.f);
+	FVector SpawnLocation(PlayerInfo.x(), PlayerInfo.y(), PlayerInfo.z());
 	UE_LOG(LogTemp, Warning, TEXT("Spawn Pos: %f %f %f"),PlayerInfo.x(), PlayerInfo.y(), PlayerInfo.z());
 
 	UE_LOG(LogTemp, Warning, TEXT("HandleSpawn: id=%llu IsMine=%d"), PlayerInfo.object_id(), IsMine);
@@ -120,10 +152,14 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 			SpawnRotation
 		);
 
+		UE_LOG(LogTemp, Warning, TEXT("SpawnActor Success? %s"),
+			Player ? TEXT("YES") : TEXT("NO"));
+
 		if (Player == nullptr)
 			return;
 
 		Player->bIsMine = false;
+		Player->SetPlayerInfo(PlayerInfo);
 
 		Players.Add(PlayerInfo.object_id(), Player);
 	}
@@ -156,7 +192,22 @@ void UMainGameInstance::HandleDespawn(uint64 ObjectId)
 	if (FindActor == nullptr)
 		return;
 
-	World->DestroyActor(*FindActor);
+	APlayerCharacter* PlayerToDestroy = *FindActor;
+	
+	// Players 맵에서 제거
+	Players.Remove(ObjectId);
+	
+	// MyPlayer인 경우 nullptr로 설정
+	if (MyPlayer == PlayerToDestroy)
+	{
+		MyPlayer = nullptr;
+	}
+
+	// 액터 파괴
+	if (PlayerToDestroy != nullptr)
+	{
+		World->DestroyActor(PlayerToDestroy);
+	}
 }
 
 void UMainGameInstance::HandleDespawn(const Protocol::S_DESPAWN& DespawnPkt)

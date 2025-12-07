@@ -5,6 +5,11 @@
 
 atomic<uint64> ObjectUtils::s_idGenerator = 1;
 
+void ObjectUtils::ResetIdGenerator()
+{
+	s_idGenerator.store(1);
+}
+
 PlayerRef ObjectUtils::CreatePlayer(GameSessionRef session)
 {
 	const int64 newId = s_idGenerator.fetch_add(1);
