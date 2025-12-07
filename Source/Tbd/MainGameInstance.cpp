@@ -120,6 +120,9 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 			SpawnRotation
 		);
 
+		UE_LOG(LogTemp, Warning, TEXT("SpawnActor Success? %s"),
+			Player ? TEXT("YES") : TEXT("NO"));
+
 		if (Player == nullptr)
 			return;
 
