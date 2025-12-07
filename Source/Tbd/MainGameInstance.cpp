@@ -127,6 +127,7 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 			return;
 
 		Player->bIsMine = false;
+		Player->SetPlayerInfo(PlayerInfo);
 
 		Players.Add(PlayerInfo.object_id(), Player);
 	}
