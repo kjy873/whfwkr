@@ -1,206 +1,60 @@
-﻿Struct.proto(4,1): warning G1A4DC0EC: Import Enum.proto is unused.
-Protocol.proto(4,1): warning G1A4DC0EC: Import Enum.proto is unused.
-  #pragma once
-  #include "Protocol.pb.h"
-  
-  #if UE_BUILD_DEBUG + UE_BUILD_DEVELOPMENT + UE_BUILD_TEST + UE_BUILD_SHIPPING >= 1
-  #include "Tbd.h"
-  #endif
-  
-  using PacketHandlerFunc = std::function<bool(PacketSessionRef&, BYTE*, int32)>;
-  extern PacketHandlerFunc GPacketHandler[UINT16_MAX];
-  
-  enum : uint16
-  {
-  	PKT_C_LOGIN = 1000,
-  	PKT_S_LOGIN = 1001,
-  	PKT_C_ENTER_GAME = 1002,
-  	PKT_S_ENTER_GAME = 1003,
-  	PKT_C_CHAT = 1004,
-  	PKT_S_CHAT = 1005,
-  };
-  
-  // Custom Handlers
-  bool Handle_INVALID(PacketSessionRef& session, BYTE* buffer, int32 len);
-  bool Handle_S_LOGIN(PacketSessionRef& session, Protocol::S_LOGIN& pkt);
-  bool Handle_S_ENTER_GAME(PacketSessionRef& session, Protocol::S_ENTER_GAME& pkt);
-  bool Handle_S_CHAT(PacketSessionRef& session, Protocol::S_CHAT& pkt);
-  
-  class ClientPacketHandler
-  {
-  public:
-  	static void Init()
-  	{
-  		for (int32 i = 0; i < UINT16_MAX; i++)
-  			GPacketHandler[i] = Handle_INVALID;
-  		GPacketHandler[PKT_S_LOGIN] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_LOGIN>(Handle_S_LOGIN, session, buffer, len); };
-  		GPacketHandler[PKT_S_ENTER_GAME] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_ENTER_GAME>(Handle_S_ENTER_GAME, session, buffer, len); };
-  		GPacketHandler[PKT_S_CHAT] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_CHAT>(Handle_S_CHAT, session, buffer, len); };
-  	}
-  
-  	static bool HandlePacket(PacketSessionRef& session, BYTE* buffer, int32 len)
-  	{
-  		PacketHeader* header = reinterpret_cast<PacketHeader*>(buffer);
-  		return GPacketHandler[header->id](session, buffer, len);
-  	}
-  	static SendBufferRef MakeSendBuffer(Protocol::C_LOGIN& pkt) { return MakeSendBuffer(pkt, PKT_C_LOGIN); }
-  	static SendBufferRef MakeSendBuffer(Protocol::C_ENTER_GAME& pkt) { return MakeSendBuffer(pkt, PKT_C_ENTER_GAME); }
-  	static SendBufferRef MakeSendBuffer(Protocol::C_CHAT& pkt) { return MakeSendBuffer(pkt, PKT_C_CHAT); }
-  
-  private:
-  	template<typename PacketType, typename ProcessFunc>
-  	static bool HandlePacket(ProcessFunc func, PacketSessionRef& session, BYTE* buffer, int32 len)
-  	{
-  		PacketType pkt;
-  		if (pkt.ParseFromArray(buffer + sizeof(PacketHeader), len - sizeof(PacketHeader)) == false)
-  			return false;
-  
-  		return func(session, pkt);
-  	}
-  
-  	template<typename T>
-  	static SendBufferRef MakeSendBuffer(T& pkt, uint16 pktId)
-  	{
-  		const uint16 dataSize = static_cast<uint16>(pkt.ByteSizeLong());
-  		const uint16 packetSize = dataSize + sizeof(PacketHeader);
-  
-  #if UE_BUILD_DEBUG + UE_BUILD_DEVELOPMENT + UE_BUILD_TEST + UE_BUILD_SHIPPING >= 1
-  		SendBufferRef sendBuffer = MakeShared<SendBuffer>(packetSize);
-  #else
-  		SendBufferRef sendBuffer = make_shared<SendBuffer>(packetSize);
-  #endif
-  
-  		PacketHeader* header = reinterpret_cast<PacketHeader*>(sendBuffer->Buffer());
-  		header->size = packetSize;
-  		header->id = pktId;
-  		pkt.SerializeToArray(&header[1], dataSize);
-  		sendBuffer->Close(packetSize);
-  
-  		return sendBuffer;
-  	}
-  };
-  #pragma once
-  #include "Protocol.pb.h"
-  
-  #if UE_BUILD_DEBUG + UE_BUILD_DEVELOPMENT + UE_BUILD_TEST + UE_BUILD_SHIPPING >= 1
-  #include "Tbd.h"
-  #endif
-  
-  using PacketHandlerFunc = std::function<bool(PacketSessionRef&, BYTE*, int32)>;
-  extern PacketHandlerFunc GPacketHandler[UINT16_MAX];
-  
-  enum : uint16
-  {
-  	PKT_C_LOGIN = 1000,
-  	PKT_S_LOGIN = 1001,
-  	PKT_C_ENTER_GAME = 1002,
-  	PKT_S_ENTER_GAME = 1003,
-  	PKT_C_CHAT = 1004,
-  	PKT_S_CHAT = 1005,
-  };
-  
-  // Custom Handlers
-  bool Handle_INVALID(PacketSessionRef& session, BYTE* buffer, int32 len);
-  bool Handle_C_LOGIN(PacketSessionRef& session, Protocol::C_LOGIN& pkt);
-  bool Handle_C_ENTER_GAME(PacketSessionRef& session, Protocol::C_ENTER_GAME& pkt);
-  bool Handle_C_CHAT(PacketSessionRef& session, Protocol::C_CHAT& pkt);
-  
-  class ServerPacketHandler
-  {
-  public:
-  	static void Init()
-  	{
-  		for (int32 i = 0; i < UINT16_MAX; i++)
-  			GPacketHandler[i] = Handle_INVALID;
-  		GPacketHandler[PKT_C_LOGIN] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::C_LOGIN>(Handle_C_LOGIN, session, buffer, len); };
-  		GPacketHandler[PKT_C_ENTER_GAME] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::C_ENTER_GAME>(Handle_C_ENTER_GAME, session, buffer, len); };
-  		GPacketHandler[PKT_C_CHAT] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::C_CHAT>(Handle_C_CHAT, session, buffer, len); };
-  	}
-  
-  	static bool HandlePacket(PacketSessionRef& session, BYTE* buffer, int32 len)
-  	{
-  		PacketHeader* header = reinterpret_cast<PacketHeader*>(buffer);
-  		return GPacketHandler[header->id](session, buffer, len);
-  	}
-  	static SendBufferRef MakeSendBuffer(Protocol::S_LOGIN& pkt) { return MakeSendBuffer(pkt, PKT_S_LOGIN); }
-  	static SendBufferRef MakeSendBuffer(Protocol::S_ENTER_GAME& pkt) { return MakeSendBuffer(pkt, PKT_S_ENTER_GAME); }
-  	static SendBufferRef MakeSendBuffer(Protocol::S_CHAT& pkt) { return MakeSendBuffer(pkt, PKT_S_CHAT); }
-  
-  private:
-  	template<typename PacketType, typename ProcessFunc>
-  	static bool HandlePacket(ProcessFunc func, PacketSessionRef& session, BYTE* buffer, int32 len)
-  	{
-  		PacketType pkt;
-  		if (pkt.ParseFromArray(buffer + sizeof(PacketHeader), len - sizeof(PacketHeader)) == false)
-  			return false;
-  
-  		return func(session, pkt);
-  	}
-  
-  	template<typename T>
-  	static SendBufferRef MakeSendBuffer(T& pkt, uint16 pktId)
-  	{
-  		const uint16 dataSize = static_cast<uint16>(pkt.ByteSizeLong());
-  		const uint16 packetSize = dataSize + sizeof(PacketHeader);
-  
-  #if UE_BUILD_DEBUG + UE_BUILD_DEVELOPMENT + UE_BUILD_TEST + UE_BUILD_SHIPPING >= 1
-  		SendBufferRef sendBuffer = MakeShared<SendBuffer>(packetSize);
-  #else
-  		SendBufferRef sendBuffer = make_shared<SendBuffer>(packetSize);
-  #endif
-  
-  		PacketHeader* header = reinterpret_cast<PacketHeader*>(sendBuffer->Buffer());
-  		header->size = packetSize;
-  		header->id = pktId;
-  		pkt.SerializeToArray(&header[1], dataSize);
-  		sendBuffer->Close(packetSize);
-  
-  		return sendBuffer;
-  	}
-  };
-  C:Enum.pb.h
-  1개 파일이 복사되었습니다.
-  C:Enum.pb.cc
-  1개 파일이 복사되었습니다.
-  C:Struct.pb.h
-  1개 파일이 복사되었습니다.
-  C:Struct.pb.cc
-  1개 파일이 복사되었습니다.
-  C:Protocol.pb.h
-  1개 파일이 복사되었습니다.
-  C:Protocol.pb.cc
-  1개 파일이 복사되었습니다.
-  C:ServerPacketHandler.h
-  1개 파일이 복사되었습니다.
-  C:Enum.pb.h
-  1개 파일이 복사되었습니다.
-  C:Enum.pb.cc
-  1개 파일이 복사되었습니다.
-  C:Struct.pb.h
-  1개 파일이 복사되었습니다.
-  C:Struct.pb.cc
-  1개 파일이 복사되었습니다.
-  C:Protocol.pb.h
-  1개 파일이 복사되었습니다.
-  C:Protocol.pb.cc
-  1개 파일이 복사되었습니다.
-  C:ClientPacketHandler.h
-  1개 파일이 복사되었습니다.
-  C:Enum.pb.h
-  1개 파일이 복사되었습니다.
-  C:Enum.pb.cc
-  1개 파일이 복사되었습니다.
-  C:Struct.pb.h
-  1개 파일이 복사되었습니다.
-  C:Struct.pb.cc
-  1개 파일이 복사되었습니다.
-  C:Protocol.pb.h
-  1개 파일이 복사되었습니다.
-  C:Protocol.pb.cc
-  1개 파일이 복사되었습니다.
-  C:ClientPacketHandler.h
-  1개 파일이 복사되었습니다.
-  계속하려면 아무 키나 누르십시오 . . . 
+﻿  'protoc.exe' is not recognized as an internal or external command,
+  operable program or batch file.
+  'protoc.exe' is not recognized as an internal or external command,
+  operable program or batch file.
+  'protoc.exe' is not recognized as an internal or external command,
+  operable program or batch file.
+  'GenPackets.exe' is not recognized as an internal or external command,
+  operable program or batch file.
+  'GenPackets.exe' is not recognized as an internal or external command,
+  operable program or batch file.
+  Press any key to continue . . . 
+  File not found - Enum.pb.h
+  0 File(s) copied
+  File not found - Enum.pb.cc
+  0 File(s) copied
+  File not found - Struct.pb.h
+  0 File(s) copied
+  File not found - Struct.pb.cc
+  0 File(s) copied
+  File not found - Protocol.pb.h
+  0 File(s) copied
+  File not found - Protocol.pb.cc
+  0 File(s) copied
+  File not found - ServerPacketHandler.h
+  0 File(s) copied
+  File not found - Enum.pb.h
+  0 File(s) copied
+  File not found - Enum.pb.cc
+  0 File(s) copied
+  File not found - Struct.pb.h
+  0 File(s) copied
+  File not found - Struct.pb.cc
+  0 File(s) copied
+  File not found - Protocol.pb.h
+  0 File(s) copied
+  File not found - Protocol.pb.cc
+  0 File(s) copied
+  File not found - ClientPacketHandler.h
+  0 File(s) copied
+  File not found - Enum.pb.h
+  0 File(s) copied
+  File not found - Enum.pb.cc
+  0 File(s) copied
+  File not found - Struct.pb.h
+  0 File(s) copied
+  File not found - Struct.pb.cc
+  0 File(s) copied
+  File not found - Protocol.pb.h
+  0 File(s) copied
+  File not found - Protocol.pb.cc
+  0 File(s) copied
+  File not found - ClientPacketHandler.h
+  0 File(s) copied
+  Could Not Find D:\Source\whfwkr\Server\Common\protoc-21.12-win64\bin\*.pb.h
+  Could Not Find D:\Source\whfwkr\Server\Common\protoc-21.12-win64\bin\*.pb.cc
+  Could Not Find D:\Source\whfwkr\Server\Common\protoc-21.12-win64\bin\*.h
+  Press any key to continue . . . 
   pch.cpp
   ClientPacketHandler.cpp
   DummyClient.cpp
@@ -209,4 +63,8 @@ Protocol.proto(4,1): warning G1A4DC0EC: Import Enum.proto is unused.
   Protocol.pb.cc
   Struct.pb.cc
   코드를 생성하고 있습니다...
-LINK : fatal error LNK1104: 'Protobuf\Debug\libprotobufd.lib' 파일을 열 수 없습니다.
+DummyClient.obj : error LNK2019: "bool __cdecl Handle_S_LEAVE_GAME(class std::shared_ptr<class PacketSession> &,class Protocol::S_LEAVE_GAME &)" (?Handle_S_LEAVE_GAME@@YA_NAEAV?$shared_ptr@VPacketSession@@@std@@AEAVS_LEAVE_GAME@Protocol@@@Z)"public: __cdecl `public: static void __cdecl ClientPacketHandler::Init(void)'::`2'::<lambda_3>::operator()(class std::shared_ptr<class PacketSession> &,unsigned char *,int)const " (??R<lambda_3>@?1??Init@ClientPacketHandler@@SAXXZ@QEBA@AEAV?$shared_ptr@VPacketSession@@@std@@PEAEH@Z) 함수에서 참조되는 확인할 수 없는 외부 기호
+DummyClient.obj : error LNK2019: "bool __cdecl Handle_S_SPAWN(class std::shared_ptr<class PacketSession> &,class Protocol::S_SPAWN &)" (?Handle_S_SPAWN@@YA_NAEAV?$shared_ptr@VPacketSession@@@std@@AEAVS_SPAWN@Protocol@@@Z)"public: __cdecl `public: static void __cdecl ClientPacketHandler::Init(void)'::`2'::<lambda_4>::operator()(class std::shared_ptr<class PacketSession> &,unsigned char *,int)const " (??R<lambda_4>@?1??Init@ClientPacketHandler@@SAXXZ@QEBA@AEAV?$shared_ptr@VPacketSession@@@std@@PEAEH@Z) 함수에서 참조되는 확인할 수 없는 외부 기호
+DummyClient.obj : error LNK2019: "bool __cdecl Handle_S_DESPAWN(class std::shared_ptr<class PacketSession> &,class Protocol::S_DESPAWN &)" (?Handle_S_DESPAWN@@YA_NAEAV?$shared_ptr@VPacketSession@@@std@@AEAVS_DESPAWN@Protocol@@@Z)"public: __cdecl `public: static void __cdecl ClientPacketHandler::Init(void)'::`2'::<lambda_5>::operator()(class std::shared_ptr<class PacketSession> &,unsigned char *,int)const " (??R<lambda_5>@?1??Init@ClientPacketHandler@@SAXXZ@QEBA@AEAV?$shared_ptr@VPacketSession@@@std@@PEAEH@Z) 함수에서 참조되는 확인할 수 없는 외부 기호
+DummyClient.obj : error LNK2019: "bool __cdecl Handle_S_MOVE(class std::shared_ptr<class PacketSession> &,class Protocol::S_MOVE &)" (?Handle_S_MOVE@@YA_NAEAV?$shared_ptr@VPacketSession@@@std@@AEAVS_MOVE@Protocol@@@Z)"public: __cdecl `public: static void __cdecl ClientPacketHandler::Init(void)'::`2'::<lambda_6>::operator()(class std::shared_ptr<class PacketSession> &,unsigned char *,int)const " (??R<lambda_6>@?1??Init@ClientPacketHandler@@SAXXZ@QEBA@AEAV?$shared_ptr@VPacketSession@@@std@@PEAEH@Z) 함수에서 참조되는 확인할 수 없는 외부 기호
+D:\Source\whfwkr\Server\Binaries\Debug\DummyClient.exe : fatal error LNK1120: 4개의 확인할 수 없는 외부 참조입니다.
