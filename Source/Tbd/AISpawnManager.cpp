@@ -108,10 +108,21 @@ bool AAISpawnManager::SpawnEnemies(const ECollisionChannel LandscapeChannel) {
 void AAISpawnManager::DisableAllEnemies() {
 	for (auto& R : Regions) {
 		for (auto& E : R.SpawnedEnemies) {
-			//E->SetActorHiddenInGame(true);
-			//E->SetActorEnableCollision(false);
+			E->SetActorHiddenInGame(true);
+			E->SetActorEnableCollision(false);
 			E->SetActorTickEnabled(false);
 			//E->DisableComponentsSimulatePhysics();
+		}
+	}
+}
+
+void AAISpawnManager::EnableAllEnemies() {
+	for (auto& R : Regions) {
+		for (auto& E : R.SpawnedEnemies) {
+			E->SetActorHiddenInGame(false);
+			E->SetActorEnableCollision(true);
+			E->SetActorTickEnabled(true);
+			//E->EnableComponentsSimulatePhysics();
 		}
 	}
 }

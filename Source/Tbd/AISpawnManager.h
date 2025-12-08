@@ -110,6 +110,9 @@ public:
 	void DisableAllEnemies();
 
 	UFUNCTION(BlueprintCallable, Category = "AISpawnManager")
+	void EnableAllEnemies();
+
+	UFUNCTION(BlueprintCallable, Category = "AISpawnManager")
 	void GetWorldPlayers(UWorld* WorldActor, TArray<AActor*>& PlayerArray, TSubclassOf<AActor> CharacterClass) {
 		UGameplayStatics::GetAllActorsOfClass(WorldActor, CharacterClass, PlayerArray);
 	}
