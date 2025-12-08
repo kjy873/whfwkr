@@ -110,6 +110,6 @@ void UActionComponent::DebugPrint(const FString& Message) {
 
 EPlayerState UActionComponent::ActionTagToState(const FGameplayTag& ActionTag) {
 	if (ActionTag == FGameplayTag::RequestGameplayTag("ActionTag.Knight.Attack1")) return EPlayerState::Attack;
-	if (ActionTag == FGameplayTag::RequestGameplayTag("ActionTag.Mage.Attack1")) return EPlayerState::Attack;
+	//if (ActionTag == FGameplayTag::RequestGameplayTag("ActionTag.Mage.Attack1")) return EPlayerState::Attack;
     else return EPlayerState::Idle;
 }

@@ -144,6 +144,8 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 
 	else
 	{
+		// 충돌 방지를 위해 약간 옆으로 오프셋
+		SpawnLocation += FVector(30.f, 0.f, 0.f);
 		FRotator SpawnRotation(0.f, PlayerInfo.yaw(), 0.f);
 
 		APlayerCharacter* Player = World->SpawnActor<APlayerCharacter>(
@@ -168,6 +170,7 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 
 void UMainGameInstance::HandleSpawn(const Protocol::S_ENTER_GAME& EnterGamePkt)
 {
+	MyObjectId = EnterGamePkt.player().object_id();
 	HandleSpawn(EnterGamePkt.player(), true);
 }
 
@@ -175,7 +178,8 @@ void UMainGameInstance::HandleSpawn(const Protocol::S_SPAWN& SpawnPkt)
 {
 	for (auto& Player : SpawnPkt.players())
 	{
-		HandleSpawn(Player, false);
+		const bool bIsMine = (Player.object_id() == MyObjectId);
+		HandleSpawn(Player, bIsMine);
 	}
 }
 

@@ -27,6 +27,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void HandleRecvPackets();
 
+	UPROPERTY()
+	uint64 MyObjectId = 0;
+
 	void SendPacket(SendBufferRef SendBuffer);
 
 public:
