@@ -34,6 +34,15 @@ struct FAttribute
 	float MaxMana;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attribute")
+	float Experience;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attribute")
+	float MaxExperience;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attribute")
+	int Level;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attribute")
 	int Strength;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attribute")
@@ -52,6 +61,9 @@ struct FAttribute
 		, MaxStamina(100.f)
 		, Mana(100.f)
 		, MaxMana(100.f)
+		, Experience(0.f)
+		, MaxExperience(100.f)
+		, Level(1)
 		, Strength(1)
 		, Agility(1)
 		, Intelligence(1)
