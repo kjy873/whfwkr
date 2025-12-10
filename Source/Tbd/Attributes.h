@@ -72,6 +72,38 @@ struct FAttribute
 	{
 	}
 
+	inline float GetHealthPercent() const { return MaxHealth > 0.f ? Health / MaxHealth : 0.f; }
+	inline float GetStaminaPercent() const { return MaxStamina > 0.f ? Stamina / MaxStamina : 0.f; }
+	inline float GetManaPercent() const { return MaxMana > 0.f ? Mana / MaxMana : 0.f; }
+	inline float GetExperiencePercent() const { return MaxExperience > 0.f ? Experience / MaxExperience : 0.f; }
+
+	inline void AddMaxHealth(float Value) { MaxHealth += Value; Health += Value; }
+	inline void AddMaxStamina(float Value) { MaxStamina += Value; Stamina += Value; }
+	inline void AddMaxMana(float Value) { MaxMana += Value; Mana += Value; }
+	inline void AddHealth(float Value) { Health = FMath::Clamp(Health + Value, 0.f, MaxHealth); }
+	inline void AddStamina(float Value) { Stamina = FMath::Clamp(Stamina + Value, 0.f, MaxStamina); }
+	inline void AddMana(float Value) { Mana = FMath::Clamp(Mana + Value, 0.f, MaxMana); }
+
+	inline void SubtractHealth(float Value) { Health = FMath::Clamp(Health - Value, 0.f, MaxHealth); }
+	inline void SubtractStamina(float Value) { Stamina = FMath::Clamp(Stamina - Value, 0.f, MaxStamina); }
+	inline void SubtractMana(float Value) { Mana = FMath::Clamp(Mana - Value, 0.f, MaxMana); }
+
+	inline bool AddExperience(float Value)
+	{
+		bool LevelUp = false;
+
+		Experience += Value;
+		while (Experience >= MaxExperience) {
+			Experience -= MaxExperience;
+			Level++;
+			MaxExperience *= 1.1f;
+			LevelUp = true;
+		}
+
+		return LevelUp;
+	}
+
+
 };
 
 UENUM(BlueprintType)
