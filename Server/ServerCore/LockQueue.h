@@ -24,8 +24,12 @@ public:
 	void PopAll(OUT vector<T>& items)
 	{
 		WRITE_LOCK;
-		while (T item = Pop())
+		while (_items.empty() == false)
+		{
+			T item = _items.front();
+			_items.pop();
 			items.push_back(item);
+		}
 	}
 
 	void Clear()

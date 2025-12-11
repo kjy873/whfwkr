@@ -13,32 +13,47 @@
 PacketSession::PacketSession(class FSocket* Socket) : Socket(Socket)
 {
 	ClientPacketHandler::Init();
-	UE_LOG(LogTemp, Error, TEXT("Å¬¶óÀÌ¾ðÆ®ÆÐÅ¶ÇÚµé·¯ init"));
+	UE_LOG(LogTemp, Error, TEXT("Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ®ï¿½ï¿½Å¶ï¿½Úµé·¯ init"));
 }
 
 PacketSession::~PacketSession()
 {
 	Disconnect();
-	UE_LOG(LogTemp, Error, TEXT("Å¬¶óÀÌ¾ðÆ®ÆÐÅ¶ÇÚµé·¯ disconnect"));
+	UE_LOG(LogTemp, Error, TEXT("Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ®ï¿½ï¿½Å¶ï¿½Úµé·¯ disconnect"));
 }
 
 void PacketSession::Run()
 {
 	RecvWorkerThread = MakeShared<RecvWorker>(Socket, AsShared());
 	SendWorkerThread = MakeShared<SendWorker>(Socket, AsShared());
-	UE_LOG(LogTemp, Error, TEXT("ÆÐÅ¶¼¼¼Ç ·±"));
+	UE_LOG(LogTemp, Error, TEXT("ï¿½ï¿½Å¶ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½"));
 }
 
 void PacketSession::HandleRecvPackets()
 {
+	int32 PacketCount = 0;
 	while (true)
 	{
 		TArray<uint8> Packet;
 		if (RecvPacketQueue.Dequeue(OUT Packet) == false)
 			break;
 		
+		PacketCount++;
 		PacketSessionRef ThisPtr = AsShared();
+		
+		if (Packet.Num() >= sizeof(PacketHeader))
+		{
+			PacketHeader* Header = reinterpret_cast<PacketHeader*>(Packet.GetData());
+			UE_LOG(LogTemp, Warning, TEXT("[PacketSession::HandleRecvPackets] Processing packet ID=%d, Size=%d"), 
+				Header->id, Header->size);
+		}
+		
 		ClientPacketHandler::HandlePacket(ThisPtr, Packet.GetData(), Packet.Num());
+	}
+	
+	if (PacketCount > 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[PacketSession::HandleRecvPackets] Processed %d packets"), PacketCount);
 	}
 }
 

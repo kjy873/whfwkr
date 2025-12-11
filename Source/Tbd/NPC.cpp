@@ -15,7 +15,7 @@ ANPC::ANPC()
 void ANPC::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 }
 
 // Called every frame
