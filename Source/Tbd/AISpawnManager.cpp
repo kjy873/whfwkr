@@ -127,9 +127,9 @@ void AAISpawnManager::EnableAllEnemies() {
 	}
 }
 
-// AI È°¼ºÈ­
-// ÇÏµå °æ°è ³»¿¡ ÇÃ·¹ÀÌ¾î°¡ µé¾î¿À¸é ¿ÏÀü È°¼ºÈ­
-// ¼ÒÇÁÆ® °æ°è ³»¿¡ ÇÃ·¹ÀÌ¾î°¡ µé¾î¿À¸é ÀÏºÎ È°¼ºÈ­
+// AI È°ï¿½ï¿½È­
+// ï¿½Ïµï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î°¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È°ï¿½ï¿½È­
+// ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î°¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ïºï¿½ È°ï¿½ï¿½È­
 
 void AAISpawnManager::UpdateRegionActivation() {
 
@@ -138,7 +138,7 @@ void AAISpawnManager::UpdateRegionActivation() {
 	for (const auto& Player : PlayerActors) {
 		const FVector PlayerLocation = Player->GetActorLocation();
 
-		// ÇÏµå °æ°è °Ë»ç
+		// ï¿½Ïµï¿½ ï¿½ï¿½ï¿½ ï¿½Ë»ï¿½
 		for (int i = 0; i < Regions.Num(); i++) {
 			if (Regions[i].RangeX.GetLowerBoundValue() < PlayerLocation.X &&
 				PlayerLocation.X < Regions[i].RangeX.GetUpperBoundValue() &&
@@ -147,14 +147,14 @@ void AAISpawnManager::UpdateRegionActivation() {
 			{
 				Regions[i].HardActivation = true;
 				for (auto& E : Regions[i].SpawnedEnemies) {
-					// ÇÏµå È°¼ºÈ­
+					// ï¿½Ïµï¿½ È°ï¿½ï¿½È­
 					EnableEnemy(E);
 				}
 
 				const int CoreRegionIndexX = i / RegionCountY;
 				const int CoreRegionIndexY = i % RegionCountY;
 
-				// ¼ÒÇÁÆ® °æ°è °Ë»ç
+				// ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ ï¿½Ë»ï¿½
 				for (int di = -1; di <= 1; di++) {
 					for (int dj = -1; dj <= 1; dj++) {
 
@@ -169,9 +169,9 @@ void AAISpawnManager::UpdateRegionActivation() {
 							const int NeighborIndex = NeighborIndexX * RegionCountY + NeighborIndexY;
 							Regions[NeighborIndex].SoftActivation = true;
 
-							// ¼ÒÇÁÆ® È°¼ºÈ­
-							// ±Ùµ¥ ¼ÒÇÁÆ® È°¼ºÈ­ ÇÏ±â Àü¿¡ ÇÏµå È°¼ºÈ­°¡ ÀÌ¹Ì µÇ¾îÀÖ´Â Áö °Ë»çÇØ¾ßÇÔ
-							// ÇÔ¼ö
+							// ï¿½ï¿½ï¿½ï¿½Æ® È°ï¿½ï¿½È­
+							// ï¿½Ùµï¿½ ï¿½ï¿½ï¿½ï¿½Æ® È°ï¿½ï¿½È­ ï¿½Ï±ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ïµï¿½ È°ï¿½ï¿½È­ï¿½ï¿½ ï¿½Ì¹ï¿½ ï¿½Ç¾ï¿½ï¿½Ö´ï¿½ ï¿½ï¿½ ï¿½Ë»ï¿½ï¿½Ø¾ï¿½ï¿½ï¿½
+							// ï¿½Ô¼ï¿½
 							if (!Regions[NeighborIndex].HardActivation) {
 								for (auto& E : Regions[NeighborIndex].SpawnedEnemies) {
 									EnableEnemy(E);

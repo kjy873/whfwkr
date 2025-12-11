@@ -80,3 +80,57 @@ bool Handle_S_CHAT(PacketSessionRef& session, Protocol::S_CHAT& pkt)
 
 	return true;
 }
+
+bool Handle_S_SPAWN_MOB(PacketSessionRef& session, Protocol::S_SPAWN_MOB& pkt)
+{
+	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_SPAWN_MOB] ===== PACKET RECEIVED ====="));
+	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_SPAWN_MOB] Received %d mobs"), pkt.mobs_size());
+
+	if (GWorld == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Handle_S_SPAWN_MOB] GWorld is nullptr!"));
+		return false;
+	}
+
+	auto* GameInstance = Cast<UMainGameInstance>(GWorld->GetGameInstance());
+	if (GameInstance == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Handle_S_SPAWN_MOB] GameInstance is nullptr!"));
+		return false;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_SPAWN_MOB] Calling HandleSpawnMob..."));
+		GameInstance->HandleSpawnMob(pkt);
+	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_SPAWN_MOB] HandleSpawnMob returned"));
+
+	return false;
+}
+
+bool Handle_S_DESPAWN_MOB(PacketSessionRef& session, Protocol::S_DESPAWN_MOB& pkt)
+{
+	if (auto* GameInstance = Cast<UMainGameInstance>(GWorld->GetGameInstance()))
+	{
+		GameInstance->HandleDespawnMob(pkt);
+	}
+
+	return true;
+}
+
+bool Handle_S_MOVE_MOB(PacketSessionRef& session, Protocol::S_MOVE_MOB& pkt)
+{
+	if (auto* GameInstance = Cast<UMainGameInstance>(GWorld->GetGameInstance()))
+	{
+		GameInstance->HandleMoveMob(pkt);
+	}
+
+	return false;
+}
+
+bool Handle_S_DAMAGE_MOB(PacketSessionRef& session, Protocol::S_DAMAGE_MOB& pkt)
+{
+	if (auto* GameInstance = Cast<UMainGameInstance>(GWorld->GetGameInstance()))
+	{
+		GameInstance->HandleDamageMob(pkt);
+	}
+	return false;
+}
