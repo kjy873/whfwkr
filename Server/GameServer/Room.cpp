@@ -21,7 +21,7 @@ void Room::Init()
 
 
 void Room::UpdateTick()
-{	
+{
 	// Protocol::S_MOVE_MOB pkt;
 	// 
 	// for (auto& kv : _mobs)
@@ -58,7 +58,7 @@ void Room::Clear()
 			player->room.reset();
 		}
 	}
-	
+
 	_players.clear();
 }
 
@@ -66,7 +66,7 @@ bool Room::HandleEnterPlayerLocked(PlayerRef player)
 {
 	WRITE_LOCK;
 
-	cout << "[SERVER] EnterPlayer object_id = "<< player->playerInfo->object_id() << endl;
+	cout << "[SERVER] EnterPlayer object_id = " << player->playerInfo->object_id() << endl;
 
 	bool success = EnterPlayer(player);
 
@@ -81,7 +81,7 @@ bool Room::HandleEnterPlayerLocked(PlayerRef player)
 
 	player->playerInfo->set_x(centerX);
 	player->playerInfo->set_y(centerY);
-	player->playerInfo->set_z(centerZ); 
+	player->playerInfo->set_z(centerZ);
 	player->playerInfo->set_yaw(Utils::GetRandom(0.f, 360.f));
 
 
@@ -141,15 +141,15 @@ bool Room::HandleEnterPlayerLocked(PlayerRef player)
 
 		if (spawnMobPkt.mobs_size() > 0)
 		{
-			cout << "[Room::HandleEnterPlayerLocked] Sending " << spawnMobPkt.mobs_size() 
-				 << " existing mobs to new player" << endl;
+			cout << "[Room::HandleEnterPlayerLocked] Sending " << spawnMobPkt.mobs_size()
+				<< " existing mobs to new player" << endl;
 			SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(spawnMobPkt);
 			if (auto session = player->session.lock())
 				session->Send(sendBuffer);
 		}
 	}
 
-	
+
 	return success;
 }
 
@@ -195,7 +195,7 @@ void Room::HandleMoveLocked(Protocol::C_MOVE& pkt)
 
 	PlayerRef& player = _players[objectId];
 	player->playerInfo->CopyFrom(pkt.info());
-			
+
 	{
 		Protocol::S_MOVE movePkt;
 		{
@@ -249,7 +249,7 @@ void Room::Broadcast(SendBufferRef sendBuffer, uint64 exceptId)
 			sentCount++;
 		}
 	}
-	
+
 	if (sentCount == 0)
 	{
 		cout << "[Room::Broadcast] WARNING: No players to send packet to!" << endl;
@@ -284,13 +284,13 @@ void Room::SpawnRandomMobs()
 	Protocol::MobInfo* info = pkt.add_mobs();
 	info->CopyFrom(mob->ToInfo());
 
-	cout << "[Room::SpawnRandomMobs] Spawning Mob ID=" << id 
-		 << " at [" << mob->x << ", " << mob->y << ", " << mob->z << "]" << endl;
+	cout << "[Room::SpawnRandomMobs] Spawning Mob ID=" << id
+		<< " at [" << mob->x << ", " << mob->y << ", " << mob->z << "]" << endl;
 	cout << "[Room::SpawnRandomMobs] Player count: " << _players.size() << endl;
 
 	SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
 	Broadcast(sendBuffer);
-	
+
 	cout << "[Room::SpawnRandomMobs] Packet broadcasted" << endl;
 }
 
@@ -314,8 +314,8 @@ void Room::HandleMoveMobLocked(uint64 mobId, float x, float y, float z)
 
 	// 클라들에게 이동 브로드캐스트
 	Protocol::S_MOVE_MOB pkt;
-	Protocol::MobInfo* info = pkt.add_mobs();
-	*info = mob->ToInfo();   // Mob.h의 ToInfo() 그대로 활용
+	Protocol::MobInfo* info = pkt.mutable_mob();
+	*info = mob->ToInfo();
 
 	SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
 

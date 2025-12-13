@@ -1,4 +1,8 @@
 ### UnrealEngine ###
+
+# Debug symbols
+*.pdb
+
 # Visual Studio 2015 user specific files
 .vs/
 
@@ -98,3 +102,6 @@ Build/Android/res/*/*
 # Ignore plugins binaries on deep subfolders
 Plugins/**/Binaries/*
 Plugins/**/Intermediate/*
+*.lastbuildstate
+*.vcxproj
+*.filters

@@ -39,7 +39,10 @@ bool Handle_C_ENTER_GAME(PacketSessionRef& session, Protocol::C_ENTER_GAME& pkt)
 {
 	PlayerRef player = ObjectUtils::CreatePlayer(static_pointer_cast<GameSession>(session));
 
-	GRoom->HandleEnterPlayerLocked(player);
+	GRoom->DoAsync([player]()
+		{
+			GRoom->HandleEnterPlayerLocked(player);
+		});
 
 	return true;
 }
@@ -57,7 +60,10 @@ bool Handle_C_LEAVE_GAME(PacketSessionRef& session, Protocol::C_LEAVE_GAME& pkt)
 	if ( room == nullptr )
 		return false;
 
-	room->HandleLeavePlayerLocked(player);
+	room->DoAsync([room, player]()
+		{
+			room->HandleLeavePlayerLocked(player);
+		});
 
 	return true;
 }
@@ -75,7 +81,12 @@ bool Handle_C_MOVE(PacketSessionRef& session, Protocol::C_MOVE& pkt)
 	if (room == nullptr)
 		return false;
 
-	room->HandleMoveLocked(pkt);
+	Protocol::C_MOVE pktCopy = pkt;
+	room->DoAsync([room, pktCopy]()
+		{
+			Protocol::C_MOVE pkt = pktCopy;
+			room->HandleMoveLocked(pkt);
+		});
 
 	return true;
 }
@@ -101,8 +112,17 @@ bool Handle_C_MOVE_MOB(PacketSessionRef& session, Protocol::C_MOVE_MOB& pkt)
 	if (room == nullptr)
 		return false;
 
-	room->DoAsync(&Room::HandleMoveMobLocked,
-		pkt.objectid(), pkt.x(), pkt.y(), pkt.z());
+	uint64 mobId = pkt.mobid();
+
+	const Protocol::Vector3& pos = pkt.pos();
+	float x = pos.x();
+	float y = pos.y();
+	float z = pos.z();
+
+	room->DoAsync([room, mobId, x, y, z]()
+		{
+			room->HandleMoveMobLocked(mobId, x, y, z);
+		});
 
 	return true;
 }
