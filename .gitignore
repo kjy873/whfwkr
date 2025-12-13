@@ -1,4 +1,8 @@
 ### UnrealEngine ###
+
+# Debug symbols
+*.pdb
+
 # Visual Studio 2015 user specific files
 .vs/
 
