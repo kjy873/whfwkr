@@ -36,49 +36,43 @@ void DoWorkerJob(ServerServiceRef& service)
 
 int main()
 {
-    SetConsoleOutputCP(CP_UTF8);
-    SetConsoleCP(CP_UTF8);
+	SetConsoleOutputCP(CP_UTF8);
+	SetConsoleCP(CP_UTF8);
 
-    ServerPacketHandler::Init();
+	ServerPacketHandler::Init();
+	
+	// 서버 시작 시 Room 초기화 및 ID 생성기 초기화
+	GRoom = make_shared<Room>();
+	GRoom->Init();
+	GRoom->Clear();
+	ObjectUtils::ResetIdGenerator();
 
-    GRoom = make_shared<Room>();
-    ObjectUtils::ResetIdGenerator();
-    GRoom->Init();
+	ServerServiceRef service = make_shared<ServerService>(
+		NetAddress(L"127.0.0.1", 7777),
+		make_shared<IocpCore>(),
+		[=]() { return make_shared<GameSession>(); }, 100);
 
-    GRoom->DoAsync([]()
-        {
-            for (int i = 0; i < 5; i++)
-                GRoom->SpawnRandomMobs();
-        });
+	ASSERT_CRASH(service->Start());
 
-    ServerServiceRef service = make_shared<ServerService>(
-        NetAddress(L"127.0.0.1", 7777),
-        make_shared<IocpCore>(),
-        [=]() { return make_shared<GameSession>(); },
-        100);
+	if (!service->Start())
+	{
+		cout<< "Service Start Failed!" << endl;
+		return -1;
+	}
+	cout << "Server Start!" << endl;
 
-    ASSERT_CRASH(service->Start());
+	for (int32 i = 0; i < 5; i++)
+	{
+		GThreadManager->Launch([&service]()
+			{
+				DoWorkerJob(service);
+			});
+	}
 
-    if (!service->Start())
-    {
-        cout << "Service Start Failed!" << endl;
-        return -1;
-    }
+	while (true)
+	{
+		this_thread::sleep_for(1s);
+	}
 
-    cout << "Server Start!" << endl;
-
-    for (int32 i = 0; i < 5; i++)
-    {
-        GThreadManager->Launch([&service]()
-            {
-                DoWorkerJob(service);
-            });
-    }
-
-    while (true)
-    {
-        this_thread::sleep_for(1s);
-    }
-
-    GThreadManager->Join();
+	GThreadManager->Join();
 }

@@ -549,42 +549,41 @@ void UMainGameInstance::HandleDespawnMob(const Protocol::S_DESPAWN_MOB& Pkt)
 
 void UMainGameInstance::HandleMoveMob(const Protocol::S_MOVE_MOB& Pkt)
 {
-	for (auto& MobInfo : Pkt.mobs())
+	const Protocol::MobInfo& MobInfo = Pkt.mob();
+	const uint64 MobId = MobInfo.mobid();
+	AActor** Found = Monsters.Find(MobId);
+	if (Found == nullptr)
+		return;
+
+	AActor* MobActor = *Found;
+	if (MobActor == nullptr)
+		return;
+
+	// Character인 경우 XY만 업데이트하고 Z는 중력에 맡김
+	if (ACharacter* Character = Cast<ACharacter>(MobActor))
 	{
-		const uint64 MobId = MobInfo.mobid();
-		AActor** Found = Monsters.Find(MobId);
-		if (Found == nullptr)
-			continue;
-
-		AActor* MobActor = *Found;
-		if (MobActor == nullptr)
-			continue;
-
-		// Character인 경우 XY만 업데이트하고 Z는 중력에 맡김
-		if (ACharacter* Character = Cast<ACharacter>(MobActor))
-		{
-			FVector CurrentPos = Character->GetActorLocation();
-			FVector NewPos(MobInfo.pos().x(), MobInfo.pos().y(), CurrentPos.Z); // Z는 현재 위치 유지
-			
-			// XY만 업데이트 (Z는 중력이 처리)
-			Character->SetActorLocation(NewPos, false, nullptr, ETeleportType::None);
-		}
-		else
-		{
-			// Character가 아닌 경우 전체 위치 업데이트
-			FVector NewPos(MobInfo.pos().x(), MobInfo.pos().y(), MobInfo.pos().z());
-			MobActor->SetActorLocation(NewPos);
-		}
+		FVector CurrentPos = Character->GetActorLocation();
+		FVector NewPos(MobInfo.pos().x(), MobInfo.pos().y(), CurrentPos.Z); // Z는 현재 위치 유지
+		
+		// XY만 업데이트 (Z는 중력이 처리)
+		Character->SetActorLocation(NewPos, false, nullptr, ETeleportType::None);
+	}
+	else
+	{
+		// Character가 아닌 경우 전체 위치 업데이트
+		FVector NewPos(MobInfo.pos().x(), MobInfo.pos().y(), MobInfo.pos().z());
+		MobActor->SetActorLocation(NewPos);
 	}
 }
 
 void UMainGameInstance::HandleDamageMob(const Protocol::S_DAMAGE_MOB& Pkt)
 {
 	const uint64 MobId = Pkt.mobid();
-	const int32 NewHp = Pkt.newhp();
+	const int32 Damage = Pkt.damage();
+	const int32 Hp = Pkt.hp();
 
 	if (Monsters.Contains(MobId))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Mob Damaged: ID=%llu HP=%d"), MobId, NewHp);
+		UE_LOG(LogTemp, Warning, TEXT("Mob Damaged: ID=%llu Damage=%d HP=%d"), MobId, Damage, Hp);
 	}
 }
