@@ -9,7 +9,7 @@ AAISpawnManager::AAISpawnManager()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	World = GetWorld();
+	
 
 
 }
@@ -19,6 +19,7 @@ void AAISpawnManager::BeginPlay()
 {
 	Super::BeginPlay();
 
+	World = GetWorld();
 
 	
 }
@@ -85,6 +86,7 @@ bool AAISpawnManager::SpawnEnemies(const ECollisionChannel LandscapeChannel) {
 				FVector(PointX, PointY, PointZ + 1000.f),
 				FRotator(0.0f, FMath::FRandRange(0.f, 360.f), 0.0f)
 			);
+			
 
 			if (SpawnedAI) {
 				SpawnedAI->AddActorWorldOffset(FVector(0.0f, 0.0f, -2000.0f), true);
@@ -98,8 +100,6 @@ bool AAISpawnManager::SpawnEnemies(const ECollisionChannel LandscapeChannel) {
 			
 		}
 	}
-
-
 
 	return (Total == RegionTotal);
 
@@ -134,8 +134,10 @@ void AAISpawnManager::EnableAllEnemies() {
 void AAISpawnManager::UpdateRegionActivation() {
 
 	if (PlayerActors.IsEmpty()) return;
+
 	
 	for (const auto& Player : PlayerActors) {
+		//if (WeakPlayer.IsValid()) if (AActor* Player = WeakPlayer.Get())
 		const FVector PlayerLocation = Player->GetActorLocation();
 
 		// �ϵ� ��� �˻�
@@ -146,9 +148,9 @@ void AAISpawnManager::UpdateRegionActivation() {
 				PlayerLocation.Y < Regions[i].RangeY.GetUpperBoundValue())
 			{
 				Regions[i].HardActivation = true;
-				for (auto& E : Regions[i].SpawnedEnemies) {
+				for (auto& WeakE : Regions[i].SpawnedEnemies) {
 					// �ϵ� Ȱ��ȭ
-					EnableEnemy(E);
+					if (WeakE.IsValid()) { if (AActor* E = WeakE.Get()) EnableEnemy(E); }
 				}
 
 				const int CoreRegionIndexX = i / RegionCountY;
@@ -173,8 +175,8 @@ void AAISpawnManager::UpdateRegionActivation() {
 							// �ٵ� ����Ʈ Ȱ��ȭ �ϱ� ���� �ϵ� Ȱ��ȭ�� �̹� �Ǿ��ִ� �� �˻��ؾ���
 							// �Լ�
 							if (!Regions[NeighborIndex].HardActivation) {
-								for (auto& E : Regions[NeighborIndex].SpawnedEnemies) {
-									EnableEnemy(E);
+								for (auto& WeakE : Regions[NeighborIndex].SpawnedEnemies) {
+									if (WeakE.IsValid()) { if (AActor* E = WeakE.Get()) EnableEnemy(E); }
 								}
 							} 
 						}
@@ -185,6 +187,16 @@ void AAISpawnManager::UpdateRegionActivation() {
 			}
 		}
 
+	}
+
+	for (int i = 0; i < Regions.Num(); i++) {
+		if (!Regions[i].HardActivation && !Regions[i].SoftActivation) {
+			for (auto& WeakE : Regions[i].SpawnedEnemies) {
+				if (WeakE.IsValid()) { if (AActor* E = WeakE.Get()) DisableEnemy(E); }
+			}
+		}
+		Regions[i].HardActivation = false;
+		Regions[i].SoftActivation = false;
 	}
 
 }
@@ -203,10 +215,18 @@ FTimerHandle& AAISpawnManager::SetUpdateTimer(FTimerHandle& TimerHandle) {
 		TimerHandle,
 		this,
 		&AAISpawnManager::Update,
-		2.0f,
+		5.0f,
 		true,
 		1.0f
 	);
 
 	return TimerHandle;
+}
+
+void AAISpawnManager::EndPlay(const EEndPlayReason::Type EndPlayReason) {
+
+	Super::EndPlay(EndPlayReason);
+
+	UpdateTimerHandle.Invalidate();
+	
 }
