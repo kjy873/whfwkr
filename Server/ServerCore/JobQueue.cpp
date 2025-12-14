@@ -13,7 +13,11 @@ void JobQueue::Push(JobRef job, bool pushOnly)
 
 	if (prevCount == 0)
 	{
-		if (LCurrentJobQueue == nullptr && pushOnly == false)
+		if (LCurrentJobQueue == this || pushOnly == true)
+		{
+			GGlobalQueue->Push(shared_from_this());
+		}
+		else if (LCurrentJobQueue == nullptr)
 		{
 			Execute();
 		}

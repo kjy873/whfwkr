@@ -11,6 +11,10 @@
 #include "ClientPacketHandler.h"
 #include "Player/MyPlayerCharacter.h"
 #include "Player/UC_NetworkPlayerComponent.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Engine/World.h"
+#include "DrawDebugHelpers.h"
 
 void UMainGameInstance::ConnectToGameServer()
 {
@@ -79,10 +83,34 @@ void UMainGameInstance::DisconnectToGameServer()
 	SEND_PACKET(LeavePkt);
 }
 
+void UMainGameInstance::Init()
+{
+	Super::Init();
+
+	ClientPacketHandler::Init();
+
+	if (auto* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(
+			RecvPacketsTimerHandle,
+			this,
+			&UMainGameInstance::HandleRecvPackets,
+			0.0f,
+			true 
+		);
+		UE_LOG(LogTemp, Warning, TEXT("[MainGameInstance::Init] RecvPackets timer started"));
+	}
+}
+
 void UMainGameInstance::HandleRecvPackets()
 {
 	if ( Socket == nullptr || GameServerSession == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[HandleRecvPackets] Socket or Session is nullptr"));
 		return;
+	}
+	
+	UE_LOG(LogTemp, VeryVerbose, TEXT("[HandleRecvPackets] Calling HandleRecvPackets..."));
 	GameServerSession->HandleRecvPackets();
 }
 
@@ -144,6 +172,8 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 
 	else
 	{
+		// 충돌 방지를 위해 약간 옆으로 오프셋
+		SpawnLocation += FVector(30.f, 0.f, 0.f);
 		FRotator SpawnRotation(0.f, PlayerInfo.yaw(), 0.f);
 
 		APlayerCharacter* Player = World->SpawnActor<APlayerCharacter>(
@@ -165,9 +195,9 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 	}
 }
 
-
 void UMainGameInstance::HandleSpawn(const Protocol::S_ENTER_GAME& EnterGamePkt)
 {
+	MyObjectId = EnterGamePkt.player().object_id();
 	HandleSpawn(EnterGamePkt.player(), true);
 }
 
@@ -175,7 +205,8 @@ void UMainGameInstance::HandleSpawn(const Protocol::S_SPAWN& SpawnPkt)
 {
 	for (auto& Player : SpawnPkt.players())
 	{
-		HandleSpawn(Player, false);
+		const bool bIsMine = (Player.object_id() == MyObjectId);
+		HandleSpawn(Player, bIsMine);
 	}
 }
 
@@ -239,4 +270,391 @@ void UMainGameInstance::HandleMove(const Protocol::S_MOVE& MovePkt)
 	Player->SetDestInfo(MovePkt.info());
 	//const Protocol::PlayerInfo& Info = MovePkt.info();
 	//Player->SetPlayerInfo(Info);
+}
+
+void UMainGameInstance::HandleSpawnMob(const Protocol::S_SPAWN_MOB& Pkt)
+{
+	UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] ===== FUNCTION CALLED ====="));
+	UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] Received packet with %d mobs"), Pkt.mobs_size());
+	
+	auto* World = GetWorld();
+	if (World == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[HandleSpawnMob] World is nullptr!"));
+		return;
+	}
+	UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] World is valid"));
+
+	if (MonsterClass == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[HandleSpawnMob] MonsterClass is nullptr! Check Blueprint settings."));
+		return;
+	}
+	UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] MonsterClass is valid: %s"), 
+		MonsterClass ? *MonsterClass->GetName() : TEXT("nullptr"));
+
+	UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] Processing %d mobs"), Pkt.mobs_size());
+
+	int32 SuccessCount = 0;
+	int32 FailCount = 0;
+
+	for (auto& MobInfo : Pkt.mobs())
+	{
+		const uint64 MobId = MobInfo.mobid();
+
+		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] Attempting to spawn Mob ID=%llu"), MobId);
+
+		// 기존 몬스터 제거
+		if (AActor** Existing = Monsters.Find(MobId))
+		{
+			if (*Existing != nullptr)
+				World->DestroyActor(*Existing);
+			Monsters.Remove(MobId);
+		}
+
+		FVector SpawnPos(MobInfo.pos().x(), MobInfo.pos().y(), MobInfo.pos().z());
+		FRotator SpawnRot(0.f, 0.f, 0.f);
+
+		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] Server Spawn Pos: [X=%.3f Y=%.3f Z=%.3f]"), 
+			SpawnPos.X, SpawnPos.Y, SpawnPos.Z);
+
+		// 서버에서 보낸 정확한 위치 사용 (오프셋 제거)
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+		AActor* MobActor = World->SpawnActor<AActor>(
+			MonsterClass,
+			SpawnPos,
+			SpawnRot,
+			SpawnParams
+		);
+
+		if (MobActor)
+		{
+			if (ACharacter* Character = Cast<ACharacter>(MobActor))
+			{
+				if (UCharacterMovementComponent* MovementComp = Character->GetCharacterMovement())
+				{
+					// 지면 레이캐스트로 지면 위치 찾기
+					FHitResult HitResult;
+					FVector TraceStart = SpawnPos + FVector(0, 0, 1000.f);
+					FVector TraceEnd = SpawnPos + FVector(0, 0, -10000.f);
+					
+					FVector GroundPos = SpawnPos;
+					if (World->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_WorldStatic))
+					{
+						GroundPos = HitResult.ImpactPoint;
+						GroundPos.Z += 100.f; // 캡슐 높이 고려
+						UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] Line trace hit: ImpactPoint Z=%.3f, Adjusted Z=%.3f"), 
+							HitResult.ImpactPoint.Z, GroundPos.Z);
+					}
+					else
+					{
+						UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] Line trace failed, using SpawnPos"));
+					}
+					
+					// 중력 강제 활성화 (여러 번 설정)
+					MovementComp->GravityScale = 1.0f;
+					MovementComp->bApplyGravityWhileJumping = true;
+					MovementComp->bCanWalkOffLedges = true;
+					MovementComp->bUseControllerDesiredRotation = false;
+					
+					// 물리 시뮬레이션 활성화 확인
+					Character->SetActorEnableCollision(true);
+					
+					// Falling 모드로 설정하여 중력 강제 적용
+					MovementComp->SetMovementMode(MOVE_Falling);
+					MovementComp->Velocity = FVector::ZeroVector; // 속도 초기화
+					MovementComp->GravityScale = 1.0f;
+					
+					// 위치를 여러 번 강제 설정 (블루프린트 BeginPlay가 덮어쓸 수 있으므로)
+					if (USceneComponent* RootComp = Character->GetRootComponent())
+					{
+						RootComp->SetWorldLocation(GroundPos, false, nullptr, ETeleportType::TeleportPhysics);
+						RootComp->SetWorldLocation(GroundPos, false, nullptr, ETeleportType::TeleportPhysics); // 두 번 호출
+					}
+					
+					Character->SetActorLocation(GroundPos, false, nullptr, ETeleportType::TeleportPhysics);
+					Character->SetActorLocation(GroundPos, false, nullptr, ETeleportType::TeleportPhysics); // 두 번 호출
+					
+					// 중력 다시 설정
+					MovementComp->GravityScale = 1.0f;
+					MovementComp->SetMovementMode(MOVE_Walking);
+					MovementComp->Velocity = FVector::ZeroVector; // 속도 다시 초기화
+					
+					UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] Initial Setup: GroundPos [X=%.3f Y=%.3f Z=%.3f], GravityScale=%.2f, MovementMode=%d"), 
+						GroundPos.X, GroundPos.Y, GroundPos.Z, MovementComp->GravityScale, (int32)MovementComp->MovementMode);
+					
+					// BeginPlay 이후에 다시 한번 확실히 설정 (블루프린트 BeginPlay가 실행된 후)
+					World->GetTimerManager().SetTimerForNextTick([Character, MovementComp, World, GroundPos]()
+					{
+						UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] Timer Callback 1: Checking validity..."));
+						
+						if (!IsValid(Character))
+						{
+							UE_LOG(LogTemp, Error, TEXT("[HandleSpawnMob] Timer Callback 1: Character is invalid!"));
+							return;
+						}
+						
+						if (!IsValid(MovementComp))
+						{
+							UE_LOG(LogTemp, Error, TEXT("[HandleSpawnMob] Timer Callback 1: MovementComp is invalid!"));
+							return;
+						}
+						
+						if (!IsValid(World))
+						{
+							UE_LOG(LogTemp, Error, TEXT("[HandleSpawnMob] Timer Callback 1: World is invalid!"));
+							return;
+						}
+						
+						UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] Timer Callback 1: All valid, applying settings..."));
+						
+						// 중력 다시 한번 확실히 설정
+						MovementComp->GravityScale = 1.0f;
+						MovementComp->bApplyGravityWhileJumping = true;
+						MovementComp->Velocity = FVector::ZeroVector; // 속도 초기화
+						
+						// 지면 레이캐스트로 정확한 지면 위치 찾기
+						FHitResult HitResult;
+						FVector CurrentPos = Character->GetActorLocation();
+						FVector TraceStart = CurrentPos + FVector(0, 0, 500.f);
+						FVector TraceEnd = CurrentPos + FVector(0, 0, -10000.f);
+						
+						UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] Timer Callback 1: Current Pos [X=%.3f Y=%.3f Z=%.3f]"), 
+							CurrentPos.X, CurrentPos.Y, CurrentPos.Z);
+						
+						FVector FinalGroundPos = GroundPos;
+						if (World->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_WorldStatic))
+						{
+							FinalGroundPos = HitResult.ImpactPoint;
+							FinalGroundPos.Z += 100.f;
+							UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] Timer Callback 1: Line trace hit, FinalGroundPos Z=%.3f"), FinalGroundPos.Z);
+						}
+						else
+						{
+							UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] Timer Callback 1: Line trace failed, using GroundPos Z=%.3f"), GroundPos.Z);
+						}
+
+						// RootComponent와 Actor 위치 모두 강제 설정 (여러 번 호출)
+						if (USceneComponent* RootComp = Character->GetRootComponent())
+						{
+							RootComp->SetWorldLocation(FinalGroundPos, false, nullptr, ETeleportType::TeleportPhysics);
+							RootComp->SetWorldLocation(FinalGroundPos, false, nullptr, ETeleportType::TeleportPhysics);
+						}
+						Character->SetActorLocation(FinalGroundPos, false, nullptr, ETeleportType::TeleportPhysics);
+						Character->SetActorLocation(FinalGroundPos, false, nullptr, ETeleportType::TeleportPhysics);
+						
+						// Falling으로 설정했다가 Walking으로 변경 (중력 강제 적용)
+						MovementComp->SetMovementMode(MOVE_Falling);
+						MovementComp->GravityScale = 1.0f;
+						MovementComp->Velocity = FVector::ZeroVector;
+						MovementComp->SetMovementMode(MOVE_Walking);
+						
+						// 실제 위치 확인
+						FVector ActualPos = Character->GetActorLocation();
+						UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] Post-BeginPlay: Target [X=%.3f Y=%.3f Z=%.3f], Actual [X=%.3f Y=%.3f Z=%.3f], GravityScale=%.2f, MovementMode=%d"), 
+							FinalGroundPos.X, FinalGroundPos.Y, FinalGroundPos.Z,
+							ActualPos.X, ActualPos.Y, ActualPos.Z,
+							MovementComp->GravityScale, (int32)MovementComp->MovementMode);
+
+						// 한 틱 더 기다렸다가 최종 확인
+						World->GetTimerManager().SetTimerForNextTick([Character, MovementComp, World]()
+						{
+							UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] Timer Callback 2: Final check..."));
+							
+							if (!IsValid(Character))
+							{
+								UE_LOG(LogTemp, Error, TEXT("[HandleSpawnMob] Timer Callback 2: Character is invalid!"));
+								return;
+							}
+							
+							if (!IsValid(MovementComp))
+							{
+								UE_LOG(LogTemp, Error, TEXT("[HandleSpawnMob] Timer Callback 2: MovementComp is invalid!"));
+								return;
+							}
+							
+							// 최종 중력 및 위치 확인 및 강제 설정
+							MovementComp->GravityScale = 1.0f;
+							MovementComp->Velocity = FVector::ZeroVector;
+							MovementComp->SetMovementMode(MOVE_Walking);
+							
+							// 지면 레이캐스트로 최종 확인
+							FHitResult HitResult;
+							FVector CurrentPos = Character->GetActorLocation();
+							FVector TraceStart = CurrentPos + FVector(0, 0, 500.f);
+							FVector TraceEnd = CurrentPos + FVector(0, 0, -10000.f);
+							
+							if (World->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_WorldStatic))
+							{
+								FVector FinalPos = HitResult.ImpactPoint;
+								FinalPos.Z += 100.f;
+								
+								// 위치가 많이 벗어나면 다시 설정
+								if (FMath::Abs(CurrentPos.Z - FinalPos.Z) > 50.f)
+								{
+									if (USceneComponent* RootComp = Character->GetRootComponent())
+									{
+										RootComp->SetWorldLocation(FinalPos, false, nullptr, ETeleportType::TeleportPhysics);
+									}
+									Character->SetActorLocation(FinalPos, false, nullptr, ETeleportType::TeleportPhysics);
+									UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] Final Check: Position corrected from Z=%.3f to Z=%.3f"), 
+										CurrentPos.Z, FinalPos.Z);
+								}
+							}
+							
+							FVector FinalPos = Character->GetActorLocation();
+							UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] Final Check: GravityScale=%.2f, MovementMode=%d, Location [X=%.3f Y=%.3f Z=%.3f], Velocity [X=%.3f Y=%.3f Z=%.3f]"), 
+								MovementComp->GravityScale, (int32)MovementComp->MovementMode, 
+								FinalPos.X, FinalPos.Y, FinalPos.Z,
+								MovementComp->Velocity.X, MovementComp->Velocity.Y, MovementComp->Velocity.Z);
+						});
+					});
+					
+					UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] Character Movement Setup: GravityScale=%.2f, Ground Pos: [X=%.3f Y=%.3f Z=%.3f]"), 
+						MovementComp->GravityScale, GroundPos.X, GroundPos.Y, GroundPos.Z);
+				}
+			}
+
+			Monsters.Add(MobId, MobActor);
+			SuccessCount++;
+			
+			// 실제 액터 위치 확인
+			FVector ActualPos = MobActor->GetActorLocation();
+			UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] SUCCESS - Mob Spawned: ID=%llu, Server Pos [X=%.3f Y=%.3f Z=%.3f], Actual Pos [X=%.3f Y=%.3f Z=%.3f]"), 
+				MobId, SpawnPos.X, SpawnPos.Y, SpawnPos.Z, ActualPos.X, ActualPos.Y, ActualPos.Z);
+		}
+		else
+		{
+			FailCount++;
+			UE_LOG(LogTemp, Error, TEXT("[HandleSpawnMob] FAILED - Mob Spawn FAILED: ID=%llu at [X=%.3f Y=%.3f Z=%.3f] (MonsterClass: %s)"), 
+				MobId, SpawnPos.X, SpawnPos.Y, SpawnPos.Z, 
+				MonsterClass ? *MonsterClass->GetName() : TEXT("NULL"));
+		}
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[HandleSpawnMob] Summary: Total=%d, Success=%d, Failed=%d"), 
+		Pkt.mobs_size(), SuccessCount, FailCount);
+}
+
+void UMainGameInstance::HandleDespawnMob(uint64 MobId)
+{
+	auto* World = GetWorld();
+	if (World == nullptr)
+		return;
+
+	AActor** Found = Monsters.Find(MobId);
+	if (Found == nullptr)
+		return;
+
+	AActor* MobActor = *Found;
+	Monsters.Remove(MobId);
+
+	if (MobActor)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Mob Despawned: ID=%llu"), MobId);
+		World->DestroyActor(MobActor);
+	}
+}
+
+void UMainGameInstance::HandleDespawnMob(const Protocol::S_DESPAWN_MOB& Pkt)
+{
+	for (uint64 MobId : Pkt.mobids())
+	{
+		HandleDespawnMob(MobId);
+	}
+}
+
+void UMainGameInstance::HandleMoveMob(const Protocol::S_MOVE_MOB& Pkt)
+{
+	const Protocol::MobInfo& MobInfo = Pkt.mob();
+	const uint64 MobId = MobInfo.mobid();
+	AActor** Found = Monsters.Find(MobId);
+	if (Found == nullptr)
+		return;
+
+	AActor* MobActor = *Found;
+	if (MobActor == nullptr)
+		return;
+
+	// Character인 경우 XY만 업데이트하고 Z는 중력에 맡김
+	if (ACharacter* Character = Cast<ACharacter>(MobActor))
+	{
+		FVector CurrentPos = Character->GetActorLocation();
+		FVector NewPos(MobInfo.pos().x(), MobInfo.pos().y(), CurrentPos.Z); // Z는 현재 위치 유지
+		
+		// XY만 업데이트 (Z는 중력이 처리)
+		Character->SetActorLocation(NewPos, false, nullptr, ETeleportType::None);
+	}
+	else
+	{
+		// Character가 아닌 경우 전체 위치 업데이트
+		FVector NewPos(MobInfo.pos().x(), MobInfo.pos().y(), MobInfo.pos().z());
+		MobActor->SetActorLocation(NewPos);
+	}
+}
+
+void UMainGameInstance::SendAttackMob(int64 MobId)
+{
+	if (Socket == nullptr || GameServerSession == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SendAttackMob] Socket or Session is nullptr"));
+		return;
+	}
+
+	uint64 mobIdUint64 = static_cast<uint64>(MobId);
+
+	Protocol::C_ATTACK_MOB attackPkt;
+	attackPkt.set_mobid(mobIdUint64);
+
+	SendBufferRef sendBuffer = ClientPacketHandler::MakeSendBuffer(attackPkt);
+	SendPacket(sendBuffer);
+
+	UE_LOG(LogTemp, Warning, TEXT("[SendAttackMob] Sent attack packet for Mob ID=%llu"), mobIdUint64);
+}
+
+void UMainGameInstance::HandleDamageMob(const Protocol::S_DAMAGE_MOB& Pkt)
+{
+	const uint64 MobId = Pkt.mobid();
+	const int32 Damage = Pkt.damage();
+	const int32 Hp = Pkt.hp();
+
+	if (Monsters.Contains(MobId))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Mob Damaged: ID=%llu Damage=%d HP=%d"), MobId, Damage, Hp);
+	}
+}
+
+void UMainGameInstance::SendUseSkill(int32 SkillId)
+{
+	if (MyObjectId == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Client] SendUseSkill failed: MyPlayerId is 0"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning,TEXT("[Client] Send C_USE_SKILL player=%llu skill=%d"), MyObjectId, SkillId);
+
+	Protocol::C_USE_SKILL pkt;
+	pkt.set_playerid(MyObjectId);
+	pkt.set_skillid(SkillId);
+
+	SendPacket(ClientPacketHandler::MakeSendBuffer(pkt));
+}
+
+
+void UMainGameInstance::OnRecvUseSkill(int64 PlayerId, int32 SkillId)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Recv Skill %d from Player %llu"), SkillId, PlayerId);
+
+	if (PlayerId == MyObjectId)
+		return;
+
+	APlayerCharacter** Found = Players.Find(PlayerId);
+	if (Found == nullptr || *Found == nullptr)
+		return;
+
+	APlayerCharacter* OtherPlayer = *Found;
+	OtherPlayer->PlayOtherPlayerSkill(SkillId);
 }

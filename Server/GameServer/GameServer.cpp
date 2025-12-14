@@ -42,6 +42,8 @@ int main()
 	ServerPacketHandler::Init();
 	
 	// 서버 시작 시 Room 초기화 및 ID 생성기 초기화
+	GRoom = make_shared<Room>();
+	GRoom->Init();
 	GRoom->Clear();
 	ObjectUtils::ResetIdGenerator();
 

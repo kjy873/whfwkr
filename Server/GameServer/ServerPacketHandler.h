@@ -22,6 +22,12 @@ enum : uint16
 	PKT_S_MOVE = 1009,
 	PKT_C_CHAT = 1010,
 	PKT_S_CHAT = 1011,
+	PKT_S_SPAWN_MOB = 1012,
+	PKT_S_DESPAWN_MOB = 1013,
+	PKT_S_MOVE_MOB = 1014,
+	PKT_C_MOVE_MOB = 1015,
+	PKT_C_ATTACK_MOB = 1016,
+	PKT_S_DAMAGE_MOB = 1017,
 };
 
 // Custom Handlers
@@ -50,7 +56,7 @@ public:
 	{
 		PacketHeader* header = reinterpret_cast<PacketHeader*>(buffer);
 		
-		// 패킷 ID 유효성 검사
+		// ��Ŷ ID ��ȿ�� �˻�
 		if (header->id >= UINT16_MAX)
 		{
 			return false;

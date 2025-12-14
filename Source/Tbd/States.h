@@ -262,9 +262,7 @@ public:
 namespace ActionEvaluator {
 
 	// evaluator, ActionTag에 해당하는 FActionRule을 ActionRuleSet에서 찾아서 평가
-	// Current
-	// 
-	// e와 ActionRule을 비교해 EDecision, Reason 반환
+	// CurrentState와 ActionRule을 비교해 EDecision, Reason 반환
 	inline FActionDecision EvaluateAction(const FCurrentState& Current, const FGameplayTag& ActionTag, const UActionRuleSet* ActionRuleSet, float WorldSeconds) {
 
 		if (!ActionTag.IsValid()) return FActionDecision{ EDecision::Reject, "Invalid ActionTag", ActionTag };

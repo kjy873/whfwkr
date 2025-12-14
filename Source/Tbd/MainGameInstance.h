@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
 #include "Tbd.h"
+#include "Protocol.pb.h"
 #include "MainGameInstance.generated.h"
 
 class AActor;
@@ -27,6 +28,26 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void HandleRecvPackets();
 
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void SendAttackMob(int64 MobId);
+
+	UFUNCTION(BlueprintCallable)
+	void SendUseSkill(int32 SkillId);
+
+	void OnRecvUseSkill(int64 PlayerId, int32 SkillId);
+
+	virtual void Init() override;
+
+	UPROPERTY()
+	uint64 MyObjectId = 0;
+
+	UPROPERTY()
+	TMap<uint64, AActor*> Monsters;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> MonsterClass;
+
+
 	void SendPacket(SendBufferRef SendBuffer);
 
 public:
@@ -38,7 +59,14 @@ public:
 	void HandleDespawn(const Protocol::S_DESPAWN& DespawnPkt);
 
 	void HandleMove(const Protocol::S_MOVE& MovePkt);
-	
+
+public:
+	void HandleSpawnMob(const Protocol::S_SPAWN_MOB& SpawnPkt);
+	void HandleDespawnMob(uint64 MobId);
+	void HandleDespawnMob(const Protocol::S_DESPAWN_MOB& Pkt);
+	void HandleMoveMob(const Protocol::S_MOVE_MOB& MovePkt);
+	void HandleDamageMob(const Protocol::S_DAMAGE_MOB& DamagePkt);
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Settings")
 	int LandscapeMaterialQualityLevel = 0;
@@ -61,4 +89,7 @@ public:
 
 	APlayerCharacter* MyPlayer;
 	TMap<uint64, APlayerCharacter*> Players;
+
+private:
+	FTimerHandle RecvPacketsTimerHandle;
 };

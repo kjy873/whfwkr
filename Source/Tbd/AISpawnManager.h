@@ -23,7 +23,8 @@ struct FRegionData
 
 	int CurrentEnemyCount;
 
-	TArray<AActor*> SpawnedEnemies;
+	
+	TArray<TWeakObjectPtr<AActor>> SpawnedEnemies;
 
 	FRegionData() : RangeX(FFloatRange::Empty()), RangeY(FFloatRange::Empty()), MaxEnemyCount(5), CurrentEnemyCount(0) {}
 
@@ -92,6 +93,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:	
 	// Called every frame
@@ -108,6 +110,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "AISpawnManager")
 	void DisableAllEnemies();
+
+	UFUNCTION(BlueprintCallable, Category = "AISpawnManager")
+	void EnableAllEnemies();
 
 	UFUNCTION(BlueprintCallable, Category = "AISpawnManager")
 	void GetWorldPlayers(UWorld* WorldActor, TArray<AActor*>& PlayerArray, TSubclassOf<AActor> CharacterClass) {

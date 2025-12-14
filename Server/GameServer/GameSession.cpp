@@ -19,7 +19,10 @@ void GameSession::OnDisconnected()
 		RoomRef room = currentPlayer->room.lock();
 		if (room != nullptr)
 		{
-			room->HandleLeavePlayerLocked(currentPlayer);
+			room->DoAsync([room, currentPlayer]()
+				{
+					room->HandleLeavePlayerLocked(currentPlayer);
+				});
 		}
 		player.store(nullptr);
 	}

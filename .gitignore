@@ -98,3 +98,4 @@ Build/Android/res/*/*
 # Ignore plugins binaries on deep subfolders
 Plugins/**/Binaries/*
 Plugins/**/Intermediate/*
+Server/ServerCore/x64/Debug/ServerCore.tlog/ServerCore.lastbuildstate
