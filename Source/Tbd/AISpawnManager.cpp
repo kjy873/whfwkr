@@ -90,7 +90,7 @@ bool AAISpawnManager::SpawnEnemies(const ECollisionChannel LandscapeChannel) {
 
 			if (SpawnedAI) {
 				SpawnedAI->AddActorWorldOffset(FVector(0.0f, 0.0f, -2000.0f), true);
-				DisableEnemy(SpawnedAI);
+				//DisableEnemy(SpawnedAI);
 				R.SpawnedEnemies.Add(SpawnedAI);
 				R.CurrentEnemyCount++;
 				TotalEnemyCount++;
