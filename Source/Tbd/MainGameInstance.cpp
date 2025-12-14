@@ -16,45 +16,6 @@
 #include "Engine/World.h"
 #include "DrawDebugHelpers.h"
 
-void UMainGameInstance::StartServerProcess()
-{
-	UE_LOG(LogTemp, Warning, TEXT("[MainGameInstance] StartServerProcess called"));
-
-//#if UE_BUILD_DEBUG || UE_BUILD_DEVELOPMENT
-#if !WITH_EDITOR
-	FString ServerExePath = FPaths::Combine(
-		FPaths::ProjectDir(),
-		TEXT("Server/Binaries/Debug/GameServer.exe")
-	);
-
-	if (FPaths::FileExists(ServerExePath))
-	{
-		FPlatformProcess::CreateProc(
-			*ServerExePath,
-			nullptr,
-			true,
-			false,
-			false,
-			nullptr,
-			0,
-			*ServerDir,
-			nullptr
-		);
-
-		UE_LOG(LogTemp, Warning, TEXT("[MainGameInstance] Server process started"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("[MainGameInstance] Server exe not found: %s"), *ServerExePath);
-	}
-#endif
-}
-
-void UMainGameInstance::ConnectToServerDelayed()
-{
-	ConnectToGameServer();
-}
-
 void UMainGameInstance::ConnectToGameServer()
 {
 	// 이전 연결이 있으면 정리
@@ -127,19 +88,6 @@ void UMainGameInstance::Init()
 	Super::Init();
 
 	ClientPacketHandler::Init();
-
-	StartServerProcess();
-
-	if (auto* World = GetWorld())
-	{
-		World->GetTimerManager().SetTimer(
-			ConnectTimerHandle,
-			this,
-			&UMainGameInstance::HandleRecvPackets,
-			1.0f,
-			false
-		);
-	}
 
 	if (auto* World = GetWorld())
 	{
