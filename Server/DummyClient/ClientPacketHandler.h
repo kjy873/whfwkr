@@ -27,7 +27,9 @@ enum : uint16
 	PKT_S_MOVE_MOB = 1014,
 	PKT_C_MOVE_MOB = 1015,
 	PKT_C_ATTACK_MOB = 1016,
-	PKT_S_DAMAGE_MOB = 1017,
+	PKT_C_USE_SKILL = 1017,
+	PKT_S_USE_SKILL = 1018,
+	PKT_S_DAMAGE_MOB = 1019,
 };
 
 // Custom Handlers
@@ -42,6 +44,7 @@ bool Handle_S_CHAT(PacketSessionRef& session, Protocol::S_CHAT& pkt);
 bool Handle_S_SPAWN_MOB(PacketSessionRef& session, Protocol::S_SPAWN_MOB& pkt);
 bool Handle_S_DESPAWN_MOB(PacketSessionRef& session, Protocol::S_DESPAWN_MOB& pkt);
 bool Handle_S_MOVE_MOB(PacketSessionRef& session, Protocol::S_MOVE_MOB& pkt);
+bool Handle_S_USE_SKILL(PacketSessionRef& session, Protocol::S_USE_SKILL& pkt);
 bool Handle_S_DAMAGE_MOB(PacketSessionRef& session, Protocol::S_DAMAGE_MOB& pkt);
 
 class ClientPacketHandler
@@ -61,6 +64,7 @@ public:
 		GPacketHandler[PKT_S_SPAWN_MOB] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_SPAWN_MOB>(Handle_S_SPAWN_MOB, session, buffer, len); };
 		GPacketHandler[PKT_S_DESPAWN_MOB] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_DESPAWN_MOB>(Handle_S_DESPAWN_MOB, session, buffer, len); };
 		GPacketHandler[PKT_S_MOVE_MOB] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_MOVE_MOB>(Handle_S_MOVE_MOB, session, buffer, len); };
+		GPacketHandler[PKT_S_USE_SKILL] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_USE_SKILL>(Handle_S_USE_SKILL, session, buffer, len); };
 		GPacketHandler[PKT_S_DAMAGE_MOB] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_DAMAGE_MOB>(Handle_S_DAMAGE_MOB, session, buffer, len); };
 	}
 
@@ -76,6 +80,7 @@ public:
 	static SendBufferRef MakeSendBuffer(Protocol::C_CHAT& pkt) { return MakeSendBuffer(pkt, PKT_C_CHAT); }
 	static SendBufferRef MakeSendBuffer(Protocol::C_MOVE_MOB& pkt) { return MakeSendBuffer(pkt, PKT_C_MOVE_MOB); }
 	static SendBufferRef MakeSendBuffer(Protocol::C_ATTACK_MOB& pkt) { return MakeSendBuffer(pkt, PKT_C_ATTACK_MOB); }
+	static SendBufferRef MakeSendBuffer(Protocol::C_USE_SKILL& pkt) { return MakeSendBuffer(pkt, PKT_C_USE_SKILL); }
 
 private:
 	template<typename PacketType, typename ProcessFunc>

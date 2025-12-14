@@ -20,6 +20,8 @@ public:
 	void Clear(); // 모든 플레이어 제거
 	void Broadcast(SendBufferRef sendBuffer, uint64 exceptId = 0);
 	void HandleMoveMobLocked(uint64 mobId, float x, float y, float z);
+	void HandleAttackMobLocked(uint64 playerId, uint64 mobId);
+	void BroadcastUseSkill(uint64 playerId, uint32 skillId);
 
 private:
 	bool EnterPlayer(PlayerRef player);

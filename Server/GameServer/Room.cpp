@@ -256,7 +256,7 @@ void Room::Broadcast(SendBufferRef sendBuffer, uint64 exceptId)
 	}
 	else
 	{
-		cout << "[Room::Broadcast] Packet sent to " << sentCount << " player(s)" << endl;
+		//cout << "[Room::Broadcast] Packet sent to " << sentCount << " player(s)" << endl;
 	}
 }
 
@@ -284,8 +284,10 @@ void Room::SpawnRandomMobs()
 	Protocol::MobInfo* info = pkt.add_mobs();
 	info->CopyFrom(mob->ToInfo());
 
+
 	cout << "[Room::SpawnRandomMobs] Spawning Mob ID=" << id
 		<< " at [" << mob->x << ", " << mob->y << ", " << mob->z << "]" << endl;
+
 	cout << "[Room::SpawnRandomMobs] Player count: " << _players.size() << endl;
 
 	SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
@@ -322,3 +324,43 @@ void Room::HandleMoveMobLocked(uint64 mobId, float x, float y, float z)
 	Broadcast(sendBuffer);
 }
 
+void Room::HandleAttackMobLocked(uint64 playerId, uint64 mobId)
+{
+	WRITE_LOCK;
+
+	auto mobIt = _mobs.find(mobId);
+	if (mobIt == _mobs.end())
+		return;
+
+	MobRef mob = mobIt->second;
+	if (mob == nullptr || mob->hp <= 0)
+		return;
+
+	const int32 damage = 10;
+	mob->hp = max(0, mob->hp - damage);
+
+	Protocol::S_DAMAGE_MOB damagePkt;
+	damagePkt.set_mobid(mobId);
+	damagePkt.set_damage(damage);
+	damagePkt.set_hp(mob->hp);
+
+	Broadcast(ServerPacketHandler::MakeSendBuffer(damagePkt));
+
+	if (mob->hp <= 0)
+	{
+		Protocol::S_DESPAWN_MOB despawnPkt;
+		despawnPkt.add_mobids(mobId);
+		Broadcast(ServerPacketHandler::MakeSendBuffer(despawnPkt));
+		_mobs.erase(mobId);
+	}
+}
+
+void Room::BroadcastUseSkill(uint64 playerId, uint32 skillId)
+{
+	Protocol::S_USE_SKILL pkt;
+	pkt.set_playerid(playerId);
+	pkt.set_skillid(skillId);
+
+	SendBufferRef send = ServerPacketHandler::MakeSendBuffer(pkt);
+	Broadcast(send);
+}

@@ -114,6 +114,18 @@ message C_ATTACK_MOB
 	uint64 mobId = 1;
 }
 
+message C_USE_SKILL
+{
+    uint64 playerId = 1;
+    uint32 skillId = 2;
+}
+
+message S_USE_SKILL
+{
+    uint64 playerId = 1;
+    uint32 skillId = 2;
+}
+
 message S_DAMAGE_MOB
 {
 	uint64 mobId = 1;

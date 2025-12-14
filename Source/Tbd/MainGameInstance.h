@@ -28,6 +28,16 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void HandleRecvPackets();
 
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void SendAttackMob(int64 MobId);
+
+	UFUNCTION(BlueprintCallable)
+	void SendUseSkill(int32 SkillId);
+
+	void OnRecvUseSkill(int64 PlayerId, int32 SkillId);
+
+	virtual void Init() override;
+
 	UPROPERTY()
 	uint64 MyObjectId = 0;
 
@@ -79,4 +89,7 @@ public:
 
 	APlayerCharacter* MyPlayer;
 	TMap<uint64, APlayerCharacter*> Players;
+
+private:
+	FTimerHandle RecvPacketsTimerHandle;
 };
