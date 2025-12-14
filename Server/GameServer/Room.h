@@ -22,6 +22,8 @@ public:
 	void HandleMoveMobLocked(uint64 mobId, float x, float y, float z);
 	void HandleAttackMobLocked(uint64 playerId, uint64 mobId);
 	void BroadcastUseSkill(uint64 playerId, uint32 skillId);
+	void HandlePlayerHit(uint64 attackerId, uint64 targetId);
+	void HandleAttackPlayerLocked(uint64 attackerId, uint64 targetId, uint32 skillId);
 
 private:
 	bool EnterPlayer(PlayerRef player);

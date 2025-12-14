@@ -19,5 +19,9 @@ public:
 
 public:
 	weak_ptr<Room> room;
+
+public:
+	int32 hp = 100;
+	int32 maxHp = 100;
 };
 

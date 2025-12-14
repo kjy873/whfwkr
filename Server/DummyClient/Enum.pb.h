@@ -75,14 +75,14 @@ inline bool PlayerType_Parse(
     PlayerType_descriptor(), name, value);
 }
 enum ESkillId : int {
-  SKILL_LEFT_CLICK = 0,
-  SKILL_Q_ATTACK = 1,
+  LeftClick = 0,
+  QAttack = 1,
   ESkillId_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
   ESkillId_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
 };
 bool ESkillId_IsValid(int value);
-constexpr ESkillId ESkillId_MIN = SKILL_LEFT_CLICK;
-constexpr ESkillId ESkillId_MAX = SKILL_Q_ATTACK;
+constexpr ESkillId ESkillId_MIN = LeftClick;
+constexpr ESkillId ESkillId_MAX = QAttack;
 constexpr int ESkillId_ARRAYSIZE = ESkillId_MAX + 1;
 
 const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* ESkillId_descriptor();

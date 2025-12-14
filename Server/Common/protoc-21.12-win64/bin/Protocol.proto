@@ -68,6 +68,25 @@ message S_CHAT
 	string msg = 2;
 }
 
+message C_ATTACK_PLAYER
+{
+    uint64 targetPlayerId = 1;
+    uint32 skillId = 2;
+}
+
+message S_DAMAGE_PLAYER
+{
+    uint64 playerId = 1;
+    int32 damage = 2;
+}
+
+message S_PLAYER_DEAD
+{
+    uint64 playerId = 1;
+}
+
+
+
 //mob
 message Vector3
 {

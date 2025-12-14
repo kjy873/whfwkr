@@ -32,12 +32,12 @@ const char descriptor_table_protodef_Enum_2eproto[] PROTOBUF_SECTION_VARIABLE(pr
   "\n\nEnum.proto\022\010Protocol*h\n\nPlayerType\022\024\n\020"
   "PLAYER_TYPE_NONE\020\000\022\026\n\022PLAYER_TYPE_KNIGHT"
   "\020\001\022\024\n\020PLAYER_TYPE_MAGE\020\002\022\026\n\022PLAYER_TYPE_"
-  "ARCHER\020\003*4\n\010ESkillId\022\024\n\020SKILL_LEFT_CLICK"
-  "\020\000\022\022\n\016SKILL_Q_ATTACK\020\001b\006proto3"
+  "ARCHER\020\003*&\n\010ESkillId\022\r\n\tLeftClick\020\000\022\013\n\007Q"
+  "Attack\020\001b\006proto3"
   ;
 static ::_pbi::once_flag descriptor_table_Enum_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_Enum_2eproto = {
-    false, false, 190, descriptor_table_protodef_Enum_2eproto,
+    false, false, 176, descriptor_table_protodef_Enum_2eproto,
     "Enum.proto",
     &descriptor_table_Enum_2eproto_once, nullptr, 0, 0,
     schemas, file_default_instances, TableStruct_Enum_2eproto::offsets,

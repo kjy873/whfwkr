@@ -83,6 +83,7 @@ bool Room::HandleEnterPlayerLocked(PlayerRef player)
 	player->playerInfo->set_y(centerY);
 	player->playerInfo->set_z(centerZ);
 	player->playerInfo->set_yaw(Utils::GetRandom(0.f, 360.f));
+	player->playerInfo->set_hp(100);
 
 
 	{
@@ -260,6 +261,84 @@ void Room::Broadcast(SendBufferRef sendBuffer, uint64 exceptId)
 	}
 }
 
+void Room::BroadcastUseSkill(uint64 playerId, uint32 skillId)
+{
+	Protocol::S_USE_SKILL pkt;
+	pkt.set_playerid(playerId);
+	pkt.set_skillid(skillId);
+
+	SendBufferRef send = ServerPacketHandler::MakeSendBuffer(pkt);
+	Broadcast(send);
+}
+
+void Room::HandlePlayerHit(uint64 attackerId, uint64 targetId)
+{
+	WRITE_LOCK;
+
+	auto it = _players.find(targetId);
+	if (it == _players.end())
+		return;
+
+	PlayerRef target = it->second;
+	if (target->hp <= 0)
+		return;
+
+	int32 damage = 20;
+	target->hp -= damage;
+
+	Protocol::S_DAMAGE_PLAYER pkt;
+	pkt.set_playerid(targetId);
+	pkt.set_damage(damage);
+
+	Broadcast(ServerPacketHandler::MakeSendBuffer(pkt));
+
+	if (target->hp <= 0)
+	{
+		Protocol::S_PLAYER_DEAD deadPkt;
+		deadPkt.set_playerid(targetId);
+		Broadcast(ServerPacketHandler::MakeSendBuffer(deadPkt));
+	}
+}
+
+void Room::HandleAttackPlayerLocked(uint64 attackerId,uint64 targetId,uint32 skillId)
+{
+	WRITE_LOCK;
+
+	auto attackerIt = _players.find(attackerId);
+	auto targetIt = _players.find(targetId);
+	if (attackerIt == _players.end() || targetIt == _players.end())
+		return;
+
+	PlayerRef attacker = attackerIt->second;
+	PlayerRef target = targetIt->second;
+
+	if (target->hp <= 0)
+		return;
+
+	int32 damage = 0;
+	switch (skillId)
+	{
+	case 0: damage = 10; break; // 좌클릭
+	case 1: damage = 25; break; // Q
+	}
+
+	target->hp = max(0, target->hp - damage);
+
+	Protocol::S_DAMAGE_PLAYER pkt;
+	pkt.set_playerid(targetId);
+	pkt.set_damage(damage);
+
+	Broadcast(ServerPacketHandler::MakeSendBuffer(pkt));
+
+	if (target->hp <= 0)
+	{
+		cout << "[SERVER] Player Dead: " << targetId << endl;
+	}
+}
+
+
+//-----------------------------------------------
+// mob
 void Room::SpawnRandomMobs()
 {
 	WRITE_LOCK;
@@ -353,14 +432,4 @@ void Room::HandleAttackMobLocked(uint64 playerId, uint64 mobId)
 		Broadcast(ServerPacketHandler::MakeSendBuffer(despawnPkt));
 		_mobs.erase(mobId);
 	}
-}
-
-void Room::BroadcastUseSkill(uint64 playerId, uint32 skillId)
-{
-	Protocol::S_USE_SKILL pkt;
-	pkt.set_playerid(playerId);
-	pkt.set_skillid(skillId);
-
-	SendBufferRef send = ServerPacketHandler::MakeSendBuffer(pkt);
-	Broadcast(send);
 }

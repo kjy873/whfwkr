@@ -183,6 +183,7 @@ class PlayerInfo final :
     kYFieldNumber = 3,
     kZFieldNumber = 4,
     kYawFieldNumber = 5,
+    kHpFieldNumber = 6,
   };
   // uint64 object_id = 1;
   void clear_object_id();
@@ -229,6 +230,15 @@ class PlayerInfo final :
   void _internal_set_yaw(float value);
   public:
 
+  // int32 hp = 6;
+  void clear_hp();
+  int32_t hp() const;
+  void set_hp(int32_t value);
+  private:
+  int32_t _internal_hp() const;
+  void _internal_set_hp(int32_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:Protocol.PlayerInfo)
  private:
   class _Internal;
@@ -242,6 +252,7 @@ class PlayerInfo final :
     float y_;
     float z_;
     float yaw_;
+    int32_t hp_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -356,6 +367,26 @@ inline void PlayerInfo::_internal_set_yaw(float value) {
 inline void PlayerInfo::set_yaw(float value) {
   _internal_set_yaw(value);
   // @@protoc_insertion_point(field_set:Protocol.PlayerInfo.yaw)
+}
+
+// int32 hp = 6;
+inline void PlayerInfo::clear_hp() {
+  _impl_.hp_ = 0;
+}
+inline int32_t PlayerInfo::_internal_hp() const {
+  return _impl_.hp_;
+}
+inline int32_t PlayerInfo::hp() const {
+  // @@protoc_insertion_point(field_get:Protocol.PlayerInfo.hp)
+  return _internal_hp();
+}
+inline void PlayerInfo::_internal_set_hp(int32_t value) {
+  
+  _impl_.hp_ = value;
+}
+inline void PlayerInfo::set_hp(int32_t value) {
+  _internal_set_hp(value);
+  // @@protoc_insertion_point(field_set:Protocol.PlayerInfo.hp)
 }
 
 #ifdef __GNUC__

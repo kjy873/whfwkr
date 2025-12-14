@@ -9,8 +9,8 @@ enum PlayerType
 	PLAYER_TYPE_ARCHER = 3;
 }
 
-enum class ESkillId : uint8
+enum ESkillId
 {
-    LeftClick = 0,
-    QAttack   = 1,
-};
+    LeftClick = 0;
+    QAttack  = 1;
+}
