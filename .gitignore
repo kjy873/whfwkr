@@ -16,6 +16,10 @@
 *.o
 *.obj
 
+# Visual Studio build artifacts
+*.idb
+*.ilk
+
 # Precompiled Headers
 *.gch
 *.pch
@@ -32,6 +36,7 @@
 *.lai
 *.la
 *.a
+*.lib
 
 *Tbd.sln
 
