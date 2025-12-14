@@ -139,12 +139,16 @@ struct FUpgradeData : public FTableRowBase{
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade")
 	UTexture2D* Icon;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade")
+	bool Reusability;
+
 	FUpgradeData() 
 		: CharacterType(ECharacterType::ECT_None)
 		, Name(NAME_None)
 		, DisplayName(FText::GetEmpty())
 		, Description(FText::GetEmpty())
 		, Icon(nullptr)
+		, Reusability(false)
 	{
 	}
 
