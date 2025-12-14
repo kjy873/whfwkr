@@ -134,3 +134,15 @@ bool Handle_S_DAMAGE_MOB(PacketSessionRef& session, Protocol::S_DAMAGE_MOB& pkt)
 	}
 	return false;
 }
+
+bool Handle_S_USE_SKILL(PacketSessionRef& session, Protocol::S_USE_SKILL& pkt)
+{
+	int32 playerId = static_cast<int32>(pkt.playerid());
+	int32 skillId = static_cast<int32>(pkt.skillid());
+
+	if (auto* GI = Cast<UMainGameInstance>(GWorld->GetGameInstance()))
+	{
+		GI->OnRecvUseSkill(pkt.playerid(), pkt.skillid());
+	}
+	return true;
+}
