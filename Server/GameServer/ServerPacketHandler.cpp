@@ -98,6 +98,31 @@ bool Handle_C_CHAT(PacketSessionRef& session, Protocol::C_CHAT& pkt)
 
 bool Handle_C_ATTACK_MOB(PacketSessionRef& session, Protocol::C_ATTACK_MOB& pkt)
 {
+	GameSessionRef gameSession = static_pointer_cast<GameSession>(session);
+	PlayerRef player = gameSession->player.load();
+	if (player == nullptr)
+	{
+		cout << "[Handle_C_ATTACK_MOB] Player is nullptr" << endl;
+		return false;
+	}
+
+	RoomRef room = player->room.lock();
+	if (room == nullptr)
+	{
+		cout << "[Handle_C_ATTACK_MOB] Room is nullptr" << endl;
+		return false;
+	}
+
+	uint64 mobId = pkt.mobid();
+	uint64 playerId = player->playerInfo->object_id();
+
+	cout << "[Handle_C_ATTACK_MOB] Player " << playerId << " attacking Mob " << mobId << endl;
+
+	room->DoAsync([room, playerId, mobId]()
+		{
+			room->HandleAttackMobLocked(playerId, mobId);
+		});
+
 	return true;
 }
 
@@ -123,6 +148,30 @@ bool Handle_C_MOVE_MOB(PacketSessionRef& session, Protocol::C_MOVE_MOB& pkt)
 		{
 			room->HandleMoveMobLocked(mobId, x, y, z);
 		});
+
+	return true;
+}
+
+bool Handle_C_USE_SKILL(PacketSessionRef& session, Protocol::C_USE_SKILL& pkt)
+{
+	uint64 playerId = pkt.playerid();
+	uint32 skillId = pkt.skillid();
+	cout << "[Server] C_USE_SKILL from "<< playerId << " skill " << skillId << endl;
+
+	GameSessionRef gameSession = static_pointer_cast<GameSession>(session);
+	PlayerRef player = gameSession->player.load();
+	if (player == nullptr)
+		return false;
+
+	RoomRef room = player->room.lock();
+	if (room == nullptr)
+		return false;
+
+	room->DoAsync(
+		&Room::BroadcastUseSkill,
+		player->playerInfo->object_id(),
+		pkt.skillid()
+	);
 
 	return true;
 }

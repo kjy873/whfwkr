@@ -27,7 +27,9 @@ enum : uint16
 	PKT_S_MOVE_MOB = 1014,
 	PKT_C_MOVE_MOB = 1015,
 	PKT_C_ATTACK_MOB = 1016,
-	PKT_S_DAMAGE_MOB = 1017,
+	PKT_C_USE_SKILL = 1017,
+	PKT_S_USE_SKILL = 1018,
+	PKT_S_DAMAGE_MOB = 1019,
 };
 
 // Custom Handlers
@@ -39,6 +41,7 @@ bool Handle_C_MOVE(PacketSessionRef& session, Protocol::C_MOVE& pkt);
 bool Handle_C_CHAT(PacketSessionRef& session, Protocol::C_CHAT& pkt);
 bool Handle_C_MOVE_MOB(PacketSessionRef& session, Protocol::C_MOVE_MOB& pkt);
 bool Handle_C_ATTACK_MOB(PacketSessionRef& session, Protocol::C_ATTACK_MOB& pkt);
+bool Handle_C_USE_SKILL(PacketSessionRef& session, Protocol::C_USE_SKILL& pkt);
 
 class ServerPacketHandler
 {
@@ -54,6 +57,7 @@ public:
 		GPacketHandler[PKT_C_CHAT] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::C_CHAT>(Handle_C_CHAT, session, buffer, len); };
 		GPacketHandler[PKT_C_MOVE_MOB] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::C_MOVE_MOB>(Handle_C_MOVE_MOB, session, buffer, len); };
 		GPacketHandler[PKT_C_ATTACK_MOB] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::C_ATTACK_MOB>(Handle_C_ATTACK_MOB, session, buffer, len); };
+		GPacketHandler[PKT_C_USE_SKILL] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::C_USE_SKILL>(Handle_C_USE_SKILL, session, buffer, len); };
 	}
 
 	static bool HandlePacket(PacketSessionRef& session, BYTE* buffer, int32 len)
@@ -71,6 +75,7 @@ public:
 	static SendBufferRef MakeSendBuffer(Protocol::S_SPAWN_MOB& pkt) { return MakeSendBuffer(pkt, PKT_S_SPAWN_MOB); }
 	static SendBufferRef MakeSendBuffer(Protocol::S_DESPAWN_MOB& pkt) { return MakeSendBuffer(pkt, PKT_S_DESPAWN_MOB); }
 	static SendBufferRef MakeSendBuffer(Protocol::S_MOVE_MOB& pkt) { return MakeSendBuffer(pkt, PKT_S_MOVE_MOB); }
+	static SendBufferRef MakeSendBuffer(Protocol::S_USE_SKILL& pkt) { return MakeSendBuffer(pkt, PKT_S_USE_SKILL); }
 	static SendBufferRef MakeSendBuffer(Protocol::S_DAMAGE_MOB& pkt) { return MakeSendBuffer(pkt, PKT_S_DAMAGE_MOB); }
 
 private:

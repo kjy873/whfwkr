@@ -44,6 +44,11 @@ void APlayerCharacter::SetDestInfo(const Protocol::PlayerInfo& Info)
 	DestInfo = Info;
 }
 
+void APlayerCharacter::PlayNetworkAttackAnimation()
+{
+	UE_LOG(LogTemp, Warning, TEXT("[PlayerCharacter::PlayNetworkAttackAnimation] Called - Implement in Blueprint to play attack animation"));
+}
+
 void APlayerCharacter::ApplyNetworkPosition(float DeltaTime)
 {
 	if (bIsMine)

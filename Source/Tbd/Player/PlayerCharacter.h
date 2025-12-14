@@ -24,7 +24,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Network")
 	bool bIsMine = false;
 
-	
+	UFUNCTION(BlueprintImplementableEvent)
+	void PlaySkill(int32 SkillId);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void PlayOtherPlayerSkill(int32 SkillId);
 
 	void SetPlayerInfo(const Protocol::PlayerInfo& Info);
 	void SetDestInfo(const Protocol::PlayerInfo& Info);
@@ -69,6 +73,10 @@ public:
 	void SubtractMana(float Value) { Attributes.SubtractMana(Value); }
 
 	// Attributes end
+
+	// Network Attack Animation
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void PlayNetworkAttackAnimation();
 
 private:
 	void ApplyNetworkPosition(float DeltaTime);

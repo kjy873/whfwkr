@@ -83,6 +83,25 @@ void UMainGameInstance::DisconnectToGameServer()
 	SEND_PACKET(LeavePkt);
 }
 
+void UMainGameInstance::Init()
+{
+	Super::Init();
+
+	ClientPacketHandler::Init();
+
+	if (auto* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(
+			RecvPacketsTimerHandle,
+			this,
+			&UMainGameInstance::HandleRecvPackets,
+			0.0f,
+			true 
+		);
+		UE_LOG(LogTemp, Warning, TEXT("[MainGameInstance::Init] RecvPackets timer started"));
+	}
+}
+
 void UMainGameInstance::HandleRecvPackets()
 {
 	if ( Socket == nullptr || GameServerSession == nullptr)
@@ -576,6 +595,25 @@ void UMainGameInstance::HandleMoveMob(const Protocol::S_MOVE_MOB& Pkt)
 	}
 }
 
+void UMainGameInstance::SendAttackMob(int64 MobId)
+{
+	if (Socket == nullptr || GameServerSession == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SendAttackMob] Socket or Session is nullptr"));
+		return;
+	}
+
+	uint64 mobIdUint64 = static_cast<uint64>(MobId);
+
+	Protocol::C_ATTACK_MOB attackPkt;
+	attackPkt.set_mobid(mobIdUint64);
+
+	SendBufferRef sendBuffer = ClientPacketHandler::MakeSendBuffer(attackPkt);
+	SendPacket(sendBuffer);
+
+	UE_LOG(LogTemp, Warning, TEXT("[SendAttackMob] Sent attack packet for Mob ID=%llu"), mobIdUint64);
+}
+
 void UMainGameInstance::HandleDamageMob(const Protocol::S_DAMAGE_MOB& Pkt)
 {
 	const uint64 MobId = Pkt.mobid();
@@ -586,4 +624,37 @@ void UMainGameInstance::HandleDamageMob(const Protocol::S_DAMAGE_MOB& Pkt)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Mob Damaged: ID=%llu Damage=%d HP=%d"), MobId, Damage, Hp);
 	}
+}
+
+void UMainGameInstance::SendUseSkill(int32 SkillId)
+{
+	if (MyObjectId == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Client] SendUseSkill failed: MyPlayerId is 0"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning,TEXT("[Client] Send C_USE_SKILL player=%llu skill=%d"), MyObjectId, SkillId);
+
+	Protocol::C_USE_SKILL pkt;
+	pkt.set_playerid(MyObjectId);
+	pkt.set_skillid(SkillId);
+
+	SendPacket(ClientPacketHandler::MakeSendBuffer(pkt));
+}
+
+
+void UMainGameInstance::OnRecvUseSkill(int64 PlayerId, int32 SkillId)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Recv Skill %d from Player %llu"), SkillId, PlayerId);
+
+	if (PlayerId == MyObjectId)
+		return;
+
+	APlayerCharacter** Found = Players.Find(PlayerId);
+	if (Found == nullptr || *Found == nullptr)
+		return;
+
+	APlayerCharacter* OtherPlayer = *Found;
+	OtherPlayer->PlayOtherPlayerSkill(SkillId);
 }
