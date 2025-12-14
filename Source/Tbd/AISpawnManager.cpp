@@ -3,6 +3,7 @@
 
 #include "AISpawnManager.h"
 
+
 // Sets default values
 AAISpawnManager::AAISpawnManager()
 {
@@ -79,6 +80,8 @@ bool AAISpawnManager::SpawnEnemies(const ECollisionChannel LandscapeChannel) {
 				LandscapeChannel
 			);
 
+			if (!Hit) continue;
+
 			PointZ = HitResult.ImpactPoint.Z;
 
 			AActor* SpawnedAI = World->SpawnActor<AActor>(
@@ -90,7 +93,7 @@ bool AAISpawnManager::SpawnEnemies(const ECollisionChannel LandscapeChannel) {
 
 			if (SpawnedAI) {
 				SpawnedAI->AddActorWorldOffset(FVector(0.0f, 0.0f, -2000.0f), true);
-				//DisableEnemy(SpawnedAI);
+				DisableEnemy(SpawnedAI);
 				R.SpawnedEnemies.Add(SpawnedAI);
 				R.CurrentEnemyCount++;
 				TotalEnemyCount++;
@@ -108,9 +111,13 @@ bool AAISpawnManager::SpawnEnemies(const ECollisionChannel LandscapeChannel) {
 void AAISpawnManager::DisableAllEnemies() {
 	for (auto& R : Regions) {
 		for (auto& E : R.SpawnedEnemies) {
-			E->SetActorHiddenInGame(true);
-			E->SetActorEnableCollision(false);
-			E->SetActorTickEnabled(false);
+			E.Get()->SetActorHiddenInGame(true);
+			E.Get()->SetActorEnableCollision(false);
+			E.Get()->SetActorTickEnabled(false);
+			E.Get()->FindComponentByClass<UCharacterMovementComponent>()->StopMovementImmediately();
+			E.Get()->FindComponentByClass<UCharacterMovementComponent>()->SetComponentTickEnabled(false);
+			E.Get()->FindComponentByClass<UCharacterMovementComponent>()->DisableMovement();
+
 			//E->DisableComponentsSimulatePhysics();
 		}
 	}
@@ -119,9 +126,11 @@ void AAISpawnManager::DisableAllEnemies() {
 void AAISpawnManager::EnableAllEnemies() {
 	for (auto& R : Regions) {
 		for (auto& E : R.SpawnedEnemies) {
-			E->SetActorHiddenInGame(false);
-			E->SetActorEnableCollision(true);
-			E->SetActorTickEnabled(true);
+			E.Get()->SetActorHiddenInGame(false);
+			E.Get()->SetActorEnableCollision(true);
+			E.Get()->SetActorTickEnabled(true);
+			E.Get()->FindComponentByClass<UCharacterMovementComponent>()->SetComponentTickEnabled(true);
+			E.Get()->FindComponentByClass<UCharacterMovementComponent>()->SetMovementMode(MOVE_Walking);
 			//E->EnableComponentsSimulatePhysics();
 		}
 	}

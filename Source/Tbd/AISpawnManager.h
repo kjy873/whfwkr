@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Landscape.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/Character.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 #include "AISpawnManager.generated.h"
 
@@ -140,6 +142,9 @@ public:
 		EnemyActor->SetActorHiddenInGame(true);
 		EnemyActor->SetActorEnableCollision(false);
 		EnemyActor->SetActorTickEnabled(false);
+		EnemyActor->FindComponentByClass<UCharacterMovementComponent>()->StopMovementImmediately();
+		EnemyActor->FindComponentByClass<UCharacterMovementComponent>()->SetComponentTickEnabled(false);
+		EnemyActor->FindComponentByClass<UCharacterMovementComponent>()->DisableMovement();
 		//E->DisableComponentsSimulatePhysics();
 	}
 
@@ -148,6 +153,8 @@ public:
 		EnemyActor->SetActorHiddenInGame(false);
 		EnemyActor->SetActorEnableCollision(true);
 		EnemyActor->SetActorTickEnabled(true);
+		EnemyActor->FindComponentByClass<UCharacterMovementComponent>()->SetComponentTickEnabled(true);
+		EnemyActor->FindComponentByClass<UCharacterMovementComponent>()->SetMovementMode(MOVE_Walking);
 		//E->EnableComponentsSimulatePhysics();
 	}
 
