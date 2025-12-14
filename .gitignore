@@ -36,7 +36,6 @@
 *.lai
 *.la
 *.a
-*.lib
 
 *Tbd.sln
 
@@ -108,5 +107,3 @@ Build/Android/res/*/*
 Plugins/**/Binaries/*
 Plugins/**/Intermediate/*
 *.lastbuildstate
-*.vcxproj
-*.filters
