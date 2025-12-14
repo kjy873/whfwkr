@@ -19,6 +19,9 @@ class TBD_API UMainGameInstance : public UGameInstance
 	GENERATED_BODY()
 
 public:
+	void StartServerProcess();
+	void ConnectToServerDelayed();
+
 	UFUNCTION(BlueprintCallable)
 	void ConnectToGameServer();
 
@@ -91,5 +94,6 @@ public:
 	TMap<uint64, APlayerCharacter*> Players;
 
 private:
+	FTimerHandle ConnectTimerHandle;
 	FTimerHandle RecvPacketsTimerHandle;
 };
