@@ -144,6 +144,10 @@ void AAISpawnManager::UpdateRegionActivation() {
 
 	if (PlayerActors.IsEmpty()) return;
 
+	for (int i = 0; i < Regions.Num(); i++) {
+		Regions[i].HardActivation = false;
+		Regions[i].SoftActivation = false;
+	}
 	
 	for (const auto& Player : PlayerActors) {
 		//if (WeakPlayer.IsValid()) if (AActor* Player = WeakPlayer.Get())
@@ -204,8 +208,6 @@ void AAISpawnManager::UpdateRegionActivation() {
 				if (WeakE.IsValid()) { if (AActor* E = WeakE.Get()) DisableEnemy(E); }
 			}
 		}
-		Regions[i].HardActivation = false;
-		Regions[i].SoftActivation = false;
 	}
 
 }
