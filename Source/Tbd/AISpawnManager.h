@@ -28,9 +28,9 @@ struct FRegionData
 	
 	TArray<TWeakObjectPtr<AActor>> SpawnedEnemies;
 
-	FRegionData() : RangeX(FFloatRange::Empty()), RangeY(FFloatRange::Empty()), MaxEnemyCount(5), CurrentEnemyCount(0) {}
+	FRegionData() : RangeX(FFloatRange::Empty()), RangeY(FFloatRange::Empty()), MaxEnemyCount(1), CurrentEnemyCount(0) {}
 
-	FRegionData(FFloatRange x, FFloatRange y) : RangeX(x), RangeY(y), MaxEnemyCount(5), CurrentEnemyCount(0) {}
+	FRegionData(FFloatRange x, FFloatRange y) : RangeX(x), RangeY(y), MaxEnemyCount(1), CurrentEnemyCount(0) {}
 
 	FRegionData(FFloatRange x, FFloatRange y, int maxCount) : RangeX(x), RangeY(y), MaxEnemyCount(maxCount), CurrentEnemyCount(0) {}
 };
