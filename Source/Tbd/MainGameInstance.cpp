@@ -626,6 +626,23 @@ void UMainGameInstance::HandleDamageMob(const Protocol::S_DAMAGE_MOB& Pkt)
 	}
 }
 
+void UMainGameInstance::OnRecvProjectileHit(const Protocol::S_PROJECTILE_HIT& pkt)
+{
+}
+
+void UMainGameInstance::OnRecvProjectileDestroy(const Protocol::S_PROJECTILE_DESTROY& pkt)
+{
+	const int32 ProjectileId = (int32)pkt.projectileid();
+
+	if (AActor** Found = ByProjectileId.Find(ProjectileId))
+	{
+		if (AActor* Proj = *Found)
+			Proj->Destroy();
+
+		ByProjectileId.Remove(ProjectileId);
+	}
+}
+
 void UMainGameInstance::SendUseSkill(int32 SkillId)
 {
 	if (MyObjectId == 0)
@@ -643,18 +660,70 @@ void UMainGameInstance::SendUseSkill(int32 SkillId)
 	SendPacket(ClientPacketHandler::MakeSendBuffer(pkt));
 }
 
+static constexpr int32 ICE_SKILL_ID = 0;
+static constexpr int32 FIREBALL_SKILL_ID = 1;
 
-void UMainGameInstance::OnRecvUseSkill(int64 PlayerId, int32 SkillId)
+void UMainGameInstance::OnRecvUseSkill(const Protocol::S_USE_SKILL& pkt)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Recv Skill %d from Player %llu"), SkillId, PlayerId);
+	if (GWorld == nullptr) return;
 
-	if (PlayerId == MyObjectId)
+	const int64 PlayerId = (int64)pkt.playerid();
+	const int32 SkillId = (int32)pkt.skillid();
+
+	FVector SpawnPos(pkt.spawnpos().x(), pkt.spawnpos().y(), pkt.spawnpos().z());
+	FVector Dir(pkt.dir().x(), pkt.dir().y(), pkt.dir().z());
+	Dir = Dir.GetSafeNormal();
+
+	const int32 ClientShotId = pkt.clientshotid();
+	const int32 ProjectileId = pkt.projectileid();
+
+	const bool bIsMine = (PlayerId == MyObjectId);
+
+	if (!bIsMine)
+	{
+		APlayerCharacter** Found = Players.Find(PlayerId);
+		if (Found == nullptr || *Found == nullptr) return;
+		(*Found)->PlayOtherPlayerSkill(SkillId);
+	}
+
+	if (bIsMine)
+	{
+		if (AActor** PredPtr = PredictedByShotId.Find(ClientShotId))
+		{
+			AActor* Pred = *PredPtr;
+			if (Pred)
+			{
+				Pred->SetActorLocation(SpawnPos);
+				Pred->SetActorRotation(Dir.Rotation());
+
+				if (ProjectileId != 0)
+					ByProjectileId.Add(ProjectileId, Pred);
+			}
+
+			PredictedByShotId.Remove(ClientShotId);
+			return;
+		}
+	}
+
+	TSubclassOf<AActor> ProjClass = nullptr;
+	if (SkillId == ICE_SKILL_ID)
+		ProjClass = IceProjectileBPClass;
+	else if (SkillId == FIREBALL_SKILL_ID)
+		ProjClass = FireballProjectileBPClass;
+	else
 		return;
 
-	APlayerCharacter** Found = Players.Find(PlayerId);
-	if (Found == nullptr || *Found == nullptr)
+	if (!ProjClass)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[OnRecvUseSkill] Projectile BP class is null for SkillId=%d"), SkillId);
 		return;
+	}
 
-	APlayerCharacter* OtherPlayer = *Found;
-	OtherPlayer->PlayOtherPlayerSkill(SkillId);
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	AActor* NewProj = GWorld->SpawnActor<AActor>(ProjClass, SpawnPos, Dir.Rotation(), Params);
+
+	if (NewProj && ProjectileId != 0)
+		ByProjectileId.Add(ProjectileId, NewProj);
 }

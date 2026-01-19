@@ -4,7 +4,7 @@ package Protocol;
 import "Enum.proto";
 import "Struct.proto";
 
-//player
+
 message C_LOGIN
 {
 
@@ -85,9 +85,6 @@ message S_PLAYER_DEAD
     uint64 playerId = 1;
 }
 
-
-
-//mob
 message Vector3
 {
 	float x = 1;
@@ -137,12 +134,21 @@ message C_USE_SKILL
 {
     uint64 playerId = 1;
     uint32 skillId = 2;
+
+	int32 clientShotId = 3;
+    Vector3 dir = 4; 
 }
 
 message S_USE_SKILL
 {
     uint64 playerId = 1;
     uint32 skillId = 2;
+
+	int32 clientShotId = 3;
+    int32 projectileId = 4;
+    Vector3 spawnPos = 5;
+    Vector3 dir = 6;
+    uint32 serverTick = 7;
 }
 
 message S_DAMAGE_MOB
@@ -150,4 +156,17 @@ message S_DAMAGE_MOB
 	uint64 mobId = 1;
 	int32 damage = 2;
 	int32 hp = 3;
+}
+
+message S_PROJECTILE_HIT
+{
+    int32 projectileId = 1;
+    uint64 targetId = 2;
+    Vector3 hitPos = 3;
+    int32 damage = 4;
+}
+
+message S_PROJECTILE_DESTROY
+{
+    int32 projectileId = 1;
 }

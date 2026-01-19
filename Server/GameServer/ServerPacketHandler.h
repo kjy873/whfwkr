@@ -33,6 +33,8 @@ enum : uint16
 	PKT_C_USE_SKILL = 1020,
 	PKT_S_USE_SKILL = 1021,
 	PKT_S_DAMAGE_MOB = 1022,
+	PKT_S_PROJECTILE_HIT = 1023,
+	PKT_S_PROJECTILE_DESTROY = 1024,
 };
 
 // Custom Handlers
@@ -84,6 +86,8 @@ public:
 	static SendBufferRef MakeSendBuffer(Protocol::S_MOVE_MOB& pkt) { return MakeSendBuffer(pkt, PKT_S_MOVE_MOB); }
 	static SendBufferRef MakeSendBuffer(Protocol::S_USE_SKILL& pkt) { return MakeSendBuffer(pkt, PKT_S_USE_SKILL); }
 	static SendBufferRef MakeSendBuffer(Protocol::S_DAMAGE_MOB& pkt) { return MakeSendBuffer(pkt, PKT_S_DAMAGE_MOB); }
+	static SendBufferRef MakeSendBuffer(Protocol::S_PROJECTILE_HIT& pkt) { return MakeSendBuffer(pkt, PKT_S_PROJECTILE_HIT); }
+	static SendBufferRef MakeSendBuffer(Protocol::S_PROJECTILE_DESTROY& pkt) { return MakeSendBuffer(pkt, PKT_S_PROJECTILE_DESTROY); }
 
 private:
 	template<typename PacketType, typename ProcessFunc>

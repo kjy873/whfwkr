@@ -34,7 +34,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SendUseSkill(int32 SkillId);
 
-	void OnRecvUseSkill(int64 PlayerId, int32 SkillId);
+	void OnRecvUseSkill(const Protocol::S_USE_SKILL& pkt);
 
 	virtual void Init() override;
 
@@ -66,6 +66,8 @@ public:
 	void HandleDespawnMob(const Protocol::S_DESPAWN_MOB& Pkt);
 	void HandleMoveMob(const Protocol::S_MOVE_MOB& MovePkt);
 	void HandleDamageMob(const Protocol::S_DAMAGE_MOB& DamagePkt);
+	void OnRecvProjectileHit(const Protocol::S_PROJECTILE_HIT& pkt);
+	void OnRecvProjectileDestroy(const Protocol::S_PROJECTILE_DESTROY& pkt);
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Settings")
@@ -87,8 +89,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<APlayerCharacter> OtherPlayerClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+	TSubclassOf<AActor> IceProjectileBPClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+	TSubclassOf<AActor> FireballProjectileBPClass;
+
 	APlayerCharacter* MyPlayer;
 	TMap<uint64, APlayerCharacter*> Players;
+
+	TMap<int32, AActor*> PredictedByShotId;
+	TMap<int32, AActor*> ByProjectileId;
 
 private:
 	FTimerHandle RecvPacketsTimerHandle;

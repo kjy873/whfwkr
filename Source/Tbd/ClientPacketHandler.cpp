@@ -152,7 +152,25 @@ bool Handle_S_USE_SKILL(PacketSessionRef& session, Protocol::S_USE_SKILL& pkt)
 
 	if (auto* GI = Cast<UMainGameInstance>(GWorld->GetGameInstance()))
 	{
-		GI->OnRecvUseSkill(pkt.playerid(), pkt.skillid());
+		GI->OnRecvUseSkill(pkt);
+	}
+	return true;
+}
+
+bool Handle_S_PROJECTILE_HIT(PacketSessionRef& session, Protocol::S_PROJECTILE_HIT& pkt)
+{
+	if (auto* GI = Cast<UMainGameInstance>(GWorld->GetGameInstance()))
+	{
+		GI->OnRecvProjectileHit(pkt);
+	}
+	return true;
+}
+
+bool Handle_S_PROJECTILE_DESTROY(PacketSessionRef& session, Protocol::S_PROJECTILE_DESTROY& pkt)
+{
+	if (auto* GI = Cast<UMainGameInstance>(GWorld->GetGameInstance()))
+	{
+		GI->OnRecvProjectileDestroy(pkt);
 	}
 	return true;
 }

@@ -33,6 +33,8 @@ enum : uint16
 	PKT_C_USE_SKILL = 1020,
 	PKT_S_USE_SKILL = 1021,
 	PKT_S_DAMAGE_MOB = 1022,
+	PKT_S_PROJECTILE_HIT = 1023,
+	PKT_S_PROJECTILE_DESTROY = 1024,
 };
 
 // Custom Handlers
@@ -51,6 +53,8 @@ bool Handle_S_DESPAWN_MOB(PacketSessionRef& session, Protocol::S_DESPAWN_MOB& pk
 bool Handle_S_MOVE_MOB(PacketSessionRef& session, Protocol::S_MOVE_MOB& pkt);
 bool Handle_S_USE_SKILL(PacketSessionRef& session, Protocol::S_USE_SKILL& pkt);
 bool Handle_S_DAMAGE_MOB(PacketSessionRef& session, Protocol::S_DAMAGE_MOB& pkt);
+bool Handle_S_PROJECTILE_HIT(PacketSessionRef& session, Protocol::S_PROJECTILE_HIT& pkt);
+bool Handle_S_PROJECTILE_DESTROY(PacketSessionRef& session, Protocol::S_PROJECTILE_DESTROY& pkt);
 
 class ClientPacketHandler
 {
@@ -73,6 +77,8 @@ public:
 		GPacketHandler[PKT_S_MOVE_MOB] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_MOVE_MOB>(Handle_S_MOVE_MOB, session, buffer, len); };
 		GPacketHandler[PKT_S_USE_SKILL] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_USE_SKILL>(Handle_S_USE_SKILL, session, buffer, len); };
 		GPacketHandler[PKT_S_DAMAGE_MOB] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_DAMAGE_MOB>(Handle_S_DAMAGE_MOB, session, buffer, len); };
+		GPacketHandler[PKT_S_PROJECTILE_HIT] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_PROJECTILE_HIT>(Handle_S_PROJECTILE_HIT, session, buffer, len); };
+		GPacketHandler[PKT_S_PROJECTILE_DESTROY] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_PROJECTILE_DESTROY>(Handle_S_PROJECTILE_DESTROY, session, buffer, len); };
 	}
 
 	static bool HandlePacket(PacketSessionRef& session, BYTE* buffer, int32 len)
