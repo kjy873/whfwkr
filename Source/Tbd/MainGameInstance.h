@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
 #include "Tbd.h"
+#include "HAL/PlatformProcess.h"
 #include "Protocol.pb.h"
 #include "MainGameInstance.generated.h"
 
@@ -37,6 +38,7 @@ public:
 	void OnRecvUseSkill(const Protocol::S_USE_SKILL& pkt);
 
 	virtual void Init() override;
+	virtual void Shutdown() override;
 
 	UPROPERTY()
 	uint64 MyObjectId = 0;
@@ -102,4 +104,10 @@ public:
 
 private:
 	FTimerHandle RecvPacketsTimerHandle;
+
+	void StartServerProcess();
+	void StopServerProcess();
+
+	FProcHandle ServerProcHandle;
+	bool bStartedServer = false;
 };

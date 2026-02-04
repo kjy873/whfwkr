@@ -7,9 +7,9 @@
 #include "GameSessionManager.h"
 #include "Room.h"
 #include "ObjectUtils.h"
-//#include "ClientPacketHandler.h"
 #include <tchar.h>
 #include "Job.h"
+
 #include "Protocol.pb.h"
 
 enum
@@ -36,6 +36,24 @@ void DoWorkerJob(ServerServiceRef& service)
 
 int main()
 {
+	/*
+	try 
+	{ 
+		sql::mysql::MySQL_Driver* driver; 
+		std::unique_ptr<sql::Connection> con; 
+		driver = sql::mysql::get_mysql_driver_instance(); 
+		con.reset(driver->connect("tcp://127.0.0.1:3306", "game", "game1")); 
+		con->setSchema("tbd_game"); 
+		std::cout << "DB CONNECT SUCCESS" << std::endl; 
+	}
+	catch (sql::SQLException& e) 
+	{ 
+		std::cout << "SQL ERROR: " << e.what() << std::endl; 
+		std::cout << "ErrorCode: " << e.getErrorCode() << std::endl; 
+		std::cout << "SQLState: " << e.getSQLState() << std::endl; 
+	}
+	*/
+
 	SetConsoleOutputCP(CP_UTF8);
 	SetConsoleCP(CP_UTF8);
 

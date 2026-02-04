@@ -15,6 +15,9 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/World.h"
 #include "DrawDebugHelpers.h"
+#include "Misc/Paths.h"
+#include "HAL/PlatformProcess.h"
+#include "Misc/CoreDelegates.h"
 
 void UMainGameInstance::ConnectToGameServer()
 {
@@ -86,6 +89,44 @@ void UMainGameInstance::DisconnectToGameServer()
 void UMainGameInstance::Init()
 {
 	Super::Init();
+	StartServerProcess();
+	FCoreDelegates::OnPreExit.AddUObject(this, &UMainGameInstance::StopServerProcess);
+	/*
+	const FString ServerExePath =
+		FPaths::Combine(FPaths::ProjectContentDir(), TEXT("ExternalServer/GameServer.exe"));
+
+	UE_LOG(LogTemp, Warning, TEXT("ServerExePath: %s"), *ServerExePath);
+
+	if (FPaths::FileExists(ServerExePath))
+	{
+		const FString WorkingDir = FPaths::GetPath(ServerExePath);
+
+		FProcHandle ProcHandle = FPlatformProcess::CreateProc(
+			*ServerExePath,
+			TEXT(""),
+			true,
+			false,
+			false,
+			nullptr,
+			0,
+			*WorkingDir,
+			nullptr
+		);
+
+		if (ProcHandle.IsValid())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[MainGameInstance::Init] Server started OK"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("[MainGameInstance::Init] CreateProc FAILED"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[MainGameInstance::Init] Server exe NOT FOUND"));
+	}
+	*/
 
 	ClientPacketHandler::Init();
 
@@ -95,11 +136,73 @@ void UMainGameInstance::Init()
 			RecvPacketsTimerHandle,
 			this,
 			&UMainGameInstance::HandleRecvPackets,
-			0.0f,
-			true 
+			0.01f,
+			true
 		);
-		UE_LOG(LogTemp, Warning, TEXT("[MainGameInstance::Init] RecvPackets timer started"));
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[MainGameInstance::Init] RecvPackets timer started"));
+}
+
+void UMainGameInstance::Shutdown()
+{
+	StopServerProcess();
+	Super::Shutdown();
+}
+
+void UMainGameInstance::StartServerProcess()
+{
+	if (bStartedServer && ServerProcHandle.IsValid())
+		return;
+
+	const FString ServerExePath =
+		FPaths::Combine(FPaths::ProjectContentDir(), TEXT("ExternalServer/GameServer.exe"));
+
+	UE_LOG(LogTemp, Warning, TEXT("ServerExePath: %s"), *ServerExePath);
+
+	if (!FPaths::FileExists(ServerExePath))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Server exe NOT FOUND"));
+		return;
+	}
+
+	const FString WorkingDir = FPaths::GetPath(ServerExePath);
+
+	ServerProcHandle = FPlatformProcess::CreateProc(
+		*ServerExePath,
+		TEXT(""),
+		true,
+		false,
+		false,
+		nullptr,
+		0,
+		*WorkingDir,
+		nullptr
+	);
+
+	bStartedServer = ServerProcHandle.IsValid();
+
+	UE_LOG(LogTemp, Warning, TEXT("Server started: %s"), bStartedServer ? TEXT("YES") : TEXT("NO"));
+}
+
+void UMainGameInstance::StopServerProcess()
+{
+	if (!bStartedServer)
+		return;
+
+	if (ServerProcHandle.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Terminating server process..."));
+
+		FPlatformProcess::TerminateProc(ServerProcHandle, true);
+		FPlatformProcess::CloseProc(ServerProcHandle);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ServerProcHandle invalid (nothing to terminate)"));
+	}
+
+	bStartedServer = false;
 }
 
 void UMainGameInstance::HandleRecvPackets()
