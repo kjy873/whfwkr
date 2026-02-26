@@ -32,6 +32,11 @@ void UMainGameInstance::ConnectToGameServer()
 		if (P > 0 && P < 65536)
 			Port = static_cast<int16>(P);
 	}
+	FString CommandLineIP;
+	if (FParse::Value(FCommandLine::Get(), TEXT("TargetIP="), CommandLineIP))
+	{
+		IpAddress = CommandLineIP;
+	}
 
 	UE_LOG(LogTemp, Warning, TEXT("Attempting to connect to: %s"), *IpAddress);
 
