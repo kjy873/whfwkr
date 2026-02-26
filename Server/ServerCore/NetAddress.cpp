@@ -13,7 +13,11 @@ NetAddress::NetAddress(wstring ip, uint16 port)
 {
 	::memset(&_sockAddr, 0, sizeof(_sockAddr));
 	_sockAddr.sin_family = AF_INET;
-	_sockAddr.sin_addr = Ip2Address(ip.c_str());
+
+	if (ip == L"0.0.0.0")
+		_sockAddr.sin_addr.s_addr = ::htonl(INADDR_ANY);
+	else
+		_sockAddr.sin_addr = Ip2Address(ip.c_str());
 	_sockAddr.sin_port = ::htons(port);
 }
 

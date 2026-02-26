@@ -66,7 +66,7 @@ int main()
 	ObjectUtils::ResetIdGenerator();
 
 	ServerServiceRef service = make_shared<ServerService>(
-		NetAddress(L"127.0.0.1", 7777),
+		NetAddress(L"0.0.0.0", 7777),
 		make_shared<IocpCore>(),
 		[=]() { return make_shared<GameSession>(); }, 100);
 

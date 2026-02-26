@@ -16,11 +16,25 @@
 #include "Engine/World.h"
 #include "DrawDebugHelpers.h"
 #include "Misc/Paths.h"
+#include "Misc/ConfigCacheIni.h"
 #include "HAL/PlatformProcess.h"
 #include "Misc/CoreDelegates.h"
 
 void UMainGameInstance::ConnectToGameServer()
 {
+	FString ConfigIP;
+	if (GConfig->GetString(TEXT("Network"), TEXT("ServerIP"), ConfigIP, GGameIni) && !ConfigIP.IsEmpty())
+		IpAddress = ConfigIP;
+	FString ConfigPortStr;
+	if (GConfig->GetString(TEXT("Network"), TEXT("ServerPort"), ConfigPortStr, GGameIni) && ConfigPortStr.IsEmpty() == false)
+	{
+		const int32 P = FCString::Atoi(*ConfigPortStr);
+		if (P > 0 && P < 65536)
+			Port = static_cast<int16>(P);
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Attempting to connect to: %s"), *IpAddress);
+
 	// 이전 연결이 있으면 정리
 	if (GameServerSession.IsValid())
 	{
@@ -44,6 +58,7 @@ void UMainGameInstance::ConnectToGameServer()
 	MyPlayer = nullptr;
 
 	Socket = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(TEXT("Stream"), TEXT("Client Socket"));
+	Socket->SetNonBlocking(true);
 
 	FIPv4Address Ip;
 	FIPv4Address::Parse(IpAddress, Ip);
@@ -89,48 +104,23 @@ void UMainGameInstance::DisconnectToGameServer()
 void UMainGameInstance::Init()
 {
 	Super::Init();
-	StartServerProcess();
-	FCoreDelegates::OnPreExit.AddUObject(this, &UMainGameInstance::StopServerProcess);
-	/*
-	const FString ServerExePath =
-		FPaths::Combine(FPaths::ProjectContentDir(), TEXT("ExternalServer/GameServer.exe"));
 
-	UE_LOG(LogTemp, Warning, TEXT("ServerExePath: %s"), *ServerExePath);
+	const bool bClientOnly = FParse::Param(FCommandLine::Get(), TEXT("clientonly"));
 
-	if (FPaths::FileExists(ServerExePath))
+	if (!bClientOnly)
 	{
-		const FString WorkingDir = FPaths::GetPath(ServerExePath);
-
-		FProcHandle ProcHandle = FPlatformProcess::CreateProc(
-			*ServerExePath,
-			TEXT(""),
-			true,
-			false,
-			false,
-			nullptr,
-			0,
-			*WorkingDir,
-			nullptr
-		);
-
-		if (ProcHandle.IsValid())
-		{
-			UE_LOG(LogTemp, Warning, TEXT("[MainGameInstance::Init] Server started OK"));
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("[MainGameInstance::Init] CreateProc FAILED"));
-		}
+		StartServerProcess();
+		FCoreDelegates::OnPreExit.AddUObject(this, &UMainGameInstance::StopServerProcess);
+		UE_LOG(LogTemp, Warning, TEXT("[MainGameInstance::Init] Server process started (NOT clientonly)"));
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("[MainGameInstance::Init] Server exe NOT FOUND"));
+		UE_LOG(LogTemp, Warning, TEXT("[MainGameInstance::Init] clientonly: skip StartServerProcess"));
 	}
-	*/
 
 	ClientPacketHandler::Init();
 
-	if (auto* World = GetWorld())
+	if (UWorld* World = GetWorld()) 
 	{
 		World->GetTimerManager().SetTimer(
 			RecvPacketsTimerHandle,
@@ -154,7 +144,6 @@ void UMainGameInstance::StartServerProcess()
 {
 	if (bStartedServer && ServerProcHandle.IsValid())
 		return;
-
 	const FString ServerExePath =
 		FPaths::Combine(FPaths::ProjectContentDir(), TEXT("ExternalServer/GameServer.exe"));
 
