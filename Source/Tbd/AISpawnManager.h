@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Landscape.h"
+#include "NPC_AIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Character.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
@@ -145,6 +146,12 @@ public:
 		EnemyActor->FindComponentByClass<UCharacterMovementComponent>()->StopMovementImmediately();
 		EnemyActor->FindComponentByClass<UCharacterMovementComponent>()->SetComponentTickEnabled(false);
 		EnemyActor->FindComponentByClass<UCharacterMovementComponent>()->DisableMovement();
+
+		if (APawn* EnemyPawn = Cast<APawn>(EnemyActor)) {
+			if (ANPC_AIController* EnemyController = Cast<ANPC_AIController>(EnemyPawn->GetController())) {
+				EnemyController->UpdateDisable();
+			}
+		}
 		//E->DisableComponentsSimulatePhysics();
 	}
 
@@ -155,6 +162,12 @@ public:
 		EnemyActor->SetActorTickEnabled(true);
 		EnemyActor->FindComponentByClass<UCharacterMovementComponent>()->SetComponentTickEnabled(true);
 		EnemyActor->FindComponentByClass<UCharacterMovementComponent>()->SetMovementMode(MOVE_Walking);
+
+		if (APawn* EnemyPawn = Cast<APawn>(EnemyActor)) {
+			if (ANPC_AIController* EnemyController = Cast<ANPC_AIController>(EnemyPawn->GetController())) {
+				EnemyController->UpdateEnable();
+			}
+		}
 		//E->EnableComponentsSimulatePhysics();
 	}
 
