@@ -14,6 +14,7 @@ public:
 	SOCKADDR_IN&	GetSockAddr() { return _sockAddr; }
 	wstring			GetIpAddress();
 	uint16			GetPort() { return ::ntohs(_sockAddr.sin_port); }
+	bool			IsAny() const { return _sockAddr.sin_addr.s_addr == ::htonl(INADDR_ANY); }
 
 public:
 	static IN_ADDR	Ip2Address(const WCHAR* ip);

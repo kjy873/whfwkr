@@ -40,7 +40,12 @@ bool Listener::StartAccept(ServerServiceRef service)
 	if (SocketUtils::SetLinger(_socket, 0, 0) == false)
 		return false;
 
-	if (SocketUtils::Bind(_socket, _service->GetNetAddress()) == false)
+
+	NetAddress addr = _service->GetNetAddress();
+	bool bindOk = addr.IsAny()
+		? SocketUtils::BindAnyAddress(_socket, addr.GetPort())
+		: SocketUtils::Bind(_socket, addr);
+	if (bindOk == false)
 		return false;
 
 	if (SocketUtils::Listen(_socket) == false)
@@ -88,7 +93,7 @@ void Listener::RegisterAccept(AcceptEvent* acceptEvent)
 		const int32 errorCode = ::WSAGetLastError();
 		if (errorCode != WSA_IO_PENDING)
 		{
-			// ÀÏ´Ü ´Ù½Ã Accept °É¾îÁØ´Ù
+			// ï¿½Ï´ï¿½ ï¿½Ù½ï¿½ Accept ï¿½É¾ï¿½ï¿½Ø´ï¿½
 			RegisterAccept(acceptEvent);
 		}
 	}
