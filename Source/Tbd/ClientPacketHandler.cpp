@@ -154,3 +154,18 @@ bool Handle_S_PROJECTILE_DESTROY(PacketSessionRef& session, Protocol::S_PROJECTI
 		GI->OnRecvProjectileDestroy(pkt);
 	return true;
 }
+
+bool Handle_S_CHANGE_LEVEL(PacketSessionRef& session, Protocol::S_CHANGE_LEVEL& pkt)
+{
+	FString LevelName = UTF8_TO_TCHAR(pkt.level_name().c_str());
+
+	AsyncTask(ENamedThreads::GameThread, [LevelName]()
+		{
+			if (UWorld* World = GEngine->GetWorldFromContextObject(GetMainGameInstance(), EGetWorldErrorMode::LogAndReturnNull))
+			{
+				UGameplayStatics::OpenLevel(World, FName(*LevelName));
+			}
+		});
+
+	return true;
+}

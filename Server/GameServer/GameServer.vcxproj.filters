@@ -57,6 +57,9 @@
     <ClCompile Include="Mob.cpp">
       <Filter>Game</Filter>
     </ClCompile>
+    <ClCompile Include="RoomManager.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -93,6 +96,9 @@
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="Mob.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="RoomManager.h">
       <Filter>Game</Filter>
     </ClInclude>
   </ItemGroup>

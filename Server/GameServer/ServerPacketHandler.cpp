@@ -6,6 +6,7 @@
 #include "ObjectUtils.h"
 #include "Room.h"
 #include "Player.h"
+#include "RoomManager.h"
 
 PacketHandlerFunc GPacketHandler[UINT16_MAX];
 
@@ -18,31 +19,35 @@ bool Handle_INVALID(PacketSessionRef& session, BYTE* buffer, int32 len)
 
 bool Handle_C_LOGIN(PacketSessionRef& session, Protocol::C_LOGIN& pkt)
 {
+	auto gameSession = std::static_pointer_cast<GameSession>(session);
+
+	// 플레이어 생성 및 세션 연결
+	PlayerRef player = ObjectUtils::CreatePlayer(gameSession);
+
+	// 룸 생성 및 입장 (DoAsync는 CreateHuntingRoom 내부에서 수행하도록 설계)
+	RoomRef room = GRoomManager.CreateHuntingRoom(player);
+
+	if (room == nullptr) return false;
+
+	// 응답 패킷 전송
 	Protocol::S_LOGIN loginPkt;
-
-	for (int32 i = 0; i < 3; i++)
-	{
-		Protocol::PlayerInfo* player = loginPkt.add_players();
-		player->set_x(Utils::GetRandom(0.f, 100.f));
-		player->set_y(Utils::GetRandom(0.f, 100.f));
-		player->set_z(Utils::GetRandom(0.f, 100.f));
-		player->set_yaw(Utils::GetRandom(0.f, 45.f));
-	}
-
 	loginPkt.set_success(true);
-	SEND_PACKET(loginPkt)
+	auto sendBuffer = ServerPacketHandler::MakeSendBuffer(loginPkt);
+	session->Send(sendBuffer);
 
 	return true;
 }
 
 bool Handle_C_ENTER_GAME(PacketSessionRef& session, Protocol::C_ENTER_GAME& pkt)
 {
-	PlayerRef player = ObjectUtils::CreatePlayer(static_pointer_cast<GameSession>(session));
+	auto gameSession = static_pointer_cast<GameSession>(session);
+	PlayerRef player = gameSession->player.load();
+	if (player == nullptr) return false;
 
-	GRoom->DoAsync([player]()
-		{
-			GRoom->HandleEnterPlayerLocked(player);
-		});
+	if (auto room = player->room.lock())
+	{
+		room->DoTimer(2000, &Room::HandleClientLevelReady, player);
+	}
 
 	return true;
 }

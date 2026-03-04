@@ -2,20 +2,27 @@
 #include "Mob.h"
 #include "JobQueue.h"
 
+enum class RoomType
+{
+	Hunting,
+	Battle
+};
+
 class Room : public JobQueue
 {
 public:
-	Room();
+	Room(RoomType type);
 	virtual ~Room();
 
-	bool HandleEnterPlayerLocked(PlayerRef player);
+	bool HandleEnterPlayerLocked(PlayerRef player, RoomRef self);
+	void HandleClientLevelReady(PlayerRef player);
 	bool HandleLeavePlayerLocked(PlayerRef player);
 
 	void HandleMoveLocked(Protocol::C_MOVE& pkt);
 
 public:
 	void Init();
-	void UpdateTick();
+	void UpdateTick(float deltaTime);
 	void SpawnRandomMobs();
 	void Clear(); // 모든 플레이어 제거
 	void Broadcast(SendBufferRef sendBuffer, uint64 exceptId = 0);
@@ -24,9 +31,10 @@ public:
 	void BroadcastUseSkill(uint64 playerId, uint32 skillId);
 	void HandlePlayerHit(uint64 attackerId, uint64 targetId);
 	void HandleAttackPlayerLocked(uint64 attackerId, uint64 targetId, uint32 skillId);
+	RoomType GetRoomType() { return _roomType; }
+	bool EnterPlayer(PlayerRef player, RoomRef self);
 
 private:
-	bool EnterPlayer(PlayerRef player);
 	bool LeavePlayer(uint64 objectId);
 
 	void UpdateMobs();
@@ -35,7 +43,8 @@ private:
 	unordered_map<uint64, PlayerRef> _players;
 	unordered_map<uint64, MobRef> _mobs;
 
+	float _timer = 0.0f;
+	RoomType _roomType;
+
 	USE_LOCK;
 };
-
-extern RoomRef GRoom;

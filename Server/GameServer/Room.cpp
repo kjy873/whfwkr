@@ -3,11 +3,11 @@
 #include "Player.h"
 #include "GameSession.h"
 #include "ObjectUtils.h"
+#include "RoomManager.h"
 
-RoomRef GRoom;
-
-Room::Room()
+Room::Room(RoomType type) : _roomType(type)
 {
+	_timer = 0.0f;
 }
 
 Room::~Room()
@@ -16,34 +16,33 @@ Room::~Room()
 
 void Room::Init()
 {
-	// DoTimer(100, &Room::UpdateTick);
+
 }
 
-
-void Room::UpdateTick()
+void Room::UpdateTick(float deltaTime)
 {
-	// Protocol::S_MOVE_MOB pkt;
-	// 
-	// for (auto& kv : _mobs)
-	// {
-	// 	MobRef mob = kv.second;
-	// 
-	// 	mob->x += Utils::GetRandom(-5.f, 5.f);
-	// 	mob->y += Utils::GetRandom(-5.f, 5.f);
-	// 
-	// 	Protocol::MobInfo* info = pkt.add_mobs();
-	// 	info->CopyFrom(mob->ToInfo());
-	// }
-	// 
-	// if (pkt.mobs_size() > 0)
-	// {
-	// 	SendBufferRef send = ServerPacketHandler::MakeSendBuffer(pkt);
-	// 	Broadcast(send);
-	// }
-	// 
-	// DoTimer(100, &Room::UpdateTick);
-}
+	if (_roomType != RoomType::Hunting)
+		return;
 
+	_timer += deltaTime;
+
+	if (_timer >= 10.0f)
+	{
+		_timer = 0.0f;
+
+		cout << "[Room] 10 seconds passed! Moving players to BattleRoom" << endl;
+
+		vector<PlayerRef> players;
+		{
+			WRITE_LOCK;
+			for (auto& item : _players)
+				players.push_back(item.second);
+		}
+
+		for (auto& p : players)
+			GRoomManager.MoveToBattleRoom(p);
+	}
+}
 
 void Room::Clear()
 {
@@ -62,18 +61,15 @@ void Room::Clear()
 	_players.clear();
 }
 
-bool Room::HandleEnterPlayerLocked(PlayerRef player)
+bool Room::HandleEnterPlayerLocked(PlayerRef player, RoomRef self)
 {
 	WRITE_LOCK;
 
-	cout << "[SERVER] EnterPlayer object_id = " << player->playerInfo->object_id() << endl;
-
-	bool success = EnterPlayer(player);
-
-	//player->playerInfo->set_x(Utils::GetRandom(0.f, 500.f));
-	//player->playerInfo->set_y(Utils::GetRandom(0.f, 500.f));
-	//player->playerInfo->set_z(100.f);
-	//player->playerInfo->set_yaw(Utils::GetRandom(0.f, 100.f));
+	if (EnterPlayer(player, self) == false)
+	{
+		cout << "[SERVER] EnterPlayer Failed for object_id = " << player->playerInfo->object_id() << endl;
+		return false;
+	}
 
 	float centerX = 40025.f;
 	float centerY = 47369.f;
@@ -85,10 +81,9 @@ bool Room::HandleEnterPlayerLocked(PlayerRef player)
 	player->playerInfo->set_yaw(Utils::GetRandom(0.f, 360.f));
 	player->playerInfo->set_hp(100);
 
-
 	{
 		Protocol::S_ENTER_GAME enterGamePkt;
-		enterGamePkt.set_success(success);
+		enterGamePkt.set_success(true);
 
 		Protocol::PlayerInfo* playerInfo = new Protocol::PlayerInfo();
 		playerInfo->CopyFrom(*player->playerInfo);
@@ -99,59 +94,48 @@ bool Room::HandleEnterPlayerLocked(PlayerRef player)
 			session->Send(sendBuffer);
 	}
 
+	cout << "[SERVER] Player " << player->playerInfo->object_id() << " Entered Room. Waiting for Level Ready..." << endl;
+
+	return true;
+}
+
+void Room::HandleClientLevelReady(PlayerRef player)
+{
+	WRITE_LOCK;
+	if (player == nullptr || player->playerInfo == nullptr) return;
+
+	uint64 myId = player->playerInfo->object_id();
+
+	// _roomId나 _id 대신 현재 방의 타입이나 플레이어 수만 출력하도록 수정
+	cout << "[DEBUG] Player " << myId << " Ready. Total Players in Room: " << _players.size() << endl;
+
+	// 1. 나에게 '이미 로딩이 끝난' 다른 사람들의 정보를 보냅니다.
+	Protocol::S_SPAWN spawnPkt;
+	for (auto& item : _players)
 	{
-		Protocol::S_SPAWN spawnPkt;
+		if (item.first == myId) continue;
 
-		Protocol::PlayerInfo* playerInfo = spawnPkt.add_players();
-		playerInfo->CopyFrom(*player->playerInfo);
-
-		SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(spawnPkt);
-		Broadcast(sendBuffer, player->playerInfo->object_id());
+		// 상대방도 로딩이 끝난 상태인지 체크하는 플래그가 있다면 더 좋습니다.
+		auto* info = spawnPkt.add_players();
+		info->CopyFrom(*item.second->playerInfo);
 	}
 
+	if (spawnPkt.players_size() > 0)
 	{
-		// 새 플레이어에게 기존 플레이어들의 정보 전송
-		Protocol::S_SPAWN spawnPkt;
-
-		for (auto& item : _players)
-		{
-			if (item.first == player->playerInfo->object_id())
-				continue;
-
-			Protocol::PlayerInfo* info = spawnPkt.add_players();
-			info->CopyFrom(*item.second->playerInfo);
-		}
-
-		if (spawnPkt.players_size() > 0)
-		{
-			SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(spawnPkt);
-			if (auto session = player->session.lock())
-				session->Send(sendBuffer);
-		}
+		auto sendBuffer = ServerPacketHandler::MakeSendBuffer(spawnPkt);
+		player->session.lock()->Send(sendBuffer);
+		cout << "[DEBUG] Sent " << spawnPkt.players_size() << " players info to Player " << myId << endl;
 	}
 
-	{
-		// 새 플레이어에게 기존 몬스터들의 정보 전송
-		Protocol::S_SPAWN_MOB spawnMobPkt;
+	// 2. 다른 모든 사람들에게 '나'를 스폰하라고 방송합니다.
+	Protocol::S_SPAWN broadcastPkt;
+	auto* selfInfo = broadcastPkt.add_players();
+	selfInfo->CopyFrom(*player->playerInfo);
+	auto broadcastBuffer = ServerPacketHandler::MakeSendBuffer(broadcastPkt);
 
-		for (auto& item : _mobs)
-		{
-			Protocol::MobInfo* mobInfo = spawnMobPkt.add_mobs();
-			mobInfo->CopyFrom(item.second->ToInfo());
-		}
-
-		if (spawnMobPkt.mobs_size() > 0)
-		{
-			cout << "[Room::HandleEnterPlayerLocked] Sending " << spawnMobPkt.mobs_size()
-				<< " existing mobs to new player" << endl;
-			SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(spawnMobPkt);
-			if (auto session = player->session.lock())
-				session->Send(sendBuffer);
-		}
-	}
-
-
-	return success;
+	// ★ 여기서 exceptId를 0으로 주거나, 자신을 포함해서 방송하여 
+	// 최소한 로그상으로 sentCount가 0이 아니게 확인해보세요.
+	Broadcast(broadcastBuffer, myId);
 }
 
 bool Room::HandleLeavePlayerLocked(PlayerRef player)
@@ -208,30 +192,33 @@ void Room::HandleMoveLocked(Protocol::C_MOVE& pkt)
 	}
 }
 
-bool Room::EnterPlayer(PlayerRef player)
+bool Room::EnterPlayer(PlayerRef player, RoomRef self)
 {
-	if(_players.find(player->playerInfo->object_id()) != _players.end())
+	if (_players.find(player->playerInfo->object_id()) != _players.end())
 		return false;
 
 	_players.insert(make_pair(player->playerInfo->object_id(), player));
 
-	//player->room.store(shared_from_this());
-	player->room = static_pointer_cast<Room>(JobQueue::shared_from_this());
+	player->room = self;
 
 	return true;
 }
 
 bool Room::LeavePlayer(uint64 objectId)
 {
-	if (_players.find(objectId) == _players.end())
+	auto it = _players.find(objectId);
+	if (it == _players.end())
 		return false;
 
-	PlayerRef player = _players[objectId];
-	//player->room.store(weak_ptr<Room>());
-	player->room.reset();
+	PlayerRef player = it->second;
 
-	_players.erase(objectId);
+	if (auto cur = player->room.lock())
+	{
+		if (cur.get() == this)
+			player->room.reset();
+	}
 
+	_players.erase(it);
 	return true;
 }
 

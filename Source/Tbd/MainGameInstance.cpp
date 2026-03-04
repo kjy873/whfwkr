@@ -114,7 +114,7 @@ void UMainGameInstance::Init()
 
 	if (!bClientOnly)
 	{
-		StartServerProcess();
+		//StartServerProcess();
 		FCoreDelegates::OnPreExit.AddUObject(this, &UMainGameInstance::StopServerProcess);
 		UE_LOG(LogTemp, Warning, TEXT("[MainGameInstance::Init] Server process started (NOT clientonly)"));
 	}
@@ -221,74 +221,64 @@ void UMainGameInstance::SendPacket(SendBufferRef SendBuffer)
 
 void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool IsMine)
 {
-	if (Socket == nullptr || GameServerSession == nullptr)
-		return;
-
-	auto* World = GetWorld();
-	if (World == nullptr)
-		return;
+	if (Socket == nullptr || GameServerSession == nullptr) return;
+	UWorld* World = GetWorld();
+	if (World == nullptr) return;
 
 	const uint64 ObjectId = PlayerInfo.object_id();
-	
-	// 이미 존재하는 플레이어가 있으면 제거하고 다시 스폰
-	APlayerCharacter** ExistingPlayer = Players.Find(ObjectId);
-	if (ExistingPlayer != nullptr && *ExistingPlayer != nullptr)
+	FVector SpawnLocation(PlayerInfo.x(), PlayerInfo.y(), PlayerInfo.z());
+	FRotator SpawnRotation(0.f, PlayerInfo.yaw(), 0.f);
+
+	// [1] 안전하게 기존 플레이어 찾기
+	if (APlayerCharacter** ExistingPlayerPtr = Players.Find(ObjectId))
 	{
-		// MyPlayer가 아니면 제거
-		if (*ExistingPlayer != MyPlayer)
+		// 포인터가 가리키는 실제 액터가 엔진 내에서 유효한지 검사
+		if (IsValid(*ExistingPlayerPtr))
 		{
-			World->DestroyActor(*ExistingPlayer);
+			APlayerCharacter* ExistingPlayer = *ExistingPlayerPtr;
+			ExistingPlayer->SetActorLocation(SpawnLocation);
+			ExistingPlayer->SetActorRotation(SpawnRotation);
+			ExistingPlayer->SetPlayerInfo(PlayerInfo);
+
+			UE_LOG(LogTemp, Warning, TEXT("HandleSpawn: Actor updated ID=%llu"), ObjectId);
+			return;
 		}
-		Players.Remove(ObjectId);
+		else
+		{
+			// 액터가 이미 파괴되었거나 유효하지 않다면 맵에서 제거
+			Players.Remove(ObjectId);
+			UE_LOG(LogTemp, Error, TEXT("HandleSpawn: Invalid Actor removed from Map ID=%llu"), ObjectId);
+		}
 	}
 
-	FVector SpawnLocation(PlayerInfo.x(), PlayerInfo.y(), PlayerInfo.z());
-	UE_LOG(LogTemp, Warning, TEXT("Spawn Pos: %f %f %f"),PlayerInfo.x(), PlayerInfo.y(), PlayerInfo.z());
-
-	UE_LOG(LogTemp, Warning, TEXT("HandleSpawn: id=%llu IsMine=%d"), PlayerInfo.object_id(), IsMine);
-
+	// [2] 신규 생성 로직
 	if (IsMine)
 	{
 		auto PC = UGameplayStatics::GetPlayerController(this, 0);
+		if (PC == nullptr) return;
+
 		APlayerCharacter* Player = Cast<APlayerCharacter>(PC->GetPawn());
-		if (Player == nullptr)
-			return;
+		if (Player == nullptr) return;
 
 		Player->bIsMine = true;
 		Player->SetPlayerInfo(PlayerInfo);
+		Player->SetActorLocation(SpawnLocation);
 
 		MyPlayer = Player;
-		Players.Add(PlayerInfo.object_id(), Player);
-
-		if (UC_NetworkPlayerComponent* NetComp = Player->FindComponentByClass<UC_NetworkPlayerComponent>())
-		{
-			NetComp->SetObjectId(PlayerInfo.object_id());
-			UE_LOG(LogTemp, Warning, TEXT("My ObjectId Set: %llu"), PlayerInfo.object_id());
-		}
+		Players.Add(ObjectId, Player);
 	}
-
 	else
 	{
-		// 충돌 방지를 위해 약간 옆으로 오프셋
-		SpawnLocation += FVector(30.f, 0.f, 0.f);
-		FRotator SpawnRotation(0.f, PlayerInfo.yaw(), 0.f);
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		APlayerCharacter* Player = World->SpawnActor<APlayerCharacter>(
-			OtherPlayerClass,
-			SpawnLocation,
-			SpawnRotation
-		);
-
-		UE_LOG(LogTemp, Warning, TEXT("SpawnActor Success? %s"),
-			Player ? TEXT("YES") : TEXT("NO"));
-
-		if (Player == nullptr)
-			return;
-
-		Player->bIsMine = false;
-		Player->SetPlayerInfo(PlayerInfo);
-
-		Players.Add(PlayerInfo.object_id(), Player);
+		APlayerCharacter* Player = World->SpawnActor<APlayerCharacter>(OtherPlayerClass, SpawnLocation, SpawnRotation, SpawnParams);
+		if (Player != nullptr)
+		{
+			Player->bIsMine = false;
+			Player->SetPlayerInfo(PlayerInfo);
+			Players.Add(ObjectId, Player);
+		}
 	}
 }
 
@@ -300,41 +290,37 @@ void UMainGameInstance::HandleSpawn(const Protocol::S_ENTER_GAME& EnterGamePkt)
 
 void UMainGameInstance::HandleSpawn(const Protocol::S_SPAWN& SpawnPkt)
 {
-	for (auto& Player : SpawnPkt.players())
+	for (const auto& PlayerInfo : SpawnPkt.players())
 	{
-		const bool bIsMine = (Player.object_id() == MyObjectId);
-		HandleSpawn(Player, bIsMine);
+		uint64 ObjectId = PlayerInfo.object_id();
+
+		if (ObjectId == MyObjectId)
+		{
+			UE_LOG(LogTemp, Log, TEXT("HandleSpawn: Skipping MyPlayer ID=%llu"), ObjectId);
+			continue;
+		}
+
+		HandleSpawn(PlayerInfo, false);
 	}
 }
 
 void UMainGameInstance::HandleDespawn(uint64 ObjectId)
 {
-	if (Socket == nullptr || GameServerSession == nullptr)
-		return;
-
-	auto* World = GetWorld();
-	if (World == nullptr)
-		return;
+	if (Socket == nullptr || GameServerSession == nullptr) return;
+	UWorld* World = GetWorld();
+	if (World == nullptr) return;
 
 	APlayerCharacter** FindActor = Players.Find(ObjectId);
-	if (FindActor == nullptr)
-		return;
+	if (FindActor == nullptr || *FindActor == nullptr) return;
 
 	APlayerCharacter* PlayerToDestroy = *FindActor;
-	
-	// Players 맵에서 제거
 	Players.Remove(ObjectId);
-	
-	// MyPlayer인 경우 nullptr로 설정
-	if (MyPlayer == PlayerToDestroy)
-	{
-		MyPlayer = nullptr;
-	}
 
-	// 액터 파괴
-	if (PlayerToDestroy != nullptr)
+	if (MyPlayer == PlayerToDestroy) return;
+
+	if (IsValid(PlayerToDestroy))
 	{
-		World->DestroyActor(PlayerToDestroy);
+		PlayerToDestroy->Destroy();
 	}
 }
 
@@ -757,6 +743,23 @@ void UMainGameInstance::SendUseSkill(int32 SkillId)
 	SendPacket(ClientPacketHandler::MakeSendBuffer(pkt));
 }
 
+void UMainGameInstance::SendEnterGamePacket()
+{
+	UE_LOG(LogTemp, Warning, TEXT("=== SendEnterGamePacket Start ==="));
+
+	if (!GameServerSession.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("Critical Error: GameServerSession is NOT Valid! Connection might be lost."));
+		return;
+	}
+
+	Protocol::C_ENTER_GAME EnterGamePkt;
+	auto SendBuffer = ClientPacketHandler::MakeSendBuffer(EnterGamePkt);
+
+	GameServerSession->SendPacket(SendBuffer);
+	UE_LOG(LogTemp, Log, TEXT("Successfully Sent C_ENTER_GAME Packet"));
+}
+
 static constexpr int32 ICE_SKILL_ID = 0;
 static constexpr int32 FIREBALL_SKILL_ID = 1;
 
@@ -766,24 +769,25 @@ void UMainGameInstance::OnRecvUseSkill(const Protocol::S_USE_SKILL& pkt)
 
 	const int64 PlayerId = (int64)pkt.playerid();
 	const int32 SkillId = (int32)pkt.skillid();
+	const int32 ClientShotId = pkt.clientshotid();
+	const int32 ProjectileId = pkt.projectileid();
+ 
+	const bool bIsMine = (PlayerId == MyObjectId);
 
 	FVector SpawnPos(pkt.spawnpos().x(), pkt.spawnpos().y(), pkt.spawnpos().z());
 	FVector Dir(pkt.dir().x(), pkt.dir().y(), pkt.dir().z());
 	Dir = Dir.GetSafeNormal();
 
-	const int32 ClientShotId = pkt.clientshotid();
-	const int32 ProjectileId = pkt.projectileid();
-
-	const bool bIsMine = (PlayerId == MyObjectId);
-
 	if (!bIsMine)
 	{
 		APlayerCharacter** Found = Players.Find(PlayerId);
-		if (Found == nullptr || *Found == nullptr) return;
-		(*Found)->PlayOtherPlayerSkill(SkillId);
-	}
+		if (Found && *Found)
+		{
+			(*Found)->PlayOtherPlayerSkill(SkillId);
+		}
 
-	if (bIsMine)
+	}
+	else
 	{
 		if (AActor** PredPtr = PredictedByShotId.Find(ClientShotId))
 		{
@@ -807,14 +811,8 @@ void UMainGameInstance::OnRecvUseSkill(const Protocol::S_USE_SKILL& pkt)
 		ProjClass = IceProjectileBPClass;
 	else if (SkillId == FIREBALL_SKILL_ID)
 		ProjClass = FireballProjectileBPClass;
-	else
-		return;
 
-	if (!ProjClass)
-	{
-		UE_LOG(LogTemp, Error, TEXT("[OnRecvUseSkill] Projectile BP class is null for SkillId=%d"), SkillId);
-		return;
-	}
+	if (!ProjClass) return;
 
 	FActorSpawnParameters Params;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;

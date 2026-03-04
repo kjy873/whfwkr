@@ -170,3 +170,8 @@ message S_PROJECTILE_DESTROY
 {
     int32 projectileId = 1;
 }
+
+message S_CHANGE_LEVEL
+{
+    string level_name = 1;
+}

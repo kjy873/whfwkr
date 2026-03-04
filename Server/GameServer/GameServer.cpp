@@ -9,7 +9,7 @@
 #include "ObjectUtils.h"
 #include <tchar.h>
 #include "Job.h"
-
+#include "RoomManager.h"
 #include "Protocol.pb.h"
 
 enum
@@ -58,11 +58,6 @@ int main()
 	SetConsoleCP(CP_UTF8);
 
 	ServerPacketHandler::Init();
-	
-	// 서버 시작 시 Room 초기화 및 ID 생성기 초기화
-	GRoom = make_shared<Room>();
-	GRoom->Init();
-	GRoom->Clear();
 	ObjectUtils::ResetIdGenerator();
 
 	ServerServiceRef service = make_shared<ServerService>(
@@ -70,27 +65,43 @@ int main()
 		make_shared<IocpCore>(),
 		[=]() { return make_shared<GameSession>(); }, 100);
 
-	ASSERT_CRASH(service->Start());
-
-	if (!service->Start())
+	if (service->Start())
 	{
-		cout<< "Service Start Failed!" << endl;
+		cout << "Server Start! (Port: 7777)" << endl;
+	}
+	else
+	{
+		// 시작 실패 시 여기서 크래시를 내거나 종료
+		ASSERT_CRASH(false);
 		return -1;
 	}
-	cout << "Server Start!" << endl;
 
 	for (int32 i = 0; i < 5; i++)
 	{
-		GThreadManager->Launch([&service]()
+		GThreadManager->Launch([service]()
 			{
-				DoWorkerJob(service);
+				DoWorkerJob(const_cast<ServerServiceRef&>(service));
 			});
 	}
 
-	while (true)
-	{
-		this_thread::sleep_for(1s);
-	}
+	GThreadManager->Launch([]()
+		{
+			cout << "Game Logic Thread Started!" << endl;
+			uint64 lastTick = GetTickCount64();
+			while (true)
+			{
+				uint64 currentTick = GetTickCount64();
+				float deltaTime = (currentTick - lastTick) / 1000.0f;
+
+				if (deltaTime > 0.0f)
+				{
+					lastTick = currentTick;
+
+					GRoomManager.Update(deltaTime);
+				}
+				this_thread::sleep_for(10ms);
+			}
+		});
 
 	GThreadManager->Join();
 }

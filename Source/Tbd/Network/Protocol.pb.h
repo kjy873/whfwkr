@@ -78,6 +78,9 @@ extern C_USE_SKILLDefaultTypeInternal _C_USE_SKILL_default_instance_;
 class MobInfo;
 struct MobInfoDefaultTypeInternal;
 extern MobInfoDefaultTypeInternal _MobInfo_default_instance_;
+class S_CHANGE_LEVEL;
+struct S_CHANGE_LEVELDefaultTypeInternal;
+extern S_CHANGE_LEVELDefaultTypeInternal _S_CHANGE_LEVEL_default_instance_;
 class S_CHAT;
 struct S_CHATDefaultTypeInternal;
 extern S_CHATDefaultTypeInternal _S_CHAT_default_instance_;
@@ -141,6 +144,7 @@ template<> ::Protocol::C_MOVE* Arena::CreateMaybeMessage<::Protocol::C_MOVE>(Are
 template<> ::Protocol::C_MOVE_MOB* Arena::CreateMaybeMessage<::Protocol::C_MOVE_MOB>(Arena*);
 template<> ::Protocol::C_USE_SKILL* Arena::CreateMaybeMessage<::Protocol::C_USE_SKILL>(Arena*);
 template<> ::Protocol::MobInfo* Arena::CreateMaybeMessage<::Protocol::MobInfo>(Arena*);
+template<> ::Protocol::S_CHANGE_LEVEL* Arena::CreateMaybeMessage<::Protocol::S_CHANGE_LEVEL>(Arena*);
 template<> ::Protocol::S_CHAT* Arena::CreateMaybeMessage<::Protocol::S_CHAT>(Arena*);
 template<> ::Protocol::S_DAMAGE_MOB* Arena::CreateMaybeMessage<::Protocol::S_DAMAGE_MOB>(Arena*);
 template<> ::Protocol::S_DAMAGE_PLAYER* Arena::CreateMaybeMessage<::Protocol::S_DAMAGE_PLAYER>(Arena*);
@@ -4537,6 +4541,159 @@ class S_PROJECTILE_DESTROY final :
   union { Impl_ _impl_; };
   friend struct ::TableStruct_Protocol_2eproto;
 };
+// -------------------------------------------------------------------
+
+class S_CHANGE_LEVEL final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:Protocol.S_CHANGE_LEVEL) */ {
+ public:
+  inline S_CHANGE_LEVEL() : S_CHANGE_LEVEL(nullptr) {}
+  ~S_CHANGE_LEVEL() override;
+  explicit PROTOBUF_CONSTEXPR S_CHANGE_LEVEL(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  S_CHANGE_LEVEL(const S_CHANGE_LEVEL& from);
+  S_CHANGE_LEVEL(S_CHANGE_LEVEL&& from) noexcept
+    : S_CHANGE_LEVEL() {
+    *this = ::std::move(from);
+  }
+
+  inline S_CHANGE_LEVEL& operator=(const S_CHANGE_LEVEL& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline S_CHANGE_LEVEL& operator=(S_CHANGE_LEVEL&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const S_CHANGE_LEVEL& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const S_CHANGE_LEVEL* internal_default_instance() {
+    return reinterpret_cast<const S_CHANGE_LEVEL*>(
+               &_S_CHANGE_LEVEL_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    27;
+
+  friend void swap(S_CHANGE_LEVEL& a, S_CHANGE_LEVEL& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(S_CHANGE_LEVEL* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(S_CHANGE_LEVEL* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  S_CHANGE_LEVEL* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<S_CHANGE_LEVEL>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const S_CHANGE_LEVEL& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const S_CHANGE_LEVEL& from) {
+    S_CHANGE_LEVEL::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(S_CHANGE_LEVEL* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "Protocol.S_CHANGE_LEVEL";
+  }
+  protected:
+  explicit S_CHANGE_LEVEL(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kLevelNameFieldNumber = 1,
+  };
+  // string level_name = 1;
+  void clear_level_name();
+  const std::string& level_name() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_level_name(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_level_name();
+  PROTOBUF_NODISCARD std::string* release_level_name();
+  void set_allocated_level_name(std::string* level_name);
+  private:
+  const std::string& _internal_level_name() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_level_name(const std::string& value);
+  std::string* _internal_mutable_level_name();
+  public:
+
+  // @@protoc_insertion_point(class_scope:Protocol.S_CHANGE_LEVEL)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr level_name_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_Protocol_2eproto;
+};
 // ===================================================================
 
 
@@ -6665,9 +6822,65 @@ inline void S_PROJECTILE_DESTROY::set_projectileid(int32_t value) {
   // @@protoc_insertion_point(field_set:Protocol.S_PROJECTILE_DESTROY.projectileId)
 }
 
+// -------------------------------------------------------------------
+
+// S_CHANGE_LEVEL
+
+// string level_name = 1;
+inline void S_CHANGE_LEVEL::clear_level_name() {
+  _impl_.level_name_.ClearToEmpty();
+}
+inline const std::string& S_CHANGE_LEVEL::level_name() const {
+  // @@protoc_insertion_point(field_get:Protocol.S_CHANGE_LEVEL.level_name)
+  return _internal_level_name();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void S_CHANGE_LEVEL::set_level_name(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.level_name_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:Protocol.S_CHANGE_LEVEL.level_name)
+}
+inline std::string* S_CHANGE_LEVEL::mutable_level_name() {
+  std::string* _s = _internal_mutable_level_name();
+  // @@protoc_insertion_point(field_mutable:Protocol.S_CHANGE_LEVEL.level_name)
+  return _s;
+}
+inline const std::string& S_CHANGE_LEVEL::_internal_level_name() const {
+  return _impl_.level_name_.Get();
+}
+inline void S_CHANGE_LEVEL::_internal_set_level_name(const std::string& value) {
+  
+  _impl_.level_name_.Set(value, GetArenaForAllocation());
+}
+inline std::string* S_CHANGE_LEVEL::_internal_mutable_level_name() {
+  
+  return _impl_.level_name_.Mutable(GetArenaForAllocation());
+}
+inline std::string* S_CHANGE_LEVEL::release_level_name() {
+  // @@protoc_insertion_point(field_release:Protocol.S_CHANGE_LEVEL.level_name)
+  return _impl_.level_name_.Release();
+}
+inline void S_CHANGE_LEVEL::set_allocated_level_name(std::string* level_name) {
+  if (level_name != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.level_name_.SetAllocated(level_name, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.level_name_.IsDefault()) {
+    _impl_.level_name_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:Protocol.S_CHANGE_LEVEL.level_name)
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

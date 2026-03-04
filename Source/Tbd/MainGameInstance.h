@@ -35,6 +35,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SendUseSkill(int32 SkillId);
 
+	UFUNCTION(BlueprintCallable)
+	void SendEnterGamePacket();
+
 	void OnRecvUseSkill(const Protocol::S_USE_SKILL& pkt);
 
 	virtual void Init() override;
