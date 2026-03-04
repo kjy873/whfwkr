@@ -53,6 +53,12 @@ public:
 	bool HasStateTag(FGameplayTag Tag) const { return CurrentState.HasTag(Tag); }
 
 	UFUNCTION(BlueprintCallable, Category = "State")
+	bool HasAnyStateTags(FGameplayTagContainer Tags) const { return CurrentState.HasAnyTags(Tags); }
+
+	UFUNCTION(BlueprintCallable, Category = "State")
+	bool HasAllStateTags(FGameplayTagContainer Tags) const { return CurrentState.HasAllTags(Tags); }
+
+	UFUNCTION(BlueprintCallable, Category = "State")
 	FGameplayTag GetCurrentActionTag() const { return CurrentState.GetActionTag(); }
 
 	UFUNCTION(BlueprintCallable, Category = "State")

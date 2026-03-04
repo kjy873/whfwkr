@@ -94,6 +94,8 @@ public:
 
 	
 	bool HasTag(const FGameplayTag& Tag) const { return RuntimeTags.HasTag(Tag); }
+	bool HasAnyTags(const FGameplayTagContainer& Tags) const { return RuntimeTags.HasAny(Tags); }
+	bool HasAllTags(const FGameplayTagContainer& Tags) const { return RuntimeTags.HasAll(Tags); }
 	bool HasTagExact(const FGameplayTag& Tag) const { return RuntimeTags.HasTagExact(Tag); }
 	void AddTag(const FGameplayTag& Tag) { RuntimeTags.AddTag(Tag); }
 	void RemoveTag(const FGameplayTag& Tag) { RuntimeTags.RemoveTag(Tag); }
