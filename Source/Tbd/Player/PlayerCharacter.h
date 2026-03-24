@@ -71,6 +71,9 @@ public:
 	void SubtractStamina(float Value) { Attributes.SubtractStamina(Value); }
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
 	void SubtractMana(float Value) { Attributes.SubtractMana(Value); }
+	
+	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
+	void AddBaseDamage(float Value) { Attributes.AddBaseDamage(Value); }
 
 	// Attributes end
 

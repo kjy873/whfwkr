@@ -88,6 +88,8 @@ struct FAttribute
 	inline void SubtractStamina(float Value) { Stamina = FMath::Clamp(Stamina - Value, 0.f, MaxStamina); }
 	inline void SubtractMana(float Value) { Mana = FMath::Clamp(Mana - Value, 0.f, MaxMana); }
 
+	inline void AddBaseDamage(float Value) { BaseDamage += Value; }
+
 	inline bool AddExperience(float Value)
 	{
 		bool LevelUp = false;
@@ -142,6 +144,9 @@ struct FUpgradeData : public FTableRowBase{
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade")
 	bool Reusability;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade")
+	int ID;
+
 	FUpgradeData() 
 		: CharacterType(ECharacterType::ECT_None)
 		, Name(NAME_None)
@@ -149,6 +154,7 @@ struct FUpgradeData : public FTableRowBase{
 		, Description(FText::GetEmpty())
 		, Icon(nullptr)
 		, Reusability(false)
+		, ID(0)
 	{
 	}
 
