@@ -4,6 +4,8 @@
 #include "GameSession.h"
 #include "ObjectUtils.h"
 #include "RoomManager.h"
+#include <thread>
+#include <chrono>
 
 Room::Room(RoomType type) : _roomType(type)
 {
@@ -48,7 +50,6 @@ void Room::Clear()
 {
 	WRITE_LOCK;
 
-	// 모든 플레이어의 room 참조 해제
 	for (auto& item : _players)
 	{
 		PlayerRef player = item.second;
@@ -71,9 +72,20 @@ bool Room::HandleEnterPlayerLocked(PlayerRef player, RoomRef self)
 		return false;
 	}
 
-	float centerX = 40025.f;
-	float centerY = 47369.f;
-	float centerZ = -689.f;
+	float centerX, centerY, centerZ;
+
+	if (_roomType == RoomType::Hunting)
+	{
+		centerX = 40025.f;
+		centerY = 47369.f;
+		centerZ = -689.f;
+	}
+	else
+	{
+		centerX = 0.f;
+		centerY = 0.f;
+		centerZ = 100.f;
+	}
 
 	player->playerInfo->set_x(centerX);
 	player->playerInfo->set_y(centerY);
@@ -104,38 +116,39 @@ void Room::HandleClientLevelReady(PlayerRef player)
 	WRITE_LOCK;
 	if (player == nullptr || player->playerInfo == nullptr) return;
 
-	uint64 myId = player->playerInfo->object_id();
-
-	// _roomId나 _id 대신 현재 방의 타입이나 플레이어 수만 출력하도록 수정
-	cout << "[DEBUG] Player " << myId << " Ready. Total Players in Room: " << _players.size() << endl;
-
-	// 1. 나에게 '이미 로딩이 끝난' 다른 사람들의 정보를 보냅니다.
-	Protocol::S_SPAWN spawnPkt;
-	for (auto& item : _players)
 	{
-		if (item.first == myId) continue;
+		Protocol::S_ENTER_GAME enterGamePkt;
+		enterGamePkt.set_success(true);
+		auto* selfInfo = new Protocol::PlayerInfo();
+		selfInfo->CopyFrom(*player->playerInfo);
+		enterGamePkt.set_allocated_player(selfInfo);
 
-		// 상대방도 로딩이 끝난 상태인지 체크하는 플래그가 있다면 더 좋습니다.
-		auto* info = spawnPkt.add_players();
-		info->CopyFrom(*item.second->playerInfo);
+		if (auto session = player->session.lock())
+			session->Send(ServerPacketHandler::MakeSendBuffer(enterGamePkt));
 	}
 
-	if (spawnPkt.players_size() > 0)
 	{
-		auto sendBuffer = ServerPacketHandler::MakeSendBuffer(spawnPkt);
-		player->session.lock()->Send(sendBuffer);
-		cout << "[DEBUG] Sent " << spawnPkt.players_size() << " players info to Player " << myId << endl;
+		Protocol::S_SPAWN spawnPkt;
+		for (auto& item : _players)
+		{
+			if (item.first == player->playerInfo->object_id()) continue;
+			auto* info = spawnPkt.add_players();
+			info->CopyFrom(*item.second->playerInfo);
+		}
+		if (spawnPkt.players_size() > 0)
+		{
+			if (auto session = player->session.lock())
+				session->Send(ServerPacketHandler::MakeSendBuffer(spawnPkt));
+		}
 	}
 
-	// 2. 다른 모든 사람들에게 '나'를 스폰하라고 방송합니다.
-	Protocol::S_SPAWN broadcastPkt;
-	auto* selfInfo = broadcastPkt.add_players();
-	selfInfo->CopyFrom(*player->playerInfo);
-	auto broadcastBuffer = ServerPacketHandler::MakeSendBuffer(broadcastPkt);
+	{
+		Protocol::S_SPAWN broadcastPkt;
+		auto* broadcastInfo = broadcastPkt.add_players();
+		broadcastInfo->CopyFrom(*player->playerInfo);
 
-	// ★ 여기서 exceptId를 0으로 주거나, 자신을 포함해서 방송하여 
-	// 최소한 로그상으로 sentCount가 0이 아니게 확인해보세요.
-	Broadcast(broadcastBuffer, myId);
+		Broadcast(ServerPacketHandler::MakeSendBuffer(broadcastPkt), player->playerInfo->object_id());
+	}
 }
 
 bool Room::HandleLeavePlayerLocked(PlayerRef player)
@@ -175,21 +188,21 @@ void Room::HandleMoveLocked(Protocol::C_MOVE& pkt)
 	WRITE_LOCK;
 
 	const uint64 objectId = pkt.info().object_id();
+
 	if (_players.find(objectId) == _players.end())
+	{
 		return;
+	}
 
 	PlayerRef& player = _players[objectId];
 	player->playerInfo->CopyFrom(pkt.info());
 
-	{
-		Protocol::S_MOVE movePkt;
-		{
-			Protocol::PlayerInfo* info = movePkt.mutable_info();
-			info->CopyFrom(pkt.info());
-		}
-		SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(movePkt);
-		Broadcast(sendBuffer);
-	}
+	Protocol::S_MOVE movePkt;
+	Protocol::PlayerInfo* info = movePkt.mutable_info();
+	info->CopyFrom(pkt.info());
+
+	SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(movePkt);
+	Broadcast(sendBuffer);
 }
 
 bool Room::EnterPlayer(PlayerRef player, RoomRef self)
@@ -202,6 +215,67 @@ bool Room::EnterPlayer(PlayerRef player, RoomRef self)
 	player->room = self;
 
 	return true;
+}
+
+void Room::StartReturnToMap1Timer()
+{
+	WRITE_LOCK;
+
+	if (bReturnToMap1TimerStarted)
+		return;
+
+	bReturnToMap1TimerStarted = true;
+
+	RoomRef room = static_pointer_cast<Room>(shared_from_this());
+
+	std::thread([room]()
+		{
+			std::this_thread::sleep_for(std::chrono::seconds(20));
+
+			room->DoAsync([room]()
+				{
+					Protocol::S_CHANGE_LEVEL pkt;
+					pkt.set_level_name("LandscapeMap");
+
+					SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
+					room->Broadcast(sendBuffer);
+
+					cout << "[Room] Broadcast S_CHANGE_LEVEL -> LandscapeMap" << endl;
+				});
+		}).detach();
+}
+
+void Room::SendExistingPlayersTo(GameSessionRef session, uint64 excludeObjectId)
+{
+	WRITE_LOCK;
+
+	Protocol::S_SPAWN spawnPkt;
+
+	cout << "[Room::SendExistingPlayersTo] exclude=" << excludeObjectId
+		<< " playerCount=" << _players.size() << endl;
+
+	for (const auto& pair : _players)
+	{
+		PlayerRef other = pair.second;
+		if (other == nullptr || other->playerInfo == nullptr)
+			continue;
+
+		cout << "  [Room::SendExistingPlayersTo] candidate objId="
+			<< other->playerInfo->object_id() << endl;
+
+		if (other->playerInfo->object_id() == excludeObjectId)
+			continue;
+
+		spawnPkt.add_players()->CopyFrom(*other->playerInfo);
+	}
+
+	cout << "[Room::SendExistingPlayersTo] send count=" << spawnPkt.players_size() << endl;
+
+	if (spawnPkt.players_size() > 0)
+	{
+		SendBufferRef spawnBuffer = ServerPacketHandler::MakeSendBuffer(spawnPkt);
+		session->Send(spawnBuffer);
+	}
 }
 
 bool Room::LeavePlayer(uint64 objectId)
@@ -236,15 +310,6 @@ void Room::Broadcast(SendBufferRef sendBuffer, uint64 exceptId)
 			session->Send(sendBuffer);
 			sentCount++;
 		}
-	}
-
-	if (sentCount == 0)
-	{
-		cout << "[Room::Broadcast] WARNING: No players to send packet to!" << endl;
-	}
-	else
-	{
-		//cout << "[Room::Broadcast] Packet sent to " << sentCount << " player(s)" << endl;
 	}
 }
 

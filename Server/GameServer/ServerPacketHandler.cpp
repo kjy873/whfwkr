@@ -21,15 +21,12 @@ bool Handle_C_LOGIN(PacketSessionRef& session, Protocol::C_LOGIN& pkt)
 {
 	auto gameSession = std::static_pointer_cast<GameSession>(session);
 
-	// 플레이어 생성 및 세션 연결
 	PlayerRef player = ObjectUtils::CreatePlayer(gameSession);
 
-	// 룸 생성 및 입장 (DoAsync는 CreateHuntingRoom 내부에서 수행하도록 설계)
 	RoomRef room = GRoomManager.CreateHuntingRoom(player);
 
 	if (room == nullptr) return false;
 
-	// 응답 패킷 전송
 	Protocol::S_LOGIN loginPkt;
 	loginPkt.set_success(true);
 	auto sendBuffer = ServerPacketHandler::MakeSendBuffer(loginPkt);
@@ -41,13 +38,33 @@ bool Handle_C_LOGIN(PacketSessionRef& session, Protocol::C_LOGIN& pkt)
 bool Handle_C_ENTER_GAME(PacketSessionRef& session, Protocol::C_ENTER_GAME& pkt)
 {
 	auto gameSession = static_pointer_cast<GameSession>(session);
-	PlayerRef player = gameSession->player.load();
-	if (player == nullptr) return false;
 
-	if (auto room = player->room.lock())
+	PlayerRef player = gameSession->player.load();
+	if (player == nullptr)
 	{
-		room->DoTimer(2000, &Room::HandleClientLevelReady, player);
+		cout << "[Handle_C_ENTER_GAME] player nullptr" << endl;
+		return false;
 	}
+
+	RoomRef room = player->room.lock();
+	if (room == nullptr)
+	{
+		cout << "[Handle_C_ENTER_GAME] room nullptr" << endl;
+		return false;
+	}
+
+	cout << "[Handle_C_ENTER_GAME] objId=" << player->playerInfo->object_id()
+		<< " room=" << room.get() << endl;
+
+	room->StartReturnToMap1Timer();
+
+	Protocol::S_ENTER_GAME enterPkt;
+	enterPkt.mutable_player()->CopyFrom(*player->playerInfo);
+
+	SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(enterPkt);
+	gameSession->Send(sendBuffer);
+
+	room->SendExistingPlayersTo(gameSession, player->playerInfo->object_id());
 
 	return true;
 }
@@ -75,24 +92,32 @@ bool Handle_C_LEAVE_GAME(PacketSessionRef& session, Protocol::C_LEAVE_GAME& pkt)
 
 bool Handle_C_MOVE(PacketSessionRef& session, Protocol::C_MOVE& pkt)
 {
+
 	auto gameSession = static_pointer_cast<GameSession>(session);
+	if (gameSession == nullptr)
+	{
+		return false;
+	}
 
 	PlayerRef player = gameSession->player.load();
 	if (player == nullptr)
+	{
 		return false;
+	}
 
-	//RoomRef room = player->room.load().lock();
 	RoomRef room = player->room.lock();
 	if (room == nullptr)
+	{
 		return false;
+	}
 
 	Protocol::C_MOVE pktCopy = pkt;
+
 	room->DoAsync([room, pktCopy]()
 		{
 			Protocol::C_MOVE pkt = pktCopy;
 			room->HandleMoveLocked(pkt);
 		});
-
 	return true;
 }
 

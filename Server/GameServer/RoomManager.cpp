@@ -72,5 +72,14 @@ void RoomManager::MoveToBattleRoom(PlayerRef player)
     if (auto session = player->session.lock())
         session->Send(sendBuffer);
 
+    if (player->playerInfo != nullptr)
+    {
+        player->playerInfo->set_x(0.0f);
+        player->playerInfo->set_y(0.0f);
+        player->playerInfo->set_z(0.0f);
+
+        cout << "[DEBUG] Reset Player " << player->playerInfo->object_id() << " Pos to (0,0,0) for BattleRoom" << endl;
+    }
+
     battleRoom->DoAsync(&Room::HandleEnterPlayerLocked, player, battleRoom);
 }

@@ -12,7 +12,9 @@ void UC_NetworkPlayerComponent::BeginPlay()
 {
     Super::BeginPlay();
 
-    // GameInstance 캐싱
+    UE_LOG(LogTemp, Warning, TEXT("[UC_NetworkPlayerComponent::BeginPlay] Owner=%s"),
+        *GetNameSafe(GetOwner()));
+
     CachedGameInstance = Cast<UMainGameInstance>(GetWorld()->GetGameInstance());
     if (CachedGameInstance == nullptr)
     {
@@ -20,7 +22,20 @@ void UC_NetworkPlayerComponent::BeginPlay()
         return;
     }
 
-    // 50ms마다 자동으로 내 위치 전송
+    APawn* OwnerPawn = Cast<APawn>(GetOwner());
+    if (OwnerPawn == nullptr)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[UC_NetworkPlayerComponent::BeginPlay] Owner is not Pawn"));
+        return;
+    }
+
+    if (!OwnerPawn->IsLocallyControlled())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[UC_NetworkPlayerComponent::BeginPlay] Skip timer for non-local pawn: %s"),
+            *GetNameSafe(OwnerPawn));
+        return;
+    }
+
     GetWorld()->GetTimerManager().SetTimer(
         MoveSendTimer,
         this,
@@ -28,16 +43,42 @@ void UC_NetworkPlayerComponent::BeginPlay()
         MoveSendInterval,
         true
     );
+
+    UE_LOG(LogTemp, Warning, TEXT("[UC_NetworkPlayerComponent::BeginPlay] Timer started for local pawn: %s"),
+        *GetNameSafe(OwnerPawn));
 }
 
 void UC_NetworkPlayerComponent::SendMyMovement()
 {
-    if (MyObjectId == 0)
-        return; // 아직 내 object_id 할당 안됨
-
     AActor* Owner = GetOwner();
-    if (!Owner)
+    APawn* OwnerPawn = Cast<APawn>(Owner);
+
+    UE_LOG(LogTemp, Warning, TEXT("[SendMyMovement] ENTER Comp=%s Owner=%s"),
+        *GetNameSafe(this),
+        *GetNameSafe(Owner));
+
+    if (CachedGameInstance == nullptr)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SendMyMovement] CachedGameInstance nullptr"));
         return;
+    }
+
+    if (CachedGameInstance->MyObjectId == 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[SendMyMovement] GameInstance MyObjectId is 0"));
+        return;
+    }
+
+    if (OwnerPawn == nullptr)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[SendMyMovement] OwnerPawn nullptr"));
+        return;
+    }
+
+    if (!OwnerPawn->IsLocallyControlled())
+    {
+        return;
+    }
 
     FVector Location = Owner->GetActorLocation();
     float Yaw = Owner->GetActorRotation().Yaw;
@@ -48,24 +89,28 @@ void UC_NetworkPlayerComponent::SendMyMovement()
 void UC_NetworkPlayerComponent::SendMoveToServer(const FVector& Location, float Yaw)
 {
     if (CachedGameInstance == nullptr)
-        return;
-    
-    if (MyObjectId == 0)
     {
-        UE_LOG(LogTemp, Warning, TEXT("ObjectId not set"));
+        UE_LOG(LogTemp, Error, TEXT("[SendMoveToServer] CachedGameInstance nullptr"));
         return;
     }
 
-    // 패킷 생성
+    const uint64 SendObjectId = CachedGameInstance->MyObjectId;
+    if (SendObjectId == 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[SendMoveToServer] GameInstance MyObjectId not set"));
+        return;
+    }
+
     Protocol::C_MOVE MovePkt;
     Protocol::PlayerInfo* Info = MovePkt.mutable_info();
 
-    Info->set_object_id(MyObjectId);
+    Info->set_object_id(SendObjectId);
     Info->set_x(Location.X);
     Info->set_y(Location.Y);
     Info->set_z(Location.Z);
     Info->set_yaw(Yaw);
 
-    // 패킷 송신
+    UE_LOG(LogTemp, Warning, TEXT("[SendMoveToServer] SEND objId=%llu"), SendObjectId);
+
     SEND_PACKET(MovePkt);
 }
