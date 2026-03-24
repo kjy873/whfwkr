@@ -54,6 +54,7 @@ public:
 
 
 	void SendPacket(SendBufferRef SendBuffer);
+	void SendLevelReady();
 
 public:
 	void HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool IsMine);
@@ -66,7 +67,6 @@ public:
 	void HandleMove(const Protocol::S_MOVE& MovePkt);
 
 public:
-	void HandleSpawnMob(const Protocol::S_SPAWN_MOB& SpawnPkt);
 	void HandleDespawnMob(uint64 MobId);
 	void HandleDespawnMob(const Protocol::S_DESPAWN_MOB& Pkt);
 	void HandleMoveMob(const Protocol::S_MOVE_MOB& MovePkt);

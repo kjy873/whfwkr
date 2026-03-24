@@ -33,15 +33,16 @@ public:
 	void HandleAttackPlayerLocked(uint64 attackerId, uint64 targetId, uint32 skillId);
 	RoomType GetRoomType() { return _roomType; }
 	bool EnterPlayer(PlayerRef player, RoomRef self);
+	void StartReturnToMap1Timer();
+	void SendExistingPlayersTo(GameSessionRef session, uint64 excludeObjectId);
 
 private:
 	bool LeavePlayer(uint64 objectId);
 
-	void UpdateMobs();
-
 private:
 	unordered_map<uint64, PlayerRef> _players;
 	unordered_map<uint64, MobRef> _mobs;
+	bool bReturnToMap1TimerStarted = false;
 
 	float _timer = 0.0f;
 	RoomType _roomType;

@@ -22,28 +22,48 @@ bool Handle_INVALID(PacketSessionRef& session, BYTE* buffer, int32 len)
 
 bool Handle_S_LOGIN(PacketSessionRef& session, Protocol::S_LOGIN& pkt)
 {
-	for(auto& Player : pkt.players())
+	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_LOGIN] players_size=%d"), pkt.players_size());
+
+	if (pkt.players_size() <= 0)
 	{
+		UE_LOG(LogTemp, Error, TEXT("[Handle_S_LOGIN] No players in packet"));
+		return false;
 	}
+
 	for (int32 i = 0; i < pkt.players_size(); i++)
 	{
 		const Protocol::PlayerInfo& Player = pkt.players(i);
+
+		UE_LOG(LogTemp, Warning, TEXT("[Handle_S_LOGIN] idx=%d objectId=%lld"),
+			i,
+			static_cast<long long>(Player.object_id()));
 	}
 
 	Protocol::C_ENTER_GAME EnterGamePkt;
 	EnterGamePkt.set_playerindex(0);
 	SEND_PACKET(EnterGamePkt);
 
+	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_LOGIN] Send C_ENTER_GAME playerindex=0"));
+
 	return true;
 }
 
 bool Handle_S_ENTER_GAME(PacketSessionRef& session, Protocol::S_ENTER_GAME& pkt)
 {
+	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_ENTER_GAME] RECEIVED objId=%llu"),
+		static_cast<unsigned long long>(pkt.player().object_id()));
+
 	if (auto* GameInstance = GetMainGameInstance())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[Handle_S_ENTER_GAME] GameInstance valid"));
 		GameInstance->HandleSpawn(pkt);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Entered Game"));
 	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Handle_S_ENTER_GAME] GameInstance nullptr"));
+	}
+
 	return true;
 }
 
@@ -69,8 +89,19 @@ bool Handle_S_DESPAWN(PacketSessionRef& session, Protocol::S_DESPAWN& pkt)
 
 bool Handle_S_MOVE(PacketSessionRef& session, Protocol::S_MOVE& pkt)
 {
+	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_MOVE] packet received objId=%llu"),
+		static_cast<unsigned long long>(pkt.info().object_id()));
+
 	if (auto* GameInstance = GetMainGameInstance())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Handle_S_MOVE] GameInstance valid"));
 		GameInstance->HandleMove(pkt);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Handle_S_MOVE] GameInstance nullptr"));
+	}
+
 	return true;
 }
 
@@ -103,8 +134,6 @@ bool Handle_S_SPAWN_MOB(PacketSessionRef& session, Protocol::S_SPAWN_MOB& pkt)
 		return false;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_SPAWN_MOB] Calling HandleSpawnMob..."));
-		GameInstance->HandleSpawnMob(pkt);
 	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_SPAWN_MOB] HandleSpawnMob returned"));
 
 	return false;
@@ -161,6 +190,15 @@ bool Handle_S_CHANGE_LEVEL(PacketSessionRef& session, Protocol::S_CHANGE_LEVEL& 
 
 	AsyncTask(ENamedThreads::GameThread, [LevelName]()
 		{
+			if (UMainGameInstance* GI = GetMainGameInstance())
+			{
+				GI->MyPlayer = nullptr;
+				GI->MyObjectId = 0;
+				GI->Players.Empty();
+
+				UE_LOG(LogTemp, Warning, TEXT("[ChangeLevel] Cleared player state before OpenLevel -> %s"), *LevelName);
+			}
+
 			if (UWorld* World = GEngine->GetWorldFromContextObject(GetMainGameInstance(), EGetWorldErrorMode::LogAndReturnNull))
 			{
 				UGameplayStatics::OpenLevel(World, FName(*LevelName));
