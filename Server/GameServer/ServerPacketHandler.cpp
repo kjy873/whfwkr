@@ -65,6 +65,7 @@ bool Handle_C_ENTER_GAME(PacketSessionRef& session, Protocol::C_ENTER_GAME& pkt)
 	gameSession->Send(sendBuffer);
 
 	room->SendExistingPlayersTo(gameSession, player->playerInfo->object_id());
+	room->BroadcastPlayerSpawn(player);
 
 	return true;
 }

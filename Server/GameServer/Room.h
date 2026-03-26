@@ -35,6 +35,7 @@ public:
 	bool EnterPlayer(PlayerRef player, RoomRef self);
 	void StartReturnToMap1Timer();
 	void SendExistingPlayersTo(GameSessionRef session, uint64 excludeObjectId);
+	void BroadcastPlayerSpawn(PlayerRef player);
 
 private:
 	bool LeavePlayer(uint64 objectId);

@@ -28,11 +28,9 @@ void Room::UpdateTick(float deltaTime)
 
 	_timer += deltaTime;
 
-	if (_timer >= 10.0f)
+	if (_timer >= 20.0f)
 	{
 		_timer = 0.0f;
-
-		cout << "[Room] 10 seconds passed! Moving players to BattleRoom" << endl;
 
 		vector<PlayerRef> players;
 		{
@@ -234,6 +232,8 @@ void Room::StartReturnToMap1Timer()
 
 			room->DoAsync([room]()
 				{
+					room->bReturnToMap1TimerStarted = false;
+
 					Protocol::S_CHANGE_LEVEL pkt;
 					pkt.set_level_name("LandscapeMap");
 
@@ -276,6 +276,15 @@ void Room::SendExistingPlayersTo(GameSessionRef session, uint64 excludeObjectId)
 		SendBufferRef spawnBuffer = ServerPacketHandler::MakeSendBuffer(spawnPkt);
 		session->Send(spawnBuffer);
 	}
+}
+
+void Room::BroadcastPlayerSpawn(PlayerRef player)
+{
+	Protocol::S_SPAWN pkt;
+	pkt.add_players()->CopyFrom(*player->playerInfo);
+
+	SendBufferRef buffer = ServerPacketHandler::MakeSendBuffer(pkt);
+	Broadcast(buffer);
 }
 
 bool Room::LeavePlayer(uint64 objectId)
