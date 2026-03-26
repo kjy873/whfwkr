@@ -33,4 +33,8 @@ private:
     FTimerHandle MoveSendTimer;
 
     float MoveSendInterval = 0.05f;
+
+    FVector LastSentLocation = FVector::ZeroVector;
+    float LastSentYaw = 0.f;
+    bool bHasSentInitialMove = false;
 };
