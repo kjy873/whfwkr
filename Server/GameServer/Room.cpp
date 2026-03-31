@@ -23,25 +23,7 @@ void Room::Init()
 
 void Room::UpdateTick(float deltaTime)
 {
-	if (_roomType != RoomType::Hunting)
-		return;
 
-	_timer += deltaTime;
-
-	if (_timer >= 20.0f)
-	{
-		_timer = 0.0f;
-
-		vector<PlayerRef> players;
-		{
-			WRITE_LOCK;
-			for (auto& item : _players)
-				players.push_back(item.second);
-		}
-
-		for (auto& p : players)
-			GRoomManager.MoveToBattleRoom(p);
-	}
 }
 
 void Room::Clear()
@@ -60,6 +42,44 @@ void Room::Clear()
 	_players.clear();
 }
 
+void Room::ApplySpawnByRoomType(PlayerRef player)
+{
+	if (player == nullptr || player->playerInfo == nullptr)
+		return;
+
+	float centerX = 0.f;
+	float centerY = 0.f;
+	float centerZ = 0.f;
+
+	if (_roomType == RoomType::Lobby)
+	{
+		centerX = 0.f;
+		centerY = 0.f;
+		centerZ = 0.f;
+	}
+	else if (_roomType == RoomType::Hunting)
+	{
+		centerX = 40025.f;
+		centerY = 47369.f;
+		centerZ = -689.f;
+	}
+	else if (_roomType == RoomType::Battle)
+	{
+		centerX = 4275.f;
+		centerY = 4184.f;
+		centerZ = -1187.210769f;
+	}
+
+	player->playerInfo->set_x(centerX);
+	player->playerInfo->set_y(centerY);
+	player->playerInfo->set_z(centerZ);
+	player->playerInfo->set_yaw(Utils::GetRandom(0.f, 360.f));
+
+	cout << "[ApplySpawnByRoomType] objId=" << player->playerInfo->object_id()
+		<< " roomType=" << static_cast<int>(_roomType)
+		<< " pos=(" << centerX << ", " << centerY << ", " << centerZ << ")" << endl;
+}
+
 bool Room::HandleEnterPlayerLocked(PlayerRef player, RoomRef self)
 {
 	WRITE_LOCK;
@@ -70,25 +90,7 @@ bool Room::HandleEnterPlayerLocked(PlayerRef player, RoomRef self)
 		return false;
 	}
 
-	float centerX, centerY, centerZ;
-
-	if (_roomType == RoomType::Hunting)
-	{
-		centerX = 40025.f;
-		centerY = 47369.f;
-		centerZ = -689.f;
-	}
-	else
-	{
-		centerX = 0.f;
-		centerY = 0.f;
-		centerZ = 100.f;
-	}
-
-	player->playerInfo->set_x(centerX);
-	player->playerInfo->set_y(centerY);
-	player->playerInfo->set_z(centerZ);
-	player->playerInfo->set_yaw(Utils::GetRandom(0.f, 360.f));
+	ApplySpawnByRoomType(player);
 	player->playerInfo->set_hp(100);
 
 	{
@@ -104,14 +106,21 @@ bool Room::HandleEnterPlayerLocked(PlayerRef player, RoomRef self)
 			session->Send(sendBuffer);
 	}
 
-	cout << "[SERVER] Player " << player->playerInfo->object_id() << " Entered Room. Waiting for Level Ready..." << endl;
-
 	return true;
 }
 
 void Room::HandleClientLevelReady(PlayerRef player)
 {
 	WRITE_LOCK;
+
+	cout << "[HandleClientLevelReady] objId="
+		<< player->playerInfo->object_id()
+		<< " roomType=" << static_cast<int>(_roomType)
+		<< " pos=("
+		<< player->playerInfo->x() << ", "
+		<< player->playerInfo->y() << ", "
+		<< player->playerInfo->z() << ")" << endl;
+
 	if (player == nullptr || player->playerInfo == nullptr) return;
 
 	{
@@ -203,6 +212,49 @@ void Room::HandleMoveLocked(Protocol::C_MOVE& pkt)
 	Broadcast(sendBuffer);
 }
 
+bool Room::IsPvp() const
+{
+	return _roomType == RoomType::Battle;
+}
+
+void Room::CheckBattleEnd()
+{
+	vector<PlayerRef> alivePlayers;
+
+	{
+		WRITE_LOCK;
+
+		if (_roomType != RoomType::Battle)
+			return;
+
+		for (auto& item : _players)
+		{
+			PlayerRef player = item.second;
+			if (player && player->hp > 0)
+				alivePlayers.push_back(player);
+		}
+
+		cout << "[CheckBattleEnd] aliveCount=" << alivePlayers.size() << endl;
+
+		if (alivePlayers.size() >= 2)
+			return;
+
+		_isBattlePhase = false;
+	}
+
+	Protocol::S_CHANGE_LEVEL pkt;
+	pkt.set_level_name("LandscapeMap");
+	SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
+	Broadcast(sendBuffer);
+
+	cout << "[Room] Broadcast S_CHANGE_LEVEL -> HuntingMap" << endl;
+
+	for (auto& player : alivePlayers)
+	{
+		GRoomManager.MoveToHuntingRoom(player);
+	}
+}
+
 bool Room::EnterPlayer(PlayerRef player, RoomRef self)
 {
 	if (_players.find(player->playerInfo->object_id()) != _players.end())
@@ -234,13 +286,17 @@ void Room::StartReturnToMap1Timer()
 				{
 					room->bReturnToMap1TimerStarted = false;
 
-					Protocol::S_CHANGE_LEVEL pkt;
-					pkt.set_level_name("LandscapeMap");
+					vector<PlayerRef> playersToMove;
+					for (auto& item : room->_players)
+					{
+						if (item.second)
+							playersToMove.push_back(item.second);
+					}
 
-					SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
-					room->Broadcast(sendBuffer);
-
-					cout << "[Room] Broadcast S_CHANGE_LEVEL -> LandscapeMap" << endl;
+					for (auto& player : playersToMove)
+					{
+						GRoomManager.MoveToHuntingRoom(player);
+					}
 				});
 		}).detach();
 }
@@ -260,16 +316,11 @@ void Room::SendExistingPlayersTo(GameSessionRef session, uint64 excludeObjectId)
 		if (other == nullptr || other->playerInfo == nullptr)
 			continue;
 
-		cout << "  [Room::SendExistingPlayersTo] candidate objId="
-			<< other->playerInfo->object_id() << endl;
-
 		if (other->playerInfo->object_id() == excludeObjectId)
 			continue;
 
 		spawnPkt.add_players()->CopyFrom(*other->playerInfo);
 	}
-
-	cout << "[Room::SendExistingPlayersTo] send count=" << spawnPkt.players_size() << endl;
 
 	if (spawnPkt.players_size() > 0)
 	{
@@ -285,6 +336,62 @@ void Room::BroadcastPlayerSpawn(PlayerRef player)
 
 	SendBufferRef buffer = ServerPacketHandler::MakeSendBuffer(pkt);
 	Broadcast(buffer);
+}
+
+void Room::CheckAndStartGame()
+{
+	vector<PlayerRef> players;
+
+	{
+		WRITE_LOCK;
+
+		if (_roomType != RoomType::Lobby)
+			return;
+
+		if (bGameCountdownStarted)
+			return;
+
+		if (_players.size() < 2)
+			return;
+
+		_isBattlePhase = true;
+
+		bGameCountdownStarted = true;
+	}
+
+	RoomRef room = static_pointer_cast<Room>(shared_from_this());
+
+	std::thread([room]()
+		{
+			std::this_thread::sleep_for(std::chrono::seconds(20));
+
+			room->DoAsync([room]()
+			{
+					vector<PlayerRef> playersToMove;
+
+					if (room->_players.size() < 2)
+					{
+						room->bGameCountdownStarted = false;
+						cout << "[Room] Hunting start canceled: not enough players" << endl;
+						return;
+					}
+
+					for (auto& item : room->_players)
+					{
+						if (item.second)
+							playersToMove.push_back(item.second);
+					}
+
+					room->bGameCountdownStarted = false;
+
+					GRoomManager.StartRound(playersToMove);
+
+					for (auto& player : playersToMove)
+					{
+						GRoomManager.MoveToHuntingRoom(player);
+					}
+				});
+		}).detach();
 }
 
 bool Room::LeavePlayer(uint64 objectId)
@@ -361,7 +468,7 @@ void Room::HandlePlayerHit(uint64 attackerId, uint64 targetId)
 	}
 }
 
-void Room::HandleAttackPlayerLocked(uint64 attackerId,uint64 targetId,uint32 skillId)
+void Room::HandleAttackPlayerLocked(uint64 attackerId, uint64 targetId, uint32 skillId)
 {
 	WRITE_LOCK;
 
@@ -379,8 +486,8 @@ void Room::HandleAttackPlayerLocked(uint64 attackerId,uint64 targetId,uint32 ski
 	int32 damage = 0;
 	switch (skillId)
 	{
-	case 0: damage = 10; break; // 좌클릭
-	case 1: damage = 25; break; // Q
+	case 0: damage = 10; break;
+	case 1: damage = 25; break;
 	}
 
 	target->hp = max(0, target->hp - damage);
@@ -388,12 +495,48 @@ void Room::HandleAttackPlayerLocked(uint64 attackerId,uint64 targetId,uint32 ski
 	Protocol::S_DAMAGE_PLAYER pkt;
 	pkt.set_playerid(targetId);
 	pkt.set_damage(damage);
-
 	Broadcast(ServerPacketHandler::MakeSendBuffer(pkt));
 
 	if (target->hp <= 0)
 	{
 		cout << "[SERVER] Player Dead: " << targetId << endl;
+
+		Protocol::S_PLAYER_DEAD deadPkt;
+		deadPkt.set_playerid(targetId);
+		Broadcast(ServerPacketHandler::MakeSendBuffer(deadPkt));
+
+		if (_roomType != RoomType::Battle)
+			return;
+
+		vector<PlayerRef> playersToMove;
+		for (auto& item : _players)
+		{
+			PlayerRef p = item.second;
+			if (p && p->hp > 0)
+				playersToMove.push_back(p);
+		}
+
+		cout << "[BattleEndCheck] aliveCount=" << playersToMove.size() << endl;
+
+		if (playersToMove.size() <= 1)
+		{
+			cout << "[BattleEnd] Move survivors to HuntingRoom" << endl;
+
+			for (auto& p : playersToMove)
+			{
+				GRoomManager.MoveToHuntingRoom(p);
+			}
+
+			Protocol::S_CHANGE_LEVEL changePkt;
+			changePkt.set_level_name("LandscapeMap");
+			SendBufferRef changeBuf = ServerPacketHandler::MakeSendBuffer(changePkt);
+
+			for (auto& p : playersToMove)
+			{
+				if (auto session = p->session.lock())
+					session->Send(changeBuf);
+			}
+		}
 	}
 }
 
@@ -424,16 +567,8 @@ void Room::SpawnRandomMobs()
 	Protocol::MobInfo* info = pkt.add_mobs();
 	info->CopyFrom(mob->ToInfo());
 
-
-	cout << "[Room::SpawnRandomMobs] Spawning Mob ID=" << id
-		<< " at [" << mob->x << ", " << mob->y << ", " << mob->z << "]" << endl;
-
-	cout << "[Room::SpawnRandomMobs] Player count: " << _players.size() << endl;
-
 	SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
 	Broadcast(sendBuffer);
-
-	cout << "[Room::SpawnRandomMobs] Packet broadcasted" << endl;
 }
 
 

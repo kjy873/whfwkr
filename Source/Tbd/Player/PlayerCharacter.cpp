@@ -1,6 +1,7 @@
 #include "Tbd/Player/PlayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "MainGameInstance.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -17,6 +18,15 @@ APlayerCharacter::~APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (IsLocallyControlled())
+	{
+		if (UMainGameInstance* GI = GetGameInstance<UMainGameInstance>())
+		{
+			GI->SendLevelReady();
+			UE_LOG(LogTemp, Warning, TEXT("[Client] SendLevelReady from BeginPlay"));
+		}
+	}
 }
 
 // Called every frame

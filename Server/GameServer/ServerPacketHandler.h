@@ -36,6 +36,7 @@ enum : uint16
 	PKT_S_PROJECTILE_HIT = 1023,
 	PKT_S_PROJECTILE_DESTROY = 1024,
 	PKT_S_CHANGE_LEVEL = 1025,
+	PKT_C_LEVEL_READY = 1026,
 };
 
 // Custom Handlers
@@ -49,6 +50,7 @@ bool Handle_C_ATTACK_PLAYER(PacketSessionRef& session, Protocol::C_ATTACK_PLAYER
 bool Handle_C_MOVE_MOB(PacketSessionRef& session, Protocol::C_MOVE_MOB& pkt);
 bool Handle_C_ATTACK_MOB(PacketSessionRef& session, Protocol::C_ATTACK_MOB& pkt);
 bool Handle_C_USE_SKILL(PacketSessionRef& session, Protocol::C_USE_SKILL& pkt);
+bool Handle_C_LEVEL_READY(PacketSessionRef& session, Protocol::C_LEVEL_READY& pkt);
 
 class ServerPacketHandler
 {
@@ -66,6 +68,7 @@ public:
 		GPacketHandler[PKT_C_MOVE_MOB] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::C_MOVE_MOB>(Handle_C_MOVE_MOB, session, buffer, len); };
 		GPacketHandler[PKT_C_ATTACK_MOB] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::C_ATTACK_MOB>(Handle_C_ATTACK_MOB, session, buffer, len); };
 		GPacketHandler[PKT_C_USE_SKILL] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::C_USE_SKILL>(Handle_C_USE_SKILL, session, buffer, len); };
+		GPacketHandler[PKT_C_LEVEL_READY] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::C_LEVEL_READY>(Handle_C_LEVEL_READY, session, buffer, len); };
 	}
 
 	static bool HandlePacket(PacketSessionRef& session, BYTE* buffer, int32 len)

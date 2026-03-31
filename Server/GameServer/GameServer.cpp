@@ -71,7 +71,6 @@ int main()
 	}
 	else
 	{
-		// 시작 실패 시 여기서 크래시를 내거나 종료
 		ASSERT_CRASH(false);
 		return -1;
 	}

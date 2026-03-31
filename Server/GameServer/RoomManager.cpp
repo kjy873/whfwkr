@@ -6,36 +6,11 @@
 
 RoomManager GRoomManager;
 RoomRef RoomManager::_battleRoom = nullptr;
+RoomRef RoomManager::_lobbyRoom = nullptr;
 
 RoomManager::RoomManager()
 {
     cout << "RoomManager Constructed: " << this << endl;
-}
-
-void RoomManager::Update(float deltaTime)
-{
-	vector<RoomRef> rooms;
-	{
-		WRITE_LOCK;
-		for (auto& item : _rooms) rooms.push_back(item.second);
-	}
-	for (RoomRef room : rooms)
-		room->DoAsync(&Room::UpdateTick, deltaTime);
-}
-
-RoomRef RoomManager::CreateHuntingRoom(PlayerRef player)
-{
-    WRITE_LOCK;
-
-    RoomRef room = make_shared<Room>(RoomType::Hunting);
-
-    uint64 roomId = _roomIdGenerator++;
-    _rooms[roomId] = room;
-
-    room->Init();
-    room->DoAsync(&Room::HandleEnterPlayerLocked, player, room);
-
-    return room;
 }
 
 RoomRef RoomManager::GetOrCreateBattleRoom()
@@ -47,39 +22,185 @@ RoomRef RoomManager::GetOrCreateBattleRoom()
         _battleRoom = make_shared<Room>(RoomType::Battle);
         _battleRoom->Init();
 
-        _rooms[0] = _battleRoom;
+        _rooms.push_back(_battleRoom);
     }
 
     return _battleRoom;
 }
 
+RoomRef RoomManager::GetOrCreateLobbyRoom()
+{
+    WRITE_LOCK;
+
+    if (_lobbyRoom == nullptr)
+    {
+        _lobbyRoom = make_shared<Room>(RoomType::Lobby);
+        _lobbyRoom->Init();
+
+        _rooms.push_back(_lobbyRoom);
+    }
+
+    return _lobbyRoom;
+}
+
+void RoomManager::Update(float deltaTime)
+{
+    vector<PlayerRef> alivePlayers;
+
+    {
+        WRITE_LOCK;
+
+        if (_roundPlayers.empty())
+            return;
+
+        for (auto& p : _roundPlayers)
+        {
+            if (p && p->hp > 0)
+                alivePlayers.push_back(p);
+        }
+
+        if (alivePlayers.size() <= 1)
+        {
+            cout << "[RoundEnd] winner decided. aliveCount=" << alivePlayers.size() << endl;
+            _roundPlayers.clear();
+            _roundTimer = 0.0f;
+            _isBattlePhase = false;
+            return;
+        }
+
+        _roundTimer += deltaTime;
+
+        if (_roundTimer < 20.0f)
+            return;
+
+        _roundTimer = 0.0f;
+
+        if (_isBattlePhase == false)
+        {
+            _isBattlePhase = true;
+        }
+        else
+        {
+            _isBattlePhase = false;
+        }
+    }
+
+    if (_isBattlePhase)
+    {
+        cout << "[RoundPhase] Hunting -> Battle" << endl;
+        MoveRoundPlayersToBattle();
+    }
+    else
+    {
+        cout << "[RoundPhase] Battle -> Hunting" << endl;
+        MoveRoundPlayersToHunting();
+    }
+}
+
+void RoomManager::StartRound(const vector<PlayerRef>& players)
+{
+    WRITE_LOCK;
+    _roundPlayers = players;
+    _roundTimer = 0.0f;
+    _isBattlePhase = false;
+}
+
+void RoomManager::MoveRoundPlayersToBattle()
+{
+    vector<PlayerRef> playersToMove;
+
+    {
+        WRITE_LOCK;
+        for (auto& p : _roundPlayers)
+        {
+            if (p && p->hp > 0)
+                playersToMove.push_back(p);
+        }
+    }
+
+    for (auto& p : playersToMove)
+        MoveToBattleRoom(p);
+}
+
+void RoomManager::MoveRoundPlayersToHunting()
+{
+    vector<PlayerRef> playersToMove;
+
+    {
+        WRITE_LOCK;
+        for (auto& p : _roundPlayers)
+        {
+            if (p && p->hp > 0)
+                playersToMove.push_back(p);
+        }
+    }
+
+    for (auto& p : playersToMove)
+        MoveToHuntingRoom(p);
+}
+
 void RoomManager::MoveToBattleRoom(PlayerRef player)
 {
-    auto currentRoom = player->room.lock();
-    if (currentRoom && currentRoom->GetRoomType() == RoomType::Battle)
-        return;
-
-    if (currentRoom)
-    {
-        currentRoom->DoAsync(&Room::HandleLeavePlayerLocked, player);
-    }
+    auto session = player->session.lock();
+    if (!session) return;
 
     RoomRef battleRoom = GetOrCreateBattleRoom();
+    battleRoom->DoAsync([battleRoom, player]()
+        {
+            battleRoom->SetRoomType(RoomType::Battle);
+            battleRoom->ApplySpawnByRoomType(player);
+            battleRoom->HandleEnterPlayerLocked(player, battleRoom);
+        });
 
     Protocol::S_CHANGE_LEVEL pkt;
-    pkt.set_level_name("GameMap");
+    pkt.set_level_name("NewMap");
+
     auto sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
-    if (auto session = player->session.lock())
-        session->Send(sendBuffer);
+    session->Send(sendBuffer);
+}
 
-    if (player->playerInfo != nullptr)
+void RoomManager::MoveToHuntingRoom(PlayerRef player)
+{
+    auto session = player->session.lock();
+    if (!session)
+        return;
+
+    RoomRef oldRoom = player->room.lock();
+
+    RoomRef huntingRoom = make_shared<Room>(RoomType::Hunting);
+    huntingRoom->Init();
+
+    _rooms.push_back(huntingRoom);
+
+    if (oldRoom)
     {
-        player->playerInfo->set_x(0.0f);
-        player->playerInfo->set_y(0.0f);
-        player->playerInfo->set_z(0.0f);
+        oldRoom->DoAsync([oldRoom, huntingRoom, player, session]()
+            {
+                oldRoom->HandleLeavePlayerLocked(player);
 
-        cout << "[DEBUG] Reset Player " << player->playerInfo->object_id() << " Pos to (0,0,0) for BattleRoom" << endl;
+                huntingRoom->DoAsync([huntingRoom, player, session]()
+                    {
+                        huntingRoom->HandleEnterPlayerLocked(player, huntingRoom);
+
+                        Protocol::S_CHANGE_LEVEL pkt;
+                        pkt.set_level_name("LandscapeMap");
+
+                        auto sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
+                        session->Send(sendBuffer);
+                    });
+            });
     }
+    else
+    {
+        huntingRoom->DoAsync([huntingRoom, player, session]()
+            {
+                huntingRoom->HandleEnterPlayerLocked(player, huntingRoom);
 
-    battleRoom->DoAsync(&Room::HandleEnterPlayerLocked, player, battleRoom);
+                Protocol::S_CHANGE_LEVEL pkt;
+                pkt.set_level_name("LandscapeMap");
+
+                auto sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
+                session->Send(sendBuffer);
+            });
+    }
 }

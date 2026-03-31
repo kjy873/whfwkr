@@ -50,12 +50,13 @@ bool Handle_S_LOGIN(PacketSessionRef& session, Protocol::S_LOGIN& pkt)
 
 bool Handle_S_ENTER_GAME(PacketSessionRef& session, Protocol::S_ENTER_GAME& pkt)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_ENTER_GAME] RECEIVED objId=%llu"),
-		static_cast<unsigned long long>(pkt.player().object_id()));
+	const Protocol::PlayerInfo& PlayerInfo = pkt.player();
+	UE_LOG(LogTemp, Warning, TEXT("[BattleSpawn] ObjId=%llu Pos=(%.1f, %.1f, %.1f)"),
+		PlayerInfo.object_id(),
+		PlayerInfo.x(), PlayerInfo.y(), PlayerInfo.z());
 
 	if (auto* GameInstance = GetMainGameInstance())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[Handle_S_ENTER_GAME] GameInstance valid"));
 		GameInstance->HandleSpawn(pkt);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Entered Game"));
 	}
@@ -188,8 +189,12 @@ bool Handle_S_CHANGE_LEVEL(PacketSessionRef& session, Protocol::S_CHANGE_LEVEL& 
 {
 	FString LevelName = UTF8_TO_TCHAR(pkt.level_name().c_str());
 
+	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_CHANGE_LEVEL] RECEIVED level=%s"), *LevelName);
+
 	AsyncTask(ENamedThreads::GameThread, [LevelName]()
 		{
+			UE_LOG(LogTemp, Warning, TEXT("[Handle_S_CHANGE_LEVEL] OpenLevel %s"), *LevelName);
+
 			if (UMainGameInstance* GI = GetMainGameInstance())
 			{
 				GI->MyPlayer = nullptr;

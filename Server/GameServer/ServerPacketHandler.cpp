@@ -23,7 +23,8 @@ bool Handle_C_LOGIN(PacketSessionRef& session, Protocol::C_LOGIN& pkt)
 
 	PlayerRef player = ObjectUtils::CreatePlayer(gameSession);
 
-	RoomRef room = GRoomManager.CreateHuntingRoom(player);
+	RoomRef room = GRoomManager.GetOrCreateLobbyRoom();
+	room->DoAsync(&Room::HandleEnterPlayerLocked, player, room);
 
 	if (room == nullptr) return false;
 
@@ -40,32 +41,36 @@ bool Handle_C_ENTER_GAME(PacketSessionRef& session, Protocol::C_ENTER_GAME& pkt)
 	auto gameSession = static_pointer_cast<GameSession>(session);
 
 	PlayerRef player = gameSession->player.load();
-	if (player == nullptr)
-	{
-		cout << "[Handle_C_ENTER_GAME] player nullptr" << endl;
+	if (!player)
 		return false;
-	}
 
 	RoomRef room = player->room.lock();
-	if (room == nullptr)
-	{
-		cout << "[Handle_C_ENTER_GAME] room nullptr" << endl;
+	if (!room)
 		return false;
-	}
+
+	room->ApplySpawnByRoomType(player);
 
 	cout << "[Handle_C_ENTER_GAME] objId=" << player->playerInfo->object_id()
-		<< " room=" << room.get() << endl;
+		<< " roomType=" << static_cast<int>(room->GetRoomType())
+		<< " pos=("
+		<< player->playerInfo->x() << ", "
+		<< player->playerInfo->y() << ", "
+		<< player->playerInfo->z() << ")" << endl;
 
-	room->StartReturnToMap1Timer();
+	room->DoAsync([room, player, gameSession]()
+		{
+			Protocol::S_ENTER_GAME enterPkt;
+			enterPkt.mutable_player()->CopyFrom(*player->playerInfo);
 
-	Protocol::S_ENTER_GAME enterPkt;
-	enterPkt.mutable_player()->CopyFrom(*player->playerInfo);
+			SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(enterPkt);
+			gameSession->Send(sendBuffer);
 
-	SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(enterPkt);
-	gameSession->Send(sendBuffer);
+			room->SendExistingPlayersTo(gameSession, player->playerInfo->object_id());
+			room->BroadcastPlayerSpawn(player);
 
-	room->SendExistingPlayersTo(gameSession, player->playerInfo->object_id());
-	room->BroadcastPlayerSpawn(player);
+			if (room->GetRoomType() == RoomType::Lobby)
+				room->CheckAndStartGame();
+		});
 
 	return true;
 }
@@ -155,10 +160,18 @@ bool Handle_C_ATTACK_PLAYER(PacketSessionRef& session, Protocol::C_ATTACK_PLAYER
 {
 	GameSessionRef gs = static_pointer_cast<GameSession>(session);
 	PlayerRef attacker = gs->player.load();
-	if (!attacker) return false;
+	if (!attacker)
+		return false;
 
 	RoomRef room = attacker->room.lock();
-	if (!room) return false;
+	if (!room)
+		return false;
+
+	if (!room->IsPvp())
+	{
+		cout << "[PVP BLOCKED] RoomType is not Battle" << endl;
+		return false;
+	}
 
 	room->DoAsync(
 		&Room::HandleAttackPlayerLocked,
@@ -170,6 +183,21 @@ bool Handle_C_ATTACK_PLAYER(PacketSessionRef& session, Protocol::C_ATTACK_PLAYER
 	return true;
 }
 
+bool Handle_C_LEVEL_READY(PacketSessionRef& session, Protocol::C_LEVEL_READY& pkt)
+{
+	auto gameSession = static_pointer_cast<GameSession>(session);
+
+	PlayerRef player = gameSession->player.load();
+	if (!player)
+		return false;
+
+	RoomRef room = player->room.lock();
+	if (!room)
+		return false;
+
+	room->HandleClientLevelReady(player);
+	return true;
+}
 
 
 //----------------------------------------------------------------------------------------------------------

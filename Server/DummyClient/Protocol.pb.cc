@@ -408,8 +408,19 @@ struct S_CHANGE_LEVELDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 S_CHANGE_LEVELDefaultTypeInternal _S_CHANGE_LEVEL_default_instance_;
+PROTOBUF_CONSTEXPR C_LEVEL_READY::C_LEVEL_READY(
+    ::_pbi::ConstantInitialized) {}
+struct C_LEVEL_READYDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR C_LEVEL_READYDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~C_LEVEL_READYDefaultTypeInternal() {}
+  union {
+    C_LEVEL_READY _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 C_LEVEL_READYDefaultTypeInternal _C_LEVEL_READY_default_instance_;
 }  // namespace Protocol
-static ::_pb::Metadata file_level_metadata_Protocol_2eproto[28];
+static ::_pb::Metadata file_level_metadata_Protocol_2eproto[29];
 static constexpr ::_pb::EnumDescriptor const** file_level_enum_descriptors_Protocol_2eproto = nullptr;
 static constexpr ::_pb::ServiceDescriptor const** file_level_service_descriptors_Protocol_2eproto = nullptr;
 
@@ -634,6 +645,12 @@ const uint32_t TableStruct_Protocol_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE
   ~0u,  // no _weak_field_map_
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::Protocol::S_CHANGE_LEVEL, _impl_.level_name_),
+  ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::Protocol::C_LEVEL_READY, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  ~0u,  // no _inlined_string_donated_
 };
 static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, -1, sizeof(::Protocol::C_LOGIN)},
@@ -664,6 +681,7 @@ static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protode
   { 196, -1, -1, sizeof(::Protocol::S_PROJECTILE_HIT)},
   { 206, -1, -1, sizeof(::Protocol::S_PROJECTILE_DESTROY)},
   { 213, -1, -1, sizeof(::Protocol::S_CHANGE_LEVEL)},
+  { 220, -1, -1, sizeof(::Protocol::C_LEVEL_READY)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
@@ -695,6 +713,7 @@ static const ::_pb::Message* const file_default_instances[] = {
   &::Protocol::_S_PROJECTILE_HIT_default_instance_._instance,
   &::Protocol::_S_PROJECTILE_DESTROY_default_instance_._instance,
   &::Protocol::_S_CHANGE_LEVEL_default_instance_._instance,
+  &::Protocol::_C_LEVEL_READY_default_instance_._instance,
 };
 
 const char descriptor_table_protodef_Protocol_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
@@ -738,7 +757,8 @@ const char descriptor_table_protodef_Protocol_2eproto[] PROTOBUF_SECTION_VARIABL
   "\004\022!\n\006hitPos\030\003 \001(\0132\021.Protocol.Vector3\022\016\n\006"
   "damage\030\004 \001(\005\",\n\024S_PROJECTILE_DESTROY\022\024\n\014"
   "projectileId\030\001 \001(\005\"$\n\016S_CHANGE_LEVEL\022\022\n\n"
-  "level_name\030\001 \001(\tb\006proto3"
+  "level_name\030\001 \001(\t\"\017\n\rC_LEVEL_READYb\006proto"
+  "3"
   ;
 static const ::_pbi::DescriptorTable* const descriptor_table_Protocol_2eproto_deps[2] = {
   &::descriptor_table_Enum_2eproto,
@@ -746,9 +766,9 @@ static const ::_pbi::DescriptorTable* const descriptor_table_Protocol_2eproto_de
 };
 static ::_pbi::once_flag descriptor_table_Protocol_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_Protocol_2eproto = {
-    false, false, 1624, descriptor_table_protodef_Protocol_2eproto,
+    false, false, 1641, descriptor_table_protodef_Protocol_2eproto,
     "Protocol.proto",
-    &descriptor_table_Protocol_2eproto_once, descriptor_table_Protocol_2eproto_deps, 2, 28,
+    &descriptor_table_Protocol_2eproto_once, descriptor_table_Protocol_2eproto_deps, 2, 29,
     schemas, file_default_instances, TableStruct_Protocol_2eproto::offsets,
     file_level_metadata_Protocol_2eproto, file_level_enum_descriptors_Protocol_2eproto,
     file_level_service_descriptors_Protocol_2eproto,
@@ -6451,6 +6471,46 @@ void S_CHANGE_LEVEL::InternalSwap(S_CHANGE_LEVEL* other) {
       file_level_metadata_Protocol_2eproto[27]);
 }
 
+// ===================================================================
+
+class C_LEVEL_READY::_Internal {
+ public:
+};
+
+C_LEVEL_READY::C_LEVEL_READY(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase(arena, is_message_owned) {
+  // @@protoc_insertion_point(arena_constructor:Protocol.C_LEVEL_READY)
+}
+C_LEVEL_READY::C_LEVEL_READY(const C_LEVEL_READY& from)
+  : ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase() {
+  C_LEVEL_READY* const _this = this; (void)_this;
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  // @@protoc_insertion_point(copy_constructor:Protocol.C_LEVEL_READY)
+}
+
+
+
+
+
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData C_LEVEL_READY::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyImpl,
+    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeImpl,
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*C_LEVEL_READY::GetClassData() const { return &_class_data_; }
+
+
+
+
+
+
+
+::PROTOBUF_NAMESPACE_ID::Metadata C_LEVEL_READY::GetMetadata() const {
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
+      file_level_metadata_Protocol_2eproto[28]);
+}
+
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace Protocol
 PROTOBUF_NAMESPACE_OPEN
@@ -6565,6 +6625,10 @@ Arena::CreateMaybeMessage< ::Protocol::S_PROJECTILE_DESTROY >(Arena* arena) {
 template<> PROTOBUF_NOINLINE ::Protocol::S_CHANGE_LEVEL*
 Arena::CreateMaybeMessage< ::Protocol::S_CHANGE_LEVEL >(Arena* arena) {
   return Arena::CreateMessageInternal< ::Protocol::S_CHANGE_LEVEL >(arena);
+}
+template<> PROTOBUF_NOINLINE ::Protocol::C_LEVEL_READY*
+Arena::CreateMaybeMessage< ::Protocol::C_LEVEL_READY >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::Protocol::C_LEVEL_READY >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 

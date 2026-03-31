@@ -4,6 +4,7 @@
 
 enum class RoomType
 {
+	Lobby,
 	Hunting,
 	Battle
 };
@@ -20,6 +21,10 @@ public:
 
 	void HandleMoveLocked(Protocol::C_MOVE& pkt);
 
+	bool IsPvp() const;
+	bool _isBattlePhase = false; // false=LandscapeMap, true=NewMap
+	void CheckBattleEnd();
+
 public:
 	void Init();
 	void UpdateTick(float deltaTime);
@@ -31,14 +36,20 @@ public:
 	void BroadcastUseSkill(uint64 playerId, uint32 skillId);
 	void HandlePlayerHit(uint64 attackerId, uint64 targetId);
 	void HandleAttackPlayerLocked(uint64 attackerId, uint64 targetId, uint32 skillId);
-	RoomType GetRoomType() { return _roomType; }
+
+	void SetRoomType(RoomType NewType) { _roomType = NewType; }
+	RoomType GetRoomType() const { return _roomType; }
+
 	bool EnterPlayer(PlayerRef player, RoomRef self);
 	void StartReturnToMap1Timer();
 	void SendExistingPlayersTo(GameSessionRef session, uint64 excludeObjectId);
 	void BroadcastPlayerSpawn(PlayerRef player);
+	void CheckAndStartGame();
+	void ApplySpawnByRoomType(PlayerRef player);
 
 private:
 	bool LeavePlayer(uint64 objectId);
+
 
 private:
 	unordered_map<uint64, PlayerRef> _players;
@@ -46,7 +57,9 @@ private:
 	bool bReturnToMap1TimerStarted = false;
 
 	float _timer = 0.0f;
-	RoomType _roomType;
+	RoomType _roomType = RoomType::Lobby;
+
+	bool bGameCountdownStarted = false;
 
 	USE_LOCK;
 };

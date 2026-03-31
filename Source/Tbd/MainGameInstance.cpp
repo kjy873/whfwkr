@@ -127,6 +127,8 @@ void UMainGameInstance::Init()
 
 	ClientPacketHandler::Init();
 
+	ConnectToGameServer();
+
 	if (UWorld* World = GetWorld()) 
 	{
 		World->GetTimerManager().SetTimer(
@@ -223,8 +225,8 @@ void UMainGameInstance::SendPacket(SendBufferRef SendBuffer)
 
 void UMainGameInstance::SendLevelReady()
 {
-	Protocol::C_ENTER_GAME EnterGamePkt;
-	auto SendBuffer = ClientPacketHandler::MakeSendBuffer(EnterGamePkt);
+	Protocol::C_LEVEL_READY pkt;
+	auto SendBuffer = ClientPacketHandler::MakeSendBuffer(pkt);
 	SendPacket(SendBuffer);
 
 	UE_LOG(LogTemp, Warning, TEXT("Sent C_ENTER_GAME as Level Ready signal"));
@@ -285,6 +287,20 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 
 		LocalPlayer->bIsMine = true;
 		LocalPlayer->SetPlayerInfo(PlayerInfo);
+
+		LocalPlayer->SetActorLocation(SpawnLocation);
+		LocalPlayer->SetActorRotation(SpawnRotation);
+
+		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn-Mine] ServerPos=(%.1f, %.1f, %.1f) CurrentPawnPos=(%.1f, %.1f, %.1f)"),
+			SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z,
+			LocalPlayer->GetActorLocation().X,
+			LocalPlayer->GetActorLocation().Y,
+			LocalPlayer->GetActorLocation().Z);
+
+		if (UCharacterMovementComponent* MoveComp = LocalPlayer->GetCharacterMovement())
+		{
+			MoveComp->StopMovementImmediately();
+		}
 
 		MyPlayer = LocalPlayer;
 		MyObjectId = ObjectId;

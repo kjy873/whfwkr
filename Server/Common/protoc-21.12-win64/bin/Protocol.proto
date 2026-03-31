@@ -175,3 +175,8 @@ message S_CHANGE_LEVEL
 {
     string level_name = 1;
 }
+
+message C_LEVEL_READY
+{
+
+}

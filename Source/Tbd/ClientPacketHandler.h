@@ -36,6 +36,7 @@ enum : uint16
 	PKT_S_PROJECTILE_HIT = 1023,
 	PKT_S_PROJECTILE_DESTROY = 1024,
 	PKT_S_CHANGE_LEVEL = 1025,
+	PKT_C_LEVEL_READY = 1026,
 };
 
 // Custom Handlers
@@ -98,6 +99,7 @@ public:
 	static SendBufferRef MakeSendBuffer(Protocol::C_MOVE_MOB& pkt) { return MakeSendBuffer(pkt, PKT_C_MOVE_MOB); }
 	static SendBufferRef MakeSendBuffer(Protocol::C_ATTACK_MOB& pkt) { return MakeSendBuffer(pkt, PKT_C_ATTACK_MOB); }
 	static SendBufferRef MakeSendBuffer(Protocol::C_USE_SKILL& pkt) { return MakeSendBuffer(pkt, PKT_C_USE_SKILL); }
+	static SendBufferRef MakeSendBuffer(Protocol::C_LEVEL_READY& pkt) { return MakeSendBuffer(pkt, PKT_C_LEVEL_READY); }
 
 private:
 	template<typename PacketType, typename ProcessFunc>
