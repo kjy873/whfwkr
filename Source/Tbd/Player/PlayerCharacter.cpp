@@ -38,6 +38,23 @@ void APlayerCharacter::Tick(float DeltaTime)
 	ApplyNetworkPosition(DeltaTime);
 }
 
+void APlayerCharacter::OnHitBySkill(APlayerCharacter* Attacker, int32 SkillId)
+{
+	if (Attacker == nullptr)
+		return;
+
+	if (Attacker->IsMyPlayer() == false)
+		return;
+
+	if (UMainGameInstance* GI = GetGameInstance<UMainGameInstance>())
+	{
+		GI->SendAttackPlayer(PlayerInfo.object_id(), SkillId);
+
+		UE_LOG(LogTemp, Warning, TEXT("[Client] Hit Player -> SendAttack target=%llu"),
+			PlayerInfo.object_id());
+	}
+}
+
 void APlayerCharacter::SetPlayerInfo(const Protocol::PlayerInfo& Info)
 {
 	PlayerInfo = Info;
@@ -54,6 +71,39 @@ void APlayerCharacter::SetDestInfo(const Protocol::PlayerInfo& Info)
 	DestInfo = Info;
 }
 
+void APlayerCharacter::SetDead(bool bDead)
+{
+	UE_LOG(LogTemp, Warning, TEXT("[SetDead] %s bDead=%d IsMine=%d"),
+		*GetName(), bDead ? 1 : 0, bIsMine ? 1 : 0);
+
+	if (bIsDead == bDead)
+		return;
+
+	bIsDead = bDead;
+
+	if (bIsDead)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Client] Player Dead"));
+
+		if (GetCharacterMovement())
+		{
+			GetCharacterMovement()->StopMovementImmediately();
+			GetCharacterMovement()->DisableMovement();
+		}
+
+		PlayDeathAnimation();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Client] Player Respawn"));
+
+		if (GetCharacterMovement())
+		{
+			GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		}
+	}
+}
+
 void APlayerCharacter::PlayNetworkAttackAnimation()
 {
 	UE_LOG(LogTemp, Warning, TEXT("[PlayerCharacter::PlayNetworkAttackAnimation] Called - Implement in Blueprint to play attack animation"));
@@ -62,6 +112,9 @@ void APlayerCharacter::PlayNetworkAttackAnimation()
 void APlayerCharacter::ApplyNetworkPosition(float DeltaTime)
 {
 	if (bIsMine)
+		return;
+
+	if (bIsDead)
 		return;
 
 	FVector TargetPos(DestInfo.x(), DestInfo.y(), DestInfo.z());

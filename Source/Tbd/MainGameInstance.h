@@ -7,6 +7,7 @@
 #include "Tbd.h"
 #include "HAL/PlatformProcess.h"
 #include "Protocol.pb.h"
+#include "Player/PlayerCharacter.h"
 #include "MainGameInstance.generated.h"
 
 class AActor;
@@ -38,6 +39,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SendEnterGamePacket();
 
+	void HandleDamage(const Protocol::S_DAMAGE_PLAYER& pkt);
+	void HandleDie(const Protocol::S_PLAYER_DEAD& Pkt);
+	void SendAttackPlayer(uint64 TargetId, uint32 SkillId);
+
 	void OnRecvUseSkill(const Protocol::S_USE_SKILL& pkt);
 
 	virtual void Init() override;
@@ -52,6 +57,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> MonsterClass;
 
+	APlayerCharacter* GetPlayerById(uint64 PlayerId);
 
 	void SendPacket(SendBufferRef SendBuffer);
 	void SendLevelReady();

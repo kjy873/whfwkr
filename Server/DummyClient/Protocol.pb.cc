@@ -191,7 +191,7 @@ struct C_ATTACK_PLAYERDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 C_ATTACK_PLAYERDefaultTypeInternal _C_ATTACK_PLAYER_default_instance_;
 PROTOBUF_CONSTEXPR S_DAMAGE_PLAYER::S_DAMAGE_PLAYER(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.playerid_)*/uint64_t{0u}
+    /*decltype(_impl_.object_id_)*/uint64_t{0u}
   , /*decltype(_impl_.damage_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct S_DAMAGE_PLAYERDefaultTypeInternal {
@@ -205,7 +205,7 @@ struct S_DAMAGE_PLAYERDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 S_DAMAGE_PLAYERDefaultTypeInternal _S_DAMAGE_PLAYER_default_instance_;
 PROTOBUF_CONSTEXPR S_PLAYER_DEAD::S_PLAYER_DEAD(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.playerid_)*/uint64_t{0u}
+    /*decltype(_impl_.object_id_)*/uint64_t{0u}
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct S_PLAYER_DEADDefaultTypeInternal {
   PROTOBUF_CONSTEXPR S_PLAYER_DEADDefaultTypeInternal()
@@ -322,6 +322,7 @@ PROTOBUF_CONSTEXPR C_USE_SKILL::C_USE_SKILL(
   , /*decltype(_impl_.playerid_)*/uint64_t{0u}
   , /*decltype(_impl_.skillid_)*/0u
   , /*decltype(_impl_.clientshotid_)*/0
+  , /*decltype(_impl_.targetid_)*/uint64_t{0u}
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct C_USE_SKILLDefaultTypeInternal {
   PROTOBUF_CONSTEXPR C_USE_SKILLDefaultTypeInternal()
@@ -523,7 +524,7 @@ const uint32_t TableStruct_Protocol_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
   ~0u,  // no _inlined_string_donated_
-  PROTOBUF_FIELD_OFFSET(::Protocol::S_DAMAGE_PLAYER, _impl_.playerid_),
+  PROTOBUF_FIELD_OFFSET(::Protocol::S_DAMAGE_PLAYER, _impl_.object_id_),
   PROTOBUF_FIELD_OFFSET(::Protocol::S_DAMAGE_PLAYER, _impl_.damage_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::Protocol::S_PLAYER_DEAD, _internal_metadata_),
@@ -531,7 +532,7 @@ const uint32_t TableStruct_Protocol_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
   ~0u,  // no _inlined_string_donated_
-  PROTOBUF_FIELD_OFFSET(::Protocol::S_PLAYER_DEAD, _impl_.playerid_),
+  PROTOBUF_FIELD_OFFSET(::Protocol::S_PLAYER_DEAD, _impl_.object_id_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::Protocol::Vector3, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -599,6 +600,7 @@ const uint32_t TableStruct_Protocol_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE
   PROTOBUF_FIELD_OFFSET(::Protocol::C_USE_SKILL, _impl_.skillid_),
   PROTOBUF_FIELD_OFFSET(::Protocol::C_USE_SKILL, _impl_.clientshotid_),
   PROTOBUF_FIELD_OFFSET(::Protocol::C_USE_SKILL, _impl_.dir_),
+  PROTOBUF_FIELD_OFFSET(::Protocol::C_USE_SKILL, _impl_.targetid_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::Protocol::S_USE_SKILL, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -676,12 +678,12 @@ static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protode
   { 148, -1, -1, sizeof(::Protocol::C_MOVE_MOB)},
   { 157, -1, -1, sizeof(::Protocol::C_ATTACK_MOB)},
   { 164, -1, -1, sizeof(::Protocol::C_USE_SKILL)},
-  { 174, -1, -1, sizeof(::Protocol::S_USE_SKILL)},
-  { 187, -1, -1, sizeof(::Protocol::S_DAMAGE_MOB)},
-  { 196, -1, -1, sizeof(::Protocol::S_PROJECTILE_HIT)},
-  { 206, -1, -1, sizeof(::Protocol::S_PROJECTILE_DESTROY)},
-  { 213, -1, -1, sizeof(::Protocol::S_CHANGE_LEVEL)},
-  { 220, -1, -1, sizeof(::Protocol::C_LEVEL_READY)},
+  { 175, -1, -1, sizeof(::Protocol::S_USE_SKILL)},
+  { 188, -1, -1, sizeof(::Protocol::S_DAMAGE_MOB)},
+  { 197, -1, -1, sizeof(::Protocol::S_PROJECTILE_HIT)},
+  { 207, -1, -1, sizeof(::Protocol::S_PROJECTILE_DESTROY)},
+  { 214, -1, -1, sizeof(::Protocol::S_CHANGE_LEVEL)},
+  { 221, -1, -1, sizeof(::Protocol::C_LEVEL_READY)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
@@ -731,34 +733,34 @@ const char descriptor_table_protodef_Protocol_2eproto[] PROTOBUF_SECTION_VARIABL
   "rInfo\"\025\n\006C_CHAT\022\013\n\003msg\030\001 \001(\t\"\'\n\006S_CHAT\022\020"
   "\n\010playerId\030\001 \001(\004\022\013\n\003msg\030\002 \001(\t\":\n\017C_ATTAC"
   "K_PLAYER\022\026\n\016targetPlayerId\030\001 \001(\004\022\017\n\007skil"
-  "lId\030\002 \001(\r\"3\n\017S_DAMAGE_PLAYER\022\020\n\010playerId"
-  "\030\001 \001(\004\022\016\n\006damage\030\002 \001(\005\"!\n\rS_PLAYER_DEAD\022"
-  "\020\n\010playerId\030\001 \001(\004\"*\n\007Vector3\022\t\n\001x\030\001 \001(\002\022"
-  "\t\n\001y\030\002 \001(\002\022\t\n\001z\030\003 \001(\002\"x\n\007MobInfo\022\r\n\005mobI"
-  "d\030\001 \001(\004\022\022\n\ntemplateId\030\002 \001(\r\022\036\n\003pos\030\003 \001(\013"
-  "2\021.Protocol.Vector3\022\036\n\003dir\030\004 \001(\0132\021.Proto"
-  "col.Vector3\022\n\n\002hp\030\005 \001(\005\".\n\013S_SPAWN_MOB\022\037"
-  "\n\004mobs\030\001 \003(\0132\021.Protocol.MobInfo\"\037\n\rS_DES"
-  "PAWN_MOB\022\016\n\006mobIds\030\001 \003(\004\",\n\nS_MOVE_MOB\022\036"
-  "\n\003mob\030\001 \001(\0132\021.Protocol.MobInfo\"[\n\nC_MOVE"
-  "_MOB\022\r\n\005mobId\030\001 \001(\004\022\036\n\003pos\030\002 \001(\0132\021.Proto"
-  "col.Vector3\022\036\n\003dir\030\003 \001(\0132\021.Protocol.Vect"
-  "or3\"\035\n\014C_ATTACK_MOB\022\r\n\005mobId\030\001 \001(\004\"f\n\013C_"
-  "USE_SKILL\022\020\n\010playerId\030\001 \001(\004\022\017\n\007skillId\030\002"
-  " \001(\r\022\024\n\014clientShotId\030\003 \001(\005\022\036\n\003dir\030\004 \001(\0132"
-  "\021.Protocol.Vector3\"\265\001\n\013S_USE_SKILL\022\020\n\010pl"
-  "ayerId\030\001 \001(\004\022\017\n\007skillId\030\002 \001(\r\022\024\n\014clientS"
-  "hotId\030\003 \001(\005\022\024\n\014projectileId\030\004 \001(\005\022#\n\010spa"
-  "wnPos\030\005 \001(\0132\021.Protocol.Vector3\022\036\n\003dir\030\006 "
-  "\001(\0132\021.Protocol.Vector3\022\022\n\nserverTick\030\007 \001"
-  "(\r\"9\n\014S_DAMAGE_MOB\022\r\n\005mobId\030\001 \001(\004\022\016\n\006dam"
-  "age\030\002 \001(\005\022\n\n\002hp\030\003 \001(\005\"m\n\020S_PROJECTILE_HI"
-  "T\022\024\n\014projectileId\030\001 \001(\005\022\020\n\010targetId\030\002 \001("
-  "\004\022!\n\006hitPos\030\003 \001(\0132\021.Protocol.Vector3\022\016\n\006"
-  "damage\030\004 \001(\005\",\n\024S_PROJECTILE_DESTROY\022\024\n\014"
-  "projectileId\030\001 \001(\005\"$\n\016S_CHANGE_LEVEL\022\022\n\n"
-  "level_name\030\001 \001(\t\"\017\n\rC_LEVEL_READYb\006proto"
-  "3"
+  "lId\030\002 \001(\r\"4\n\017S_DAMAGE_PLAYER\022\021\n\tobject_i"
+  "d\030\001 \001(\004\022\016\n\006damage\030\002 \001(\005\"\"\n\rS_PLAYER_DEAD"
+  "\022\021\n\tobject_id\030\001 \001(\004\"*\n\007Vector3\022\t\n\001x\030\001 \001("
+  "\002\022\t\n\001y\030\002 \001(\002\022\t\n\001z\030\003 \001(\002\"x\n\007MobInfo\022\r\n\005mo"
+  "bId\030\001 \001(\004\022\022\n\ntemplateId\030\002 \001(\r\022\036\n\003pos\030\003 \001"
+  "(\0132\021.Protocol.Vector3\022\036\n\003dir\030\004 \001(\0132\021.Pro"
+  "tocol.Vector3\022\n\n\002hp\030\005 \001(\005\".\n\013S_SPAWN_MOB"
+  "\022\037\n\004mobs\030\001 \003(\0132\021.Protocol.MobInfo\"\037\n\rS_D"
+  "ESPAWN_MOB\022\016\n\006mobIds\030\001 \003(\004\",\n\nS_MOVE_MOB"
+  "\022\036\n\003mob\030\001 \001(\0132\021.Protocol.MobInfo\"[\n\nC_MO"
+  "VE_MOB\022\r\n\005mobId\030\001 \001(\004\022\036\n\003pos\030\002 \001(\0132\021.Pro"
+  "tocol.Vector3\022\036\n\003dir\030\003 \001(\0132\021.Protocol.Ve"
+  "ctor3\"\035\n\014C_ATTACK_MOB\022\r\n\005mobId\030\001 \001(\004\"x\n\013"
+  "C_USE_SKILL\022\020\n\010playerId\030\001 \001(\004\022\017\n\007skillId"
+  "\030\002 \001(\r\022\024\n\014clientShotId\030\003 \001(\005\022\036\n\003dir\030\004 \001("
+  "\0132\021.Protocol.Vector3\022\020\n\010targetId\030\005 \001(\004\"\265"
+  "\001\n\013S_USE_SKILL\022\020\n\010playerId\030\001 \001(\004\022\017\n\007skil"
+  "lId\030\002 \001(\r\022\024\n\014clientShotId\030\003 \001(\005\022\024\n\014proje"
+  "ctileId\030\004 \001(\005\022#\n\010spawnPos\030\005 \001(\0132\021.Protoc"
+  "ol.Vector3\022\036\n\003dir\030\006 \001(\0132\021.Protocol.Vecto"
+  "r3\022\022\n\nserverTick\030\007 \001(\r\"9\n\014S_DAMAGE_MOB\022\r"
+  "\n\005mobId\030\001 \001(\004\022\016\n\006damage\030\002 \001(\005\022\n\n\002hp\030\003 \001("
+  "\005\"m\n\020S_PROJECTILE_HIT\022\024\n\014projectileId\030\001 "
+  "\001(\005\022\020\n\010targetId\030\002 \001(\004\022!\n\006hitPos\030\003 \001(\0132\021."
+  "Protocol.Vector3\022\016\n\006damage\030\004 \001(\005\",\n\024S_PR"
+  "OJECTILE_DESTROY\022\024\n\014projectileId\030\001 \001(\005\"$"
+  "\n\016S_CHANGE_LEVEL\022\022\n\nlevel_name\030\001 \001(\t\"\017\n\r"
+  "C_LEVEL_READYb\006proto3"
   ;
 static const ::_pbi::DescriptorTable* const descriptor_table_Protocol_2eproto_deps[2] = {
   &::descriptor_table_Enum_2eproto,
@@ -766,7 +768,7 @@ static const ::_pbi::DescriptorTable* const descriptor_table_Protocol_2eproto_de
 };
 static ::_pbi::once_flag descriptor_table_Protocol_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_Protocol_2eproto = {
-    false, false, 1641, descriptor_table_protodef_Protocol_2eproto,
+    false, false, 1661, descriptor_table_protodef_Protocol_2eproto,
     "Protocol.proto",
     &descriptor_table_Protocol_2eproto_once, descriptor_table_Protocol_2eproto_deps, 2, 29,
     schemas, file_default_instances, TableStruct_Protocol_2eproto::offsets,
@@ -2963,14 +2965,14 @@ S_DAMAGE_PLAYER::S_DAMAGE_PLAYER(const S_DAMAGE_PLAYER& from)
   : ::PROTOBUF_NAMESPACE_ID::Message() {
   S_DAMAGE_PLAYER* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.playerid_){}
+      decltype(_impl_.object_id_){}
     , decltype(_impl_.damage_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
-  ::memcpy(&_impl_.playerid_, &from._impl_.playerid_,
+  ::memcpy(&_impl_.object_id_, &from._impl_.object_id_,
     static_cast<size_t>(reinterpret_cast<char*>(&_impl_.damage_) -
-    reinterpret_cast<char*>(&_impl_.playerid_)) + sizeof(_impl_.damage_));
+    reinterpret_cast<char*>(&_impl_.object_id_)) + sizeof(_impl_.damage_));
   // @@protoc_insertion_point(copy_constructor:Protocol.S_DAMAGE_PLAYER)
 }
 
@@ -2979,7 +2981,7 @@ inline void S_DAMAGE_PLAYER::SharedCtor(
   (void)arena;
   (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.playerid_){uint64_t{0u}}
+      decltype(_impl_.object_id_){uint64_t{0u}}
     , decltype(_impl_.damage_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
@@ -3008,9 +3010,9 @@ void S_DAMAGE_PLAYER::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  ::memset(&_impl_.playerid_, 0, static_cast<size_t>(
+  ::memset(&_impl_.object_id_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&_impl_.damage_) -
-      reinterpret_cast<char*>(&_impl_.playerid_)) + sizeof(_impl_.damage_));
+      reinterpret_cast<char*>(&_impl_.object_id_)) + sizeof(_impl_.damage_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -3020,10 +3022,10 @@ const char* S_DAMAGE_PLAYER::_InternalParse(const char* ptr, ::_pbi::ParseContex
     uint32_t tag;
     ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
-      // uint64 playerId = 1;
+      // uint64 object_id = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
-          _impl_.playerid_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          _impl_.object_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -3065,10 +3067,10 @@ uint8_t* S_DAMAGE_PLAYER::_InternalSerialize(
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // uint64 playerId = 1;
-  if (this->_internal_playerid() != 0) {
+  // uint64 object_id = 1;
+  if (this->_internal_object_id() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(1, this->_internal_playerid(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(1, this->_internal_object_id(), target);
   }
 
   // int32 damage = 2;
@@ -3093,9 +3095,9 @@ size_t S_DAMAGE_PLAYER::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // uint64 playerId = 1;
-  if (this->_internal_playerid() != 0) {
-    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_playerid());
+  // uint64 object_id = 1;
+  if (this->_internal_object_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_object_id());
   }
 
   // int32 damage = 2;
@@ -3121,8 +3123,8 @@ void S_DAMAGE_PLAYER::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const 
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from._internal_playerid() != 0) {
-    _this->_internal_set_playerid(from._internal_playerid());
+  if (from._internal_object_id() != 0) {
+    _this->_internal_set_object_id(from._internal_object_id());
   }
   if (from._internal_damage() != 0) {
     _this->_internal_set_damage(from._internal_damage());
@@ -3147,9 +3149,9 @@ void S_DAMAGE_PLAYER::InternalSwap(S_DAMAGE_PLAYER* other) {
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
       PROTOBUF_FIELD_OFFSET(S_DAMAGE_PLAYER, _impl_.damage_)
       + sizeof(S_DAMAGE_PLAYER::_impl_.damage_)
-      - PROTOBUF_FIELD_OFFSET(S_DAMAGE_PLAYER, _impl_.playerid_)>(
-          reinterpret_cast<char*>(&_impl_.playerid_),
-          reinterpret_cast<char*>(&other->_impl_.playerid_));
+      - PROTOBUF_FIELD_OFFSET(S_DAMAGE_PLAYER, _impl_.object_id_)>(
+          reinterpret_cast<char*>(&_impl_.object_id_),
+          reinterpret_cast<char*>(&other->_impl_.object_id_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata S_DAMAGE_PLAYER::GetMetadata() const {
@@ -3174,11 +3176,11 @@ S_PLAYER_DEAD::S_PLAYER_DEAD(const S_PLAYER_DEAD& from)
   : ::PROTOBUF_NAMESPACE_ID::Message() {
   S_PLAYER_DEAD* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.playerid_){}
+      decltype(_impl_.object_id_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
-  _this->_impl_.playerid_ = from._impl_.playerid_;
+  _this->_impl_.object_id_ = from._impl_.object_id_;
   // @@protoc_insertion_point(copy_constructor:Protocol.S_PLAYER_DEAD)
 }
 
@@ -3187,7 +3189,7 @@ inline void S_PLAYER_DEAD::SharedCtor(
   (void)arena;
   (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.playerid_){uint64_t{0u}}
+      decltype(_impl_.object_id_){uint64_t{0u}}
     , /*decltype(_impl_._cached_size_)*/{}
   };
 }
@@ -3215,7 +3217,7 @@ void S_PLAYER_DEAD::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  _impl_.playerid_ = uint64_t{0u};
+  _impl_.object_id_ = uint64_t{0u};
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -3225,10 +3227,10 @@ const char* S_PLAYER_DEAD::_InternalParse(const char* ptr, ::_pbi::ParseContext*
     uint32_t tag;
     ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
-      // uint64 playerId = 1;
+      // uint64 object_id = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
-          _impl_.playerid_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          _impl_.object_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -3262,10 +3264,10 @@ uint8_t* S_PLAYER_DEAD::_InternalSerialize(
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // uint64 playerId = 1;
-  if (this->_internal_playerid() != 0) {
+  // uint64 object_id = 1;
+  if (this->_internal_object_id() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(1, this->_internal_playerid(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(1, this->_internal_object_id(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -3284,9 +3286,9 @@ size_t S_PLAYER_DEAD::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // uint64 playerId = 1;
-  if (this->_internal_playerid() != 0) {
-    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_playerid());
+  // uint64 object_id = 1;
+  if (this->_internal_object_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_object_id());
   }
 
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
@@ -3307,8 +3309,8 @@ void S_PLAYER_DEAD::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from._internal_playerid() != 0) {
-    _this->_internal_set_playerid(from._internal_playerid());
+  if (from._internal_object_id() != 0) {
+    _this->_internal_set_object_id(from._internal_object_id());
   }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
@@ -3327,7 +3329,7 @@ bool S_PLAYER_DEAD::IsInitialized() const {
 void S_PLAYER_DEAD::InternalSwap(S_PLAYER_DEAD* other) {
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  swap(_impl_.playerid_, other->_impl_.playerid_);
+  swap(_impl_.object_id_, other->_impl_.object_id_);
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata S_PLAYER_DEAD::GetMetadata() const {
@@ -4963,6 +4965,7 @@ C_USE_SKILL::C_USE_SKILL(const C_USE_SKILL& from)
     , decltype(_impl_.playerid_){}
     , decltype(_impl_.skillid_){}
     , decltype(_impl_.clientshotid_){}
+    , decltype(_impl_.targetid_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
@@ -4970,8 +4973,8 @@ C_USE_SKILL::C_USE_SKILL(const C_USE_SKILL& from)
     _this->_impl_.dir_ = new ::Protocol::Vector3(*from._impl_.dir_);
   }
   ::memcpy(&_impl_.playerid_, &from._impl_.playerid_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.clientshotid_) -
-    reinterpret_cast<char*>(&_impl_.playerid_)) + sizeof(_impl_.clientshotid_));
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.targetid_) -
+    reinterpret_cast<char*>(&_impl_.playerid_)) + sizeof(_impl_.targetid_));
   // @@protoc_insertion_point(copy_constructor:Protocol.C_USE_SKILL)
 }
 
@@ -4984,6 +4987,7 @@ inline void C_USE_SKILL::SharedCtor(
     , decltype(_impl_.playerid_){uint64_t{0u}}
     , decltype(_impl_.skillid_){0u}
     , decltype(_impl_.clientshotid_){0}
+    , decltype(_impl_.targetid_){uint64_t{0u}}
     , /*decltype(_impl_._cached_size_)*/{}
   };
 }
@@ -5017,8 +5021,8 @@ void C_USE_SKILL::Clear() {
   }
   _impl_.dir_ = nullptr;
   ::memset(&_impl_.playerid_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.clientshotid_) -
-      reinterpret_cast<char*>(&_impl_.playerid_)) + sizeof(_impl_.clientshotid_));
+      reinterpret_cast<char*>(&_impl_.targetid_) -
+      reinterpret_cast<char*>(&_impl_.playerid_)) + sizeof(_impl_.targetid_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -5056,6 +5060,14 @@ const char* C_USE_SKILL::_InternalParse(const char* ptr, ::_pbi::ParseContext* c
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
           ptr = ctx->ParseMessage(_internal_mutable_dir(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // uint64 targetId = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 40)) {
+          _impl_.targetid_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -5114,6 +5126,12 @@ uint8_t* C_USE_SKILL::_InternalSerialize(
         _Internal::dir(this).GetCachedSize(), target, stream);
   }
 
+  // uint64 targetId = 5;
+  if (this->_internal_targetid() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(5, this->_internal_targetid(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -5152,6 +5170,11 @@ size_t C_USE_SKILL::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_clientshotid());
   }
 
+  // uint64 targetId = 5;
+  if (this->_internal_targetid() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_targetid());
+  }
+
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
@@ -5183,6 +5206,9 @@ void C_USE_SKILL::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PR
   if (from._internal_clientshotid() != 0) {
     _this->_internal_set_clientshotid(from._internal_clientshotid());
   }
+  if (from._internal_targetid() != 0) {
+    _this->_internal_set_targetid(from._internal_targetid());
+  }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
@@ -5201,8 +5227,8 @@ void C_USE_SKILL::InternalSwap(C_USE_SKILL* other) {
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(C_USE_SKILL, _impl_.clientshotid_)
-      + sizeof(C_USE_SKILL::_impl_.clientshotid_)
+      PROTOBUF_FIELD_OFFSET(C_USE_SKILL, _impl_.targetid_)
+      + sizeof(C_USE_SKILL::_impl_.targetid_)
       - PROTOBUF_FIELD_OFFSET(C_USE_SKILL, _impl_.dir_)>(
           reinterpret_cast<char*>(&_impl_.dir_),
           reinterpret_cast<char*>(&other->_impl_.dir_));

@@ -24,14 +24,26 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Network")
 	bool bIsMine = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+	bool bIsDead = false;
+
 	UFUNCTION(BlueprintImplementableEvent)
 	void PlaySkill(int32 SkillId);
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void PlayOtherPlayerSkill(int32 SkillId);
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void PlayDeathAnimation();
+
+	UFUNCTION()
+	void OnHitBySkill(APlayerCharacter* Attacker, int32 SkillId);
+
 	void SetPlayerInfo(const Protocol::PlayerInfo& Info);
 	void SetDestInfo(const Protocol::PlayerInfo& Info);
+
+	UFUNCTION(BlueprintCallable, Category = "State")
+	void SetDead(bool bDead);
 
 	UFUNCTION(BlueprintCallable)
 	bool IsMyPlayer() const { return bIsMine; }

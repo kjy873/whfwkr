@@ -2239,16 +2239,16 @@ class S_DAMAGE_PLAYER final :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kPlayerIdFieldNumber = 1,
+    kObjectIdFieldNumber = 1,
     kDamageFieldNumber = 2,
   };
-  // uint64 playerId = 1;
-  void clear_playerid();
-  uint64_t playerid() const;
-  void set_playerid(uint64_t value);
+  // uint64 object_id = 1;
+  void clear_object_id();
+  uint64_t object_id() const;
+  void set_object_id(uint64_t value);
   private:
-  uint64_t _internal_playerid() const;
-  void _internal_set_playerid(uint64_t value);
+  uint64_t _internal_object_id() const;
+  void _internal_set_object_id(uint64_t value);
   public:
 
   // int32 damage = 2;
@@ -2268,7 +2268,7 @@ class S_DAMAGE_PLAYER final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
-    uint64_t playerid_;
+    uint64_t object_id_;
     int32_t damage_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
@@ -2398,15 +2398,15 @@ class S_PLAYER_DEAD final :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kPlayerIdFieldNumber = 1,
+    kObjectIdFieldNumber = 1,
   };
-  // uint64 playerId = 1;
-  void clear_playerid();
-  uint64_t playerid() const;
-  void set_playerid(uint64_t value);
+  // uint64 object_id = 1;
+  void clear_object_id();
+  uint64_t object_id() const;
+  void set_object_id(uint64_t value);
   private:
-  uint64_t _internal_playerid() const;
-  void _internal_set_playerid(uint64_t value);
+  uint64_t _internal_object_id() const;
+  void _internal_set_object_id(uint64_t value);
   public:
 
   // @@protoc_insertion_point(class_scope:Protocol.S_PLAYER_DEAD)
@@ -2417,7 +2417,7 @@ class S_PLAYER_DEAD final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
-    uint64_t playerid_;
+    uint64_t object_id_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -3742,6 +3742,7 @@ class C_USE_SKILL final :
     kPlayerIdFieldNumber = 1,
     kSkillIdFieldNumber = 2,
     kClientShotIdFieldNumber = 3,
+    kTargetIdFieldNumber = 5,
   };
   // .Protocol.Vector3 dir = 4;
   bool has_dir() const;
@@ -3788,6 +3789,15 @@ class C_USE_SKILL final :
   void _internal_set_clientshotid(int32_t value);
   public:
 
+  // uint64 targetId = 5;
+  void clear_targetid();
+  uint64_t targetid() const;
+  void set_targetid(uint64_t value);
+  private:
+  uint64_t _internal_targetid() const;
+  void _internal_set_targetid(uint64_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:Protocol.C_USE_SKILL)
  private:
   class _Internal;
@@ -3800,6 +3810,7 @@ class C_USE_SKILL final :
     uint64_t playerid_;
     uint32_t skillid_;
     int32_t clientshotid_;
+    uint64_t targetid_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -5475,24 +5486,24 @@ inline void C_ATTACK_PLAYER::set_skillid(uint32_t value) {
 
 // S_DAMAGE_PLAYER
 
-// uint64 playerId = 1;
-inline void S_DAMAGE_PLAYER::clear_playerid() {
-  _impl_.playerid_ = uint64_t{0u};
+// uint64 object_id = 1;
+inline void S_DAMAGE_PLAYER::clear_object_id() {
+  _impl_.object_id_ = uint64_t{0u};
 }
-inline uint64_t S_DAMAGE_PLAYER::_internal_playerid() const {
-  return _impl_.playerid_;
+inline uint64_t S_DAMAGE_PLAYER::_internal_object_id() const {
+  return _impl_.object_id_;
 }
-inline uint64_t S_DAMAGE_PLAYER::playerid() const {
-  // @@protoc_insertion_point(field_get:Protocol.S_DAMAGE_PLAYER.playerId)
-  return _internal_playerid();
+inline uint64_t S_DAMAGE_PLAYER::object_id() const {
+  // @@protoc_insertion_point(field_get:Protocol.S_DAMAGE_PLAYER.object_id)
+  return _internal_object_id();
 }
-inline void S_DAMAGE_PLAYER::_internal_set_playerid(uint64_t value) {
+inline void S_DAMAGE_PLAYER::_internal_set_object_id(uint64_t value) {
   
-  _impl_.playerid_ = value;
+  _impl_.object_id_ = value;
 }
-inline void S_DAMAGE_PLAYER::set_playerid(uint64_t value) {
-  _internal_set_playerid(value);
-  // @@protoc_insertion_point(field_set:Protocol.S_DAMAGE_PLAYER.playerId)
+inline void S_DAMAGE_PLAYER::set_object_id(uint64_t value) {
+  _internal_set_object_id(value);
+  // @@protoc_insertion_point(field_set:Protocol.S_DAMAGE_PLAYER.object_id)
 }
 
 // int32 damage = 2;
@@ -5519,24 +5530,24 @@ inline void S_DAMAGE_PLAYER::set_damage(int32_t value) {
 
 // S_PLAYER_DEAD
 
-// uint64 playerId = 1;
-inline void S_PLAYER_DEAD::clear_playerid() {
-  _impl_.playerid_ = uint64_t{0u};
+// uint64 object_id = 1;
+inline void S_PLAYER_DEAD::clear_object_id() {
+  _impl_.object_id_ = uint64_t{0u};
 }
-inline uint64_t S_PLAYER_DEAD::_internal_playerid() const {
-  return _impl_.playerid_;
+inline uint64_t S_PLAYER_DEAD::_internal_object_id() const {
+  return _impl_.object_id_;
 }
-inline uint64_t S_PLAYER_DEAD::playerid() const {
-  // @@protoc_insertion_point(field_get:Protocol.S_PLAYER_DEAD.playerId)
-  return _internal_playerid();
+inline uint64_t S_PLAYER_DEAD::object_id() const {
+  // @@protoc_insertion_point(field_get:Protocol.S_PLAYER_DEAD.object_id)
+  return _internal_object_id();
 }
-inline void S_PLAYER_DEAD::_internal_set_playerid(uint64_t value) {
+inline void S_PLAYER_DEAD::_internal_set_object_id(uint64_t value) {
   
-  _impl_.playerid_ = value;
+  _impl_.object_id_ = value;
 }
-inline void S_PLAYER_DEAD::set_playerid(uint64_t value) {
-  _internal_set_playerid(value);
-  // @@protoc_insertion_point(field_set:Protocol.S_PLAYER_DEAD.playerId)
+inline void S_PLAYER_DEAD::set_object_id(uint64_t value) {
+  _internal_set_object_id(value);
+  // @@protoc_insertion_point(field_set:Protocol.S_PLAYER_DEAD.object_id)
 }
 
 // -------------------------------------------------------------------
@@ -6416,6 +6427,26 @@ inline void C_USE_SKILL::set_allocated_dir(::Protocol::Vector3* dir) {
   }
   _impl_.dir_ = dir;
   // @@protoc_insertion_point(field_set_allocated:Protocol.C_USE_SKILL.dir)
+}
+
+// uint64 targetId = 5;
+inline void C_USE_SKILL::clear_targetid() {
+  _impl_.targetid_ = uint64_t{0u};
+}
+inline uint64_t C_USE_SKILL::_internal_targetid() const {
+  return _impl_.targetid_;
+}
+inline uint64_t C_USE_SKILL::targetid() const {
+  // @@protoc_insertion_point(field_get:Protocol.C_USE_SKILL.targetId)
+  return _internal_targetid();
+}
+inline void C_USE_SKILL::_internal_set_targetid(uint64_t value) {
+  
+  _impl_.targetid_ = value;
+}
+inline void C_USE_SKILL::set_targetid(uint64_t value) {
+  _internal_set_targetid(value);
+  // @@protoc_insertion_point(field_set:Protocol.C_USE_SKILL.targetId)
 }
 
 // -------------------------------------------------------------------

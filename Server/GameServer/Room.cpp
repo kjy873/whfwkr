@@ -53,8 +53,8 @@ void Room::ApplySpawnByRoomType(PlayerRef player)
 
 	if (_roomType == RoomType::Lobby)
 	{
-		centerX = 0.f;
-		centerY = 0.f;
+		centerX = Utils::GetRandom(0.f, 500.f);
+		centerY = Utils::GetRandom(0.f, 500.f);
 		centerZ = 0.f;
 	}
 	else if (_roomType == RoomType::Hunting)
@@ -455,7 +455,7 @@ void Room::HandlePlayerHit(uint64 attackerId, uint64 targetId)
 	target->hp -= damage;
 
 	Protocol::S_DAMAGE_PLAYER pkt;
-	pkt.set_playerid(targetId);
+	pkt.set_object_id(targetId);
 	pkt.set_damage(damage);
 
 	Broadcast(ServerPacketHandler::MakeSendBuffer(pkt));
@@ -463,7 +463,7 @@ void Room::HandlePlayerHit(uint64 attackerId, uint64 targetId)
 	if (target->hp <= 0)
 	{
 		Protocol::S_PLAYER_DEAD deadPkt;
-		deadPkt.set_playerid(targetId);
+		deadPkt.set_object_id(targetId);
 		Broadcast(ServerPacketHandler::MakeSendBuffer(deadPkt));
 	}
 }
@@ -486,14 +486,21 @@ void Room::HandleAttackPlayerLocked(uint64 attackerId, uint64 targetId, uint32 s
 	int32 damage = 0;
 	switch (skillId)
 	{
-	case 0: damage = 10; break;
-	case 1: damage = 25; break;
+	case 0: damage = 100; break;
+	case 1: damage = 35; break;
 	}
+
+	cout << "[Damage] attackerId=" << attackerId
+		<< " targetId=" << targetId
+		<< " beforeHp=" << target->hp
+		<< " damage=" << damage << endl;
 
 	target->hp = max(0, target->hp - damage);
 
+	cout << "[Damage] afterHp=" << target->hp << endl;
+
 	Protocol::S_DAMAGE_PLAYER pkt;
-	pkt.set_playerid(targetId);
+	pkt.set_object_id(targetId);
 	pkt.set_damage(damage);
 	Broadcast(ServerPacketHandler::MakeSendBuffer(pkt));
 
@@ -502,7 +509,7 @@ void Room::HandleAttackPlayerLocked(uint64 attackerId, uint64 targetId, uint32 s
 		cout << "[SERVER] Player Dead: " << targetId << endl;
 
 		Protocol::S_PLAYER_DEAD deadPkt;
-		deadPkt.set_playerid(targetId);
+		deadPkt.set_object_id(targetId);
 		Broadcast(ServerPacketHandler::MakeSendBuffer(deadPkt));
 
 		if (_roomType != RoomType::Battle)

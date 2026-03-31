@@ -76,13 +76,13 @@ message C_ATTACK_PLAYER
 
 message S_DAMAGE_PLAYER
 {
-    uint64 playerId = 1;
+    uint64 object_id = 1;
     int32 damage = 2;
 }
 
 message S_PLAYER_DEAD
 {
-    uint64 playerId = 1;
+    uint64 object_id = 1;
 }
 
 message Vector3
@@ -137,6 +137,7 @@ message C_USE_SKILL
 
 	int32 clientShotId = 3;
     Vector3 dir = 4; 
+	uint64 targetId = 5;
 }
 
 message S_USE_SKILL

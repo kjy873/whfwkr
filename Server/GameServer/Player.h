@@ -23,5 +23,14 @@ public:
 public:
 	int32 hp = 100;
 	int32 maxHp = 100;
+	bool isDead = false;
+
+public:
+	uint64 GetObjectId() const
+	{
+		return playerInfo ? playerInfo->object_id() : 0;
+	}
+
+	void OnDamaged(int32 damage);
 };
 

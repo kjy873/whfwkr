@@ -18,8 +18,8 @@ public:
 	bool HandleEnterPlayerLocked(PlayerRef player, RoomRef self);
 	void HandleClientLevelReady(PlayerRef player);
 	bool HandleLeavePlayerLocked(PlayerRef player);
-
 	void HandleMoveLocked(Protocol::C_MOVE& pkt);
+	void HandlePlayerDead(PlayerRef player);
 
 	bool IsPvp() const;
 	bool _isBattlePhase = false; // false=LandscapeMap, true=NewMap
@@ -47,12 +47,11 @@ public:
 	void CheckAndStartGame();
 	void ApplySpawnByRoomType(PlayerRef player);
 
+	unordered_map<uint64, PlayerRef> _players;
 private:
 	bool LeavePlayer(uint64 objectId);
 
-
 private:
-	unordered_map<uint64, PlayerRef> _players;
 	unordered_map<uint64, MobRef> _mobs;
 	bool bReturnToMap1TimerStarted = false;
 

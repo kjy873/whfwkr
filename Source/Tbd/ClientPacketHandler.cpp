@@ -4,6 +4,7 @@
 #include "MainGameInstance.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
+#include "Player/PlayerCharacter.h"
 
 PacketHandlerFunc GPacketHandler[UINT16_MAX];
 
@@ -115,12 +116,47 @@ bool Handle_S_CHAT(PacketSessionRef& session, Protocol::S_CHAT& pkt)
 
 bool Handle_S_DAMAGE_PLAYER(PacketSessionRef& session, Protocol::S_DAMAGE_PLAYER& pkt)
 {
-	return false;
+	if (GEngine == nullptr)
+		return false;
+
+	if (GEngine->GetWorldContexts().Num() == 0)
+		return false;
+
+	UMainGameInstance* GI = Cast<UMainGameInstance>(GEngine->GetWorldContexts()[0].OwningGameInstance);
+	if (GI == nullptr)
+		return false;
+
+	GI->HandleDamage(pkt);
+
+	return true;
 }
 
 bool Handle_S_PLAYER_DEAD(PacketSessionRef& session, Protocol::S_PLAYER_DEAD& pkt)
 {
-	return false;
+	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_PLAYER_DEAD] packet arrived"));
+
+	if (GEngine == nullptr)
+		return false;
+
+	bool bHandled = false;
+
+	for (const FWorldContext& Context : GEngine->GetWorldContexts())
+	{
+		if (Context.OwningGameInstance == nullptr)
+			continue;
+
+		UMainGameInstance* GI = Cast<UMainGameInstance>(Context.OwningGameInstance);
+		if (GI == nullptr)
+			continue;
+
+		UE_LOG(LogTemp, Warning, TEXT("[Handle_S_PLAYER_DEAD] dispatch GI=%p WorldType=%d"),
+			GI, (int32)Context.WorldType);
+
+		GI->HandleDie(pkt);
+		bHandled = true;
+	}
+
+	return bHandled;
 }
 
 bool Handle_S_SPAWN_MOB(PacketSessionRef& session, Protocol::S_SPAWN_MOB& pkt)
@@ -163,11 +199,19 @@ bool Handle_S_DAMAGE_MOB(PacketSessionRef& session, Protocol::S_DAMAGE_MOB& pkt)
 
 bool Handle_S_USE_SKILL(PacketSessionRef& session, Protocol::S_USE_SKILL& pkt)
 {
-	int32 playerId = static_cast<int32>(pkt.playerid());
-	int32 skillId = static_cast<int32>(pkt.skillid());
+	UMainGameInstance* GI = Cast<UMainGameInstance>(GWorld->GetGameInstance());
+	if (GI == nullptr)
+		return false;
 
-	if (auto* GI = GetMainGameInstance())
-		GI->OnRecvUseSkill(pkt);
+	APlayerCharacter* Player = GI->GetPlayerById(pkt.playerid());
+	if (Player == nullptr)
+		return false;
+
+	if (Player->IsMyPlayer())
+		return true;
+
+	Player->PlayNetworkAttackAnimation();
+
 	return true;
 }
 
