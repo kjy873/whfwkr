@@ -164,6 +164,11 @@ void AAISpawnManager::UpdateRegionActivation() {
 				for (auto& WeakE : Regions[i].SpawnedEnemies) {
 					// �ϵ� Ȱ��ȭ
 					if (WeakE.IsValid()) { if (AActor* E = WeakE.Get()) EnableEnemy(E); }
+					if (APawn* EnemyPawn = Cast<APawn>(WeakE)) {
+						if (ANPC_AIController* EnemyController = Cast<ANPC_AIController>(EnemyPawn->GetController())) {
+							EnemyController->UpdateAttribute(Player);
+						}
+					}
 				}
 
 				const int CoreRegionIndexX = i / RegionCountY;
@@ -190,6 +195,11 @@ void AAISpawnManager::UpdateRegionActivation() {
 							if (!Regions[NeighborIndex].HardActivation) {
 								for (auto& WeakE : Regions[NeighborIndex].SpawnedEnemies) {
 									if (WeakE.IsValid()) { if (AActor* E = WeakE.Get()) EnableEnemy(E); }
+									if (APawn* EnemyPawn = Cast<APawn>(WeakE)) {
+										if (ANPC_AIController* EnemyController = Cast<ANPC_AIController>(EnemyPawn->GetController())) {
+											EnemyController->UpdateAttribute(Player);
+										}
+									}
 								}
 							} 
 						}

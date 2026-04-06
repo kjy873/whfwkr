@@ -22,4 +22,8 @@ public:
 	void UpdateDisable();
 	virtual void UpdateDisable_Implementation() {};
 	//explicit ANPC_AIController(FObjectInitializer const& ObjectInitializer);
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "NPC_AIController")
+	void UpdateAttribute(const AActor* PlayerCharacter);
+	virtual void UpdateAttribute_Implementation(const AActor* PlayerCharacter) {};
 };
