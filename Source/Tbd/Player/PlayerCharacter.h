@@ -1,10 +1,13 @@
 #pragma once
 
+#include <unordered_map>
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Protocol.pb.h"
 #include "Attributes.h"
 #include "PlayerCharacter.generated.h"
+
+using namespace std;
 
 UCLASS()
 class TBD_API APlayerCharacter : public ACharacter
@@ -86,6 +89,12 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
 	void AddBaseDamage(float Value) { Attributes.AddBaseDamage(Value); }
+
+	UPROPERTY(BlueprintReadWrite, Category = "Target")
+	AActor* LockedTargetActor = nullptr;
+
+	UPROPERTY(BlueprintReadWrite)
+	bool bIsHomingSkillMine = false;
 
 	// Attributes end
 

@@ -59,11 +59,6 @@ void APlayerCharacter::SetPlayerInfo(const Protocol::PlayerInfo& Info)
 {
 	PlayerInfo = Info;
 	DestInfo = Info;
-
-	FVector Pos(Info.x(), Info.y(), Info.z());
-	FRotator Rot(0.f, Info.yaw(), 0.f);
-	SetActorLocationAndRotation(Pos, Rot);
-
 }
 
 void APlayerCharacter::SetDestInfo(const Protocol::PlayerInfo& Info)

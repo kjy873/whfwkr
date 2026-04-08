@@ -53,8 +53,8 @@ void Room::ApplySpawnByRoomType(PlayerRef player)
 
 	if (_roomType == RoomType::Lobby)
 	{
-		centerX = Utils::GetRandom(0.f, 500.f);
-		centerY = Utils::GetRandom(0.f, 500.f);
+		centerX = Utils::GetRandom(-260.f, 0.f);
+		centerY = Utils::GetRandom(-90.f, 0.f);
 		centerZ = 0.f;
 	}
 	else if (_roomType == RoomType::Hunting)
@@ -90,6 +90,7 @@ bool Room::HandleEnterPlayerLocked(PlayerRef player, RoomRef self)
 		return false;
 	}
 
+	/*
 	ApplySpawnByRoomType(player);
 	player->playerInfo->set_hp(100);
 
@@ -105,13 +106,28 @@ bool Room::HandleEnterPlayerLocked(PlayerRef player, RoomRef self)
 		if (auto session = player->session.lock())
 			session->Send(sendBuffer);
 	}
-
+	*/
 	return true;
 }
 
 void Room::HandleClientLevelReady(PlayerRef player)
 {
 	WRITE_LOCK;
+
+	if (player == nullptr || player->playerInfo == nullptr)
+		return;
+
+	if (_roomType == RoomType::Battle || _roomType == RoomType::Hunting)
+	{
+		ApplySpawnByRoomType(player);
+	}
+
+	else if (player->playerInfo->x() == 0.f &&
+		player->playerInfo->y() == 0.f &&
+		player->playerInfo->z() == 0.f)
+	{
+		ApplySpawnByRoomType(player);
+	}
 
 	cout << "[HandleClientLevelReady] objId="
 		<< player->playerInfo->object_id()
@@ -121,11 +137,10 @@ void Room::HandleClientLevelReady(PlayerRef player)
 		<< player->playerInfo->y() << ", "
 		<< player->playerInfo->z() << ")" << endl;
 
-	if (player == nullptr || player->playerInfo == nullptr) return;
-
 	{
 		Protocol::S_ENTER_GAME enterGamePkt;
 		enterGamePkt.set_success(true);
+
 		auto* selfInfo = new Protocol::PlayerInfo();
 		selfInfo->CopyFrom(*player->playerInfo);
 		enterGamePkt.set_allocated_player(selfInfo);
@@ -136,12 +151,26 @@ void Room::HandleClientLevelReady(PlayerRef player)
 
 	{
 		Protocol::S_SPAWN spawnPkt;
+
 		for (auto& item : _players)
 		{
-			if (item.first == player->playerInfo->object_id()) continue;
+			if (item.first == player->playerInfo->object_id())
+				continue;
+
+			if (item.second == nullptr || item.second->playerInfo == nullptr)
+				continue;
+
+			if (item.second->playerInfo->x() == 0.f &&
+				item.second->playerInfo->y() == 0.f &&
+				item.second->playerInfo->z() == 0.f)
+			{
+				continue;
+			}
+
 			auto* info = spawnPkt.add_players();
 			info->CopyFrom(*item.second->playerInfo);
 		}
+
 		if (spawnPkt.players_size() > 0)
 		{
 			if (auto session = player->session.lock())
@@ -429,11 +458,12 @@ void Room::Broadcast(SendBufferRef sendBuffer, uint64 exceptId)
 	}
 }
 
-void Room::BroadcastUseSkill(uint64 playerId, uint32 skillId)
+void Room::BroadcastUseSkill(uint64 playerId, uint32 skillId, uint64 targetId)
 {
 	Protocol::S_USE_SKILL pkt;
 	pkt.set_playerid(playerId);
 	pkt.set_skillid(skillId);
+	pkt.set_targetid(targetId);
 
 	SendBufferRef send = ServerPacketHandler::MakeSendBuffer(pkt);
 	Broadcast(send);
@@ -486,7 +516,7 @@ void Room::HandleAttackPlayerLocked(uint64 attackerId, uint64 targetId, uint32 s
 	int32 damage = 0;
 	switch (skillId)
 	{
-	case 0: damage = 100; break;
+	case 0: damage = 20; break;
 	case 1: damage = 35; break;
 	}
 

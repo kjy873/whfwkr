@@ -40,30 +40,30 @@ bool Handle_S_LOGIN(PacketSessionRef& session, Protocol::S_LOGIN& pkt)
 			static_cast<long long>(Player.object_id()));
 	}
 
-	Protocol::C_ENTER_GAME EnterGamePkt;
-	EnterGamePkt.set_playerindex(0);
-	SEND_PACKET(EnterGamePkt);
-
-	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_LOGIN] Send C_ENTER_GAME playerindex=0"));
+	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_LOGIN] Login success. Wait for Start button."));
 
 	return true;
 }
 
 bool Handle_S_ENTER_GAME(PacketSessionRef& session, Protocol::S_ENTER_GAME& pkt)
 {
-	const Protocol::PlayerInfo& PlayerInfo = pkt.player();
-	UE_LOG(LogTemp, Warning, TEXT("[BattleSpawn] ObjId=%llu Pos=(%.1f, %.1f, %.1f)"),
-		PlayerInfo.object_id(),
-		PlayerInfo.x(), PlayerInfo.y(), PlayerInfo.z());
+	Protocol::PlayerInfo PlayerCopy = pkt.player();
 
-	if (auto* GameInstance = GetMainGameInstance())
+	if (auto* GI = GetMainGameInstance())
 	{
-		GameInstance->HandleSpawn(pkt);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Entered Game"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("[Handle_S_ENTER_GAME] GameInstance nullptr"));
+		if (GI->bChangingLevel)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[Handle_S_ENTER_GAME] Skip: changing level"));
+			return true;
+		}
+
+		AsyncTask(ENamedThreads::GameThread, [GI, PlayerCopy]()
+			{
+				if (GI == nullptr || GI->bChangingLevel)
+					return;
+
+				GI->HandleSpawn(PlayerCopy, true);
+			});
 	}
 
 	return true;
@@ -77,9 +77,36 @@ bool Handle_S_LEAVE_GAME(PacketSessionRef& session, Protocol::S_LEAVE_GAME& pkt)
 
 bool Handle_S_SPAWN(PacketSessionRef& session, Protocol::S_SPAWN& pkt)
 {
-	if (auto* GameInstance = GetMainGameInstance())
-		GameInstance->HandleSpawn(pkt);
-	return false;
+	TArray<Protocol::PlayerInfo> PlayerCopies;
+	PlayerCopies.Reserve(pkt.players_size());
+
+	for (const auto& Info : pkt.players())
+		PlayerCopies.Add(Info);
+
+	if (auto* GI = GetMainGameInstance())
+	{
+		if (GI->bChangingLevel)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[Handle_S_SPAWN] Skip: changing level"));
+			return true;
+		}
+
+		AsyncTask(ENamedThreads::GameThread, [GI, PlayerCopies]()
+			{
+				if (GI == nullptr || GI->bChangingLevel)
+					return;
+
+				for (const auto& Info : PlayerCopies)
+				{
+					if (Info.object_id() == GI->MyObjectId)
+						continue;
+
+					GI->HandleSpawn(Info, false);
+				}
+			});
+	}
+
+	return true;
 }
 
 bool Handle_S_DESPAWN(PacketSessionRef& session, Protocol::S_DESPAWN& pkt)
@@ -199,19 +226,19 @@ bool Handle_S_DAMAGE_MOB(PacketSessionRef& session, Protocol::S_DAMAGE_MOB& pkt)
 
 bool Handle_S_USE_SKILL(PacketSessionRef& session, Protocol::S_USE_SKILL& pkt)
 {
+	if (GWorld == nullptr)
+		return false;
+
 	UMainGameInstance* GI = Cast<UMainGameInstance>(GWorld->GetGameInstance());
 	if (GI == nullptr)
 		return false;
 
-	APlayerCharacter* Player = GI->GetPlayerById(pkt.playerid());
-	if (Player == nullptr)
-		return false;
+	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_USE_SKILL] MyId=%lld FromPlayerId=%lld SkillId=%d"),
+		(int64)GI->MyObjectId,
+		(int64)pkt.playerid(),
+		(int32)pkt.skillid());
 
-	if (Player->IsMyPlayer())
-		return true;
-
-	Player->PlayNetworkAttackAnimation();
-
+	GI->OnRecvUseSkill(pkt);
 	return true;
 }
 

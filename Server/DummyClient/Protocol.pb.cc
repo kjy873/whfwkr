@@ -335,13 +335,9 @@ struct C_USE_SKILLDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 C_USE_SKILLDefaultTypeInternal _C_USE_SKILL_default_instance_;
 PROTOBUF_CONSTEXPR S_USE_SKILL::S_USE_SKILL(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.spawnpos_)*/nullptr
-  , /*decltype(_impl_.dir_)*/nullptr
-  , /*decltype(_impl_.playerid_)*/uint64_t{0u}
+    /*decltype(_impl_.playerid_)*/uint64_t{0u}
+  , /*decltype(_impl_.targetid_)*/uint64_t{0u}
   , /*decltype(_impl_.skillid_)*/0u
-  , /*decltype(_impl_.clientshotid_)*/0
-  , /*decltype(_impl_.projectileid_)*/0
-  , /*decltype(_impl_.servertick_)*/0u
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct S_USE_SKILLDefaultTypeInternal {
   PROTOBUF_CONSTEXPR S_USE_SKILLDefaultTypeInternal()
@@ -609,11 +605,7 @@ const uint32_t TableStruct_Protocol_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::Protocol::S_USE_SKILL, _impl_.playerid_),
   PROTOBUF_FIELD_OFFSET(::Protocol::S_USE_SKILL, _impl_.skillid_),
-  PROTOBUF_FIELD_OFFSET(::Protocol::S_USE_SKILL, _impl_.clientshotid_),
-  PROTOBUF_FIELD_OFFSET(::Protocol::S_USE_SKILL, _impl_.projectileid_),
-  PROTOBUF_FIELD_OFFSET(::Protocol::S_USE_SKILL, _impl_.spawnpos_),
-  PROTOBUF_FIELD_OFFSET(::Protocol::S_USE_SKILL, _impl_.dir_),
-  PROTOBUF_FIELD_OFFSET(::Protocol::S_USE_SKILL, _impl_.servertick_),
+  PROTOBUF_FIELD_OFFSET(::Protocol::S_USE_SKILL, _impl_.targetid_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::Protocol::S_DAMAGE_MOB, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -679,11 +671,11 @@ static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protode
   { 157, -1, -1, sizeof(::Protocol::C_ATTACK_MOB)},
   { 164, -1, -1, sizeof(::Protocol::C_USE_SKILL)},
   { 175, -1, -1, sizeof(::Protocol::S_USE_SKILL)},
-  { 188, -1, -1, sizeof(::Protocol::S_DAMAGE_MOB)},
-  { 197, -1, -1, sizeof(::Protocol::S_PROJECTILE_HIT)},
-  { 207, -1, -1, sizeof(::Protocol::S_PROJECTILE_DESTROY)},
-  { 214, -1, -1, sizeof(::Protocol::S_CHANGE_LEVEL)},
-  { 221, -1, -1, sizeof(::Protocol::C_LEVEL_READY)},
+  { 184, -1, -1, sizeof(::Protocol::S_DAMAGE_MOB)},
+  { 193, -1, -1, sizeof(::Protocol::S_PROJECTILE_HIT)},
+  { 203, -1, -1, sizeof(::Protocol::S_PROJECTILE_DESTROY)},
+  { 210, -1, -1, sizeof(::Protocol::S_CHANGE_LEVEL)},
+  { 217, -1, -1, sizeof(::Protocol::C_LEVEL_READY)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
@@ -748,19 +740,16 @@ const char descriptor_table_protodef_Protocol_2eproto[] PROTOBUF_SECTION_VARIABL
   "ctor3\"\035\n\014C_ATTACK_MOB\022\r\n\005mobId\030\001 \001(\004\"x\n\013"
   "C_USE_SKILL\022\020\n\010playerId\030\001 \001(\004\022\017\n\007skillId"
   "\030\002 \001(\r\022\024\n\014clientShotId\030\003 \001(\005\022\036\n\003dir\030\004 \001("
-  "\0132\021.Protocol.Vector3\022\020\n\010targetId\030\005 \001(\004\"\265"
-  "\001\n\013S_USE_SKILL\022\020\n\010playerId\030\001 \001(\004\022\017\n\007skil"
-  "lId\030\002 \001(\r\022\024\n\014clientShotId\030\003 \001(\005\022\024\n\014proje"
-  "ctileId\030\004 \001(\005\022#\n\010spawnPos\030\005 \001(\0132\021.Protoc"
-  "ol.Vector3\022\036\n\003dir\030\006 \001(\0132\021.Protocol.Vecto"
-  "r3\022\022\n\nserverTick\030\007 \001(\r\"9\n\014S_DAMAGE_MOB\022\r"
-  "\n\005mobId\030\001 \001(\004\022\016\n\006damage\030\002 \001(\005\022\n\n\002hp\030\003 \001("
-  "\005\"m\n\020S_PROJECTILE_HIT\022\024\n\014projectileId\030\001 "
-  "\001(\005\022\020\n\010targetId\030\002 \001(\004\022!\n\006hitPos\030\003 \001(\0132\021."
-  "Protocol.Vector3\022\016\n\006damage\030\004 \001(\005\",\n\024S_PR"
-  "OJECTILE_DESTROY\022\024\n\014projectileId\030\001 \001(\005\"$"
-  "\n\016S_CHANGE_LEVEL\022\022\n\nlevel_name\030\001 \001(\t\"\017\n\r"
-  "C_LEVEL_READYb\006proto3"
+  "\0132\021.Protocol.Vector3\022\020\n\010targetId\030\005 \001(\004\"B"
+  "\n\013S_USE_SKILL\022\020\n\010playerId\030\001 \001(\004\022\017\n\007skill"
+  "Id\030\002 \001(\r\022\020\n\010targetId\030\003 \001(\004\"9\n\014S_DAMAGE_M"
+  "OB\022\r\n\005mobId\030\001 \001(\004\022\016\n\006damage\030\002 \001(\005\022\n\n\002hp\030"
+  "\003 \001(\005\"m\n\020S_PROJECTILE_HIT\022\024\n\014projectileI"
+  "d\030\001 \001(\005\022\020\n\010targetId\030\002 \001(\004\022!\n\006hitPos\030\003 \001("
+  "\0132\021.Protocol.Vector3\022\016\n\006damage\030\004 \001(\005\",\n\024"
+  "S_PROJECTILE_DESTROY\022\024\n\014projectileId\030\001 \001"
+  "(\005\"$\n\016S_CHANGE_LEVEL\022\022\n\nlevel_name\030\001 \001(\t"
+  "\"\017\n\rC_LEVEL_READYb\006proto3"
   ;
 static const ::_pbi::DescriptorTable* const descriptor_table_Protocol_2eproto_deps[2] = {
   &::descriptor_table_Enum_2eproto,
@@ -768,7 +757,7 @@ static const ::_pbi::DescriptorTable* const descriptor_table_Protocol_2eproto_de
 };
 static ::_pbi::once_flag descriptor_table_Protocol_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_Protocol_2eproto = {
-    false, false, 1661, descriptor_table_protodef_Protocol_2eproto,
+    false, false, 1545, descriptor_table_protodef_Protocol_2eproto,
     "Protocol.proto",
     &descriptor_table_Protocol_2eproto_once, descriptor_table_Protocol_2eproto_deps, 2, 29,
     schemas, file_default_instances, TableStruct_Protocol_2eproto::offsets,
@@ -5244,18 +5233,8 @@ void C_USE_SKILL::InternalSwap(C_USE_SKILL* other) {
 
 class S_USE_SKILL::_Internal {
  public:
-  static const ::Protocol::Vector3& spawnpos(const S_USE_SKILL* msg);
-  static const ::Protocol::Vector3& dir(const S_USE_SKILL* msg);
 };
 
-const ::Protocol::Vector3&
-S_USE_SKILL::_Internal::spawnpos(const S_USE_SKILL* msg) {
-  return *msg->_impl_.spawnpos_;
-}
-const ::Protocol::Vector3&
-S_USE_SKILL::_Internal::dir(const S_USE_SKILL* msg) {
-  return *msg->_impl_.dir_;
-}
 S_USE_SKILL::S_USE_SKILL(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
   : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
@@ -5266,25 +5245,15 @@ S_USE_SKILL::S_USE_SKILL(const S_USE_SKILL& from)
   : ::PROTOBUF_NAMESPACE_ID::Message() {
   S_USE_SKILL* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.spawnpos_){nullptr}
-    , decltype(_impl_.dir_){nullptr}
-    , decltype(_impl_.playerid_){}
+      decltype(_impl_.playerid_){}
+    , decltype(_impl_.targetid_){}
     , decltype(_impl_.skillid_){}
-    , decltype(_impl_.clientshotid_){}
-    , decltype(_impl_.projectileid_){}
-    , decltype(_impl_.servertick_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
-  if (from._internal_has_spawnpos()) {
-    _this->_impl_.spawnpos_ = new ::Protocol::Vector3(*from._impl_.spawnpos_);
-  }
-  if (from._internal_has_dir()) {
-    _this->_impl_.dir_ = new ::Protocol::Vector3(*from._impl_.dir_);
-  }
   ::memcpy(&_impl_.playerid_, &from._impl_.playerid_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.servertick_) -
-    reinterpret_cast<char*>(&_impl_.playerid_)) + sizeof(_impl_.servertick_));
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.skillid_) -
+    reinterpret_cast<char*>(&_impl_.playerid_)) + sizeof(_impl_.skillid_));
   // @@protoc_insertion_point(copy_constructor:Protocol.S_USE_SKILL)
 }
 
@@ -5293,13 +5262,9 @@ inline void S_USE_SKILL::SharedCtor(
   (void)arena;
   (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.spawnpos_){nullptr}
-    , decltype(_impl_.dir_){nullptr}
-    , decltype(_impl_.playerid_){uint64_t{0u}}
+      decltype(_impl_.playerid_){uint64_t{0u}}
+    , decltype(_impl_.targetid_){uint64_t{0u}}
     , decltype(_impl_.skillid_){0u}
-    , decltype(_impl_.clientshotid_){0}
-    , decltype(_impl_.projectileid_){0}
-    , decltype(_impl_.servertick_){0u}
     , /*decltype(_impl_._cached_size_)*/{}
   };
 }
@@ -5315,8 +5280,6 @@ S_USE_SKILL::~S_USE_SKILL() {
 
 inline void S_USE_SKILL::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
-  if (this != internal_default_instance()) delete _impl_.spawnpos_;
-  if (this != internal_default_instance()) delete _impl_.dir_;
 }
 
 void S_USE_SKILL::SetCachedSize(int size) const {
@@ -5329,17 +5292,9 @@ void S_USE_SKILL::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  if (GetArenaForAllocation() == nullptr && _impl_.spawnpos_ != nullptr) {
-    delete _impl_.spawnpos_;
-  }
-  _impl_.spawnpos_ = nullptr;
-  if (GetArenaForAllocation() == nullptr && _impl_.dir_ != nullptr) {
-    delete _impl_.dir_;
-  }
-  _impl_.dir_ = nullptr;
   ::memset(&_impl_.playerid_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.servertick_) -
-      reinterpret_cast<char*>(&_impl_.playerid_)) + sizeof(_impl_.servertick_));
+      reinterpret_cast<char*>(&_impl_.skillid_) -
+      reinterpret_cast<char*>(&_impl_.playerid_)) + sizeof(_impl_.skillid_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -5365,42 +5320,10 @@ const char* S_USE_SKILL::_InternalParse(const char* ptr, ::_pbi::ParseContext* c
         } else
           goto handle_unusual;
         continue;
-      // int32 clientShotId = 3;
+      // uint64 targetId = 3;
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
-          _impl_.clientshotid_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // int32 projectileId = 4;
-      case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
-          _impl_.projectileid_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // .Protocol.Vector3 spawnPos = 5;
-      case 5:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
-          ptr = ctx->ParseMessage(_internal_mutable_spawnpos(), ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // .Protocol.Vector3 dir = 6;
-      case 6:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 50)) {
-          ptr = ctx->ParseMessage(_internal_mutable_dir(), ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // uint32 serverTick = 7;
-      case 7:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 56)) {
-          _impl_.servertick_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          _impl_.targetid_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -5446,36 +5369,10 @@ uint8_t* S_USE_SKILL::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteUInt32ToArray(2, this->_internal_skillid(), target);
   }
 
-  // int32 clientShotId = 3;
-  if (this->_internal_clientshotid() != 0) {
+  // uint64 targetId = 3;
+  if (this->_internal_targetid() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(3, this->_internal_clientshotid(), target);
-  }
-
-  // int32 projectileId = 4;
-  if (this->_internal_projectileid() != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(4, this->_internal_projectileid(), target);
-  }
-
-  // .Protocol.Vector3 spawnPos = 5;
-  if (this->_internal_has_spawnpos()) {
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(5, _Internal::spawnpos(this),
-        _Internal::spawnpos(this).GetCachedSize(), target, stream);
-  }
-
-  // .Protocol.Vector3 dir = 6;
-  if (this->_internal_has_dir()) {
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(6, _Internal::dir(this),
-        _Internal::dir(this).GetCachedSize(), target, stream);
-  }
-
-  // uint32 serverTick = 7;
-  if (this->_internal_servertick() != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(7, this->_internal_servertick(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(3, this->_internal_targetid(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -5494,43 +5391,19 @@ size_t S_USE_SKILL::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // .Protocol.Vector3 spawnPos = 5;
-  if (this->_internal_has_spawnpos()) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-        *_impl_.spawnpos_);
-  }
-
-  // .Protocol.Vector3 dir = 6;
-  if (this->_internal_has_dir()) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-        *_impl_.dir_);
-  }
-
   // uint64 playerId = 1;
   if (this->_internal_playerid() != 0) {
     total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_playerid());
   }
 
+  // uint64 targetId = 3;
+  if (this->_internal_targetid() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_targetid());
+  }
+
   // uint32 skillId = 2;
   if (this->_internal_skillid() != 0) {
     total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_skillid());
-  }
-
-  // int32 clientShotId = 3;
-  if (this->_internal_clientshotid() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_clientshotid());
-  }
-
-  // int32 projectileId = 4;
-  if (this->_internal_projectileid() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_projectileid());
-  }
-
-  // uint32 serverTick = 7;
-  if (this->_internal_servertick() != 0) {
-    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_servertick());
   }
 
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
@@ -5551,28 +5424,14 @@ void S_USE_SKILL::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PR
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from._internal_has_spawnpos()) {
-    _this->_internal_mutable_spawnpos()->::Protocol::Vector3::MergeFrom(
-        from._internal_spawnpos());
-  }
-  if (from._internal_has_dir()) {
-    _this->_internal_mutable_dir()->::Protocol::Vector3::MergeFrom(
-        from._internal_dir());
-  }
   if (from._internal_playerid() != 0) {
     _this->_internal_set_playerid(from._internal_playerid());
   }
+  if (from._internal_targetid() != 0) {
+    _this->_internal_set_targetid(from._internal_targetid());
+  }
   if (from._internal_skillid() != 0) {
     _this->_internal_set_skillid(from._internal_skillid());
-  }
-  if (from._internal_clientshotid() != 0) {
-    _this->_internal_set_clientshotid(from._internal_clientshotid());
-  }
-  if (from._internal_projectileid() != 0) {
-    _this->_internal_set_projectileid(from._internal_projectileid());
-  }
-  if (from._internal_servertick() != 0) {
-    _this->_internal_set_servertick(from._internal_servertick());
   }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
@@ -5592,11 +5451,11 @@ void S_USE_SKILL::InternalSwap(S_USE_SKILL* other) {
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(S_USE_SKILL, _impl_.servertick_)
-      + sizeof(S_USE_SKILL::_impl_.servertick_)
-      - PROTOBUF_FIELD_OFFSET(S_USE_SKILL, _impl_.spawnpos_)>(
-          reinterpret_cast<char*>(&_impl_.spawnpos_),
-          reinterpret_cast<char*>(&other->_impl_.spawnpos_));
+      PROTOBUF_FIELD_OFFSET(S_USE_SKILL, _impl_.skillid_)
+      + sizeof(S_USE_SKILL::_impl_.skillid_)
+      - PROTOBUF_FIELD_OFFSET(S_USE_SKILL, _impl_.playerid_)>(
+          reinterpret_cast<char*>(&_impl_.playerid_),
+          reinterpret_cast<char*>(&other->_impl_.playerid_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata S_USE_SKILL::GetMetadata() const {

@@ -39,11 +39,21 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SendEnterGamePacket();
 
+	UFUNCTION(BlueprintCallable)
+	void ClearPlayerStateForLevelChange();
+
+	UPROPERTY(BlueprintReadWrite)
+	bool bChangingLevel = false;
+
+	UFUNCTION(BlueprintCallable)
+	void NotifyLevelLoadFinished();
+
 	void HandleDamage(const Protocol::S_DAMAGE_PLAYER& pkt);
 	void HandleDie(const Protocol::S_PLAYER_DEAD& Pkt);
 	void SendAttackPlayer(uint64 TargetId, uint32 SkillId);
 
 	void OnRecvUseSkill(const Protocol::S_USE_SKILL& pkt);
+	void HandleIceSkillPacket(uint64 CasterID, uint64 TargetID);
 
 	virtual void Init() override;
 	virtual void Shutdown() override;
@@ -105,11 +115,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 	TSubclassOf<AActor> FireballProjectileBPClass;
 
-	APlayerCharacter* MyPlayer;
-	TMap<uint64, APlayerCharacter*> Players;
+	TWeakObjectPtr<APlayerCharacter> MyPlayer;
+	TMap<uint64, TWeakObjectPtr<APlayerCharacter>> Players;
 
 	TMap<int32, AActor*> PredictedByShotId;
 	TMap<int32, AActor*> ByProjectileId;
+	TArray<Protocol::PlayerInfo> PendingSpawns;
 
 private:
 	FTimerHandle RecvPacketsTimerHandle;
