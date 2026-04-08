@@ -3,6 +3,7 @@
 
 #include "MainGameInstance.h"
 #include "Sockets.h"
+#include "Projectile.h"
 #include "Common/TcpSocketBuilder.h"
 #include "Serialization/ArrayWriter.h"
 #include "SocketSubsystem.h"
@@ -41,25 +42,6 @@ void UMainGameInstance::ConnectToGameServer()
 
 	UE_LOG(LogTemp, Warning, TEXT("Attempting to connect to: %s"), *IpAddress);
 
-	// 이전 연결이 있으면 정리
-	if (GameServerSession.IsValid())
-	{
-		DisconnectToGameServer();
-		GameServerSession.Reset();
-	}
-
-	// 이전 플레이어들 정리
-	auto* World = GetWorld();
-	if (World != nullptr)
-	{
-		for (auto& Pair : Players)
-		{
-			if (Pair.Value != nullptr && Pair.Value != MyPlayer)
-			{
-				World->DestroyActor(Pair.Value);
-			}
-		}
-	}
 	Players.Empty();
 	MyPlayer = nullptr;
 	MyObjectId = 0;
@@ -217,17 +199,20 @@ void UMainGameInstance::HandleRecvPackets()
 
 APlayerCharacter* UMainGameInstance::GetPlayerById(uint64 PlayerId)
 {
-	if (MyPlayer && MyPlayer->PlayerInfo.object_id() == PlayerId)
+	if (MyPlayer.IsValid() && MyPlayer.Get()->PlayerInfo.object_id() == PlayerId)
 	{
-		return MyPlayer;
+		return MyPlayer.Get();
 	}
 
 	for (auto& Pair : Players)
 	{
-		APlayerCharacter* Player = Pair.Value;
-		if (Player && Player->PlayerInfo.object_id() == PlayerId)
+		if (Pair.Value.IsValid())
 		{
-			return Player;
+			APlayerCharacter* Player = Pair.Value.Get();
+			if (Player && Player->PlayerInfo.object_id() == PlayerId)
+			{
+				return Player;
+			}
 		}
 	}
 
@@ -248,11 +233,26 @@ void UMainGameInstance::SendLevelReady()
 	auto SendBuffer = ClientPacketHandler::MakeSendBuffer(pkt);
 	SendPacket(SendBuffer);
 
-	UE_LOG(LogTemp, Warning, TEXT("Sent C_ENTER_GAME as Level Ready signal"));
+	if (UWorld* World = GetWorld())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SendLevelReady] map=%s MyObjectId=%llu"),
+			*World->GetMapName(), MyObjectId);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SendLevelReady] World nullptr MyObjectId=%llu"), MyObjectId);
+	}
 }
 
 void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool IsMine)
 {
+	if (bChangingLevel)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Deferred: changing level objId=%llu"), PlayerInfo.object_id());
+		PendingSpawns.Add(PlayerInfo);
+		return;
+	}
+
 	UWorld* World = GetWorld();
 	if (!World)
 		return;
@@ -261,23 +261,47 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 	FVector SpawnLocation(PlayerInfo.x(), PlayerInfo.y(), PlayerInfo.z());
 	FRotator SpawnRotation(0.f, PlayerInfo.yaw(), 0.f);
 
+	const bool bZeroSpawn =
+		FMath::IsNearlyZero(SpawnLocation.X) &&
+		FMath::IsNearlyZero(SpawnLocation.Y) &&
+		FMath::IsNearlyZero(SpawnLocation.Z);
+
+	UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] objId=%llu isMine=%d loc=(%.1f, %.1f, %.1f)"),
+		ObjectId, IsMine ? 1 : 0, SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z);
 
 	if (IsMine)
 	{
-		if (MyPlayer != nullptr)
-			return;
+		APlayerCharacter* LocalPlayer = nullptr;
 
-		APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
-		if (!PC)
-			return;
+		if (MyPlayer.IsValid())
+		{
+			LocalPlayer = MyPlayer.Get();
+		}
+		else
+		{
+			APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
+			if (!PC)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] PC nullptr"));
+				return;
+			}
 
-		APawn* Pawn = PC->GetPawn();
-		if (!Pawn)
-			return;
+			APawn* Pawn = PC->GetPawn();
+			if (!Pawn)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Pawn nullptr"));
+				return;
+			}
 
-		APlayerCharacter* LocalPlayer = Cast<APlayerCharacter>(Pawn);
-		if (!LocalPlayer)
-			return;
+			LocalPlayer = Cast<APlayerCharacter>(Pawn);
+			if (!LocalPlayer)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] LocalPlayer cast failed"));
+				return;
+			}
+
+			MyPlayer = LocalPlayer;
+		}
 
 		LocalPlayer->bIsMine = true;
 		LocalPlayer->SetPlayerInfo(PlayerInfo);
@@ -290,20 +314,54 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 			MoveComp->StopMovementImmediately();
 		}
 
-		MyPlayer = LocalPlayer;
 		MyObjectId = ObjectId;
 		Players.FindOrAdd(ObjectId) = LocalPlayer;
 
+		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] MyPlayer set/update objId=%llu loc=(%.1f, %.1f, %.1f)"),
+			ObjectId, SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z);
 		return;
 	}
 
-	APlayerCharacter* TargetActor = Players.Contains(ObjectId) ? Players[ObjectId] : nullptr;
+	if (ObjectId == MyObjectId)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Skip other spawn for my objId=%llu"), ObjectId);
+		return;
+	}
 
-	if (IsValid(TargetActor))
+	APlayerCharacter* TargetActor = nullptr;
+
+	if (TWeakObjectPtr<APlayerCharacter>* FoundPtr = Players.Find(ObjectId))
+	{
+		if (FoundPtr->IsValid())
+		{
+			TargetActor = FoundPtr->Get();
+		}
+		else
+		{
+			Players.Remove(ObjectId);
+		}
+	}
+
+	if (TargetActor)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Update existing objId=%llu"), ObjectId);
+
 		TargetActor->SetPlayerInfo(PlayerInfo);
 
-	else if (OtherPlayerClass && !Players.Contains(ObjectId))
+		if (!bZeroSpawn)
+		{
+			TargetActor->SetActorLocation(SpawnLocation);
+			TargetActor->SetActorRotation(SpawnRotation);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Ignore zero update objId=%llu"), ObjectId);
+		}
+	}
+	else if (OtherPlayerClass)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Spawn new other objId=%llu"), ObjectId);
+
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
@@ -312,7 +370,7 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 		{
 			NewOther->bIsMine = false;
 			NewOther->SetPlayerInfo(PlayerInfo);
-			Players.FindOrAdd(ObjectId) = NewOther;
+			Players.Add(ObjectId, NewOther);
 		}
 	}
 }
@@ -331,32 +389,29 @@ void UMainGameInstance::HandleSpawn(const Protocol::S_SPAWN& SpawnPkt)
 {
 	for (const auto& PlayerInfo : SpawnPkt.players())
 	{
-		uint64 ObjectId = PlayerInfo.object_id();
+		const uint64 ObjectId = PlayerInfo.object_id();
+		const bool bIsMine = (MyObjectId != 0 && ObjectId == MyObjectId);
 
-		if (ObjectId == MyObjectId)
-			continue;
-
-		HandleSpawn(PlayerInfo, false);
+		HandleSpawn(PlayerInfo, bIsMine);
 	}
 }
 
 void UMainGameInstance::HandleDespawn(uint64 ObjectId)
 {
-	if (Socket == nullptr || GameServerSession == nullptr) return;
-	UWorld* World = GetWorld();
-	if (World == nullptr) return;
+	if (TWeakObjectPtr<APlayerCharacter>* Found = Players.Find(ObjectId))
+	{
+		if (Found->IsValid())
+		{
+			Found->Get()->Destroy();
+		}
+	}
 
-	APlayerCharacter** FindActor = Players.Find(ObjectId);
-	if (FindActor == nullptr || *FindActor == nullptr) return;
-
-	APlayerCharacter* PlayerToDestroy = *FindActor;
 	Players.Remove(ObjectId);
 
-	if (MyPlayer == PlayerToDestroy) return;
-
-	if (IsValid(PlayerToDestroy))
+	if (MyObjectId == ObjectId)
 	{
-		PlayerToDestroy->Destroy();
+		MyPlayer.Reset();
+		MyObjectId = 0;
 	}
 }
 
@@ -379,11 +434,17 @@ void UMainGameInstance::HandleMove(const Protocol::S_MOVE& MovePkt)
 
 	const uint64 ObjectId = MovePkt.info().object_id();
 
-	APlayerCharacter** FindActor = Players.Find(ObjectId);
+	TWeakObjectPtr<APlayerCharacter>* FindActor = Players.Find(ObjectId);
 	if (FindActor == nullptr)
 		return;
 
-	APlayerCharacter* Player = (*FindActor);
+	if (!FindActor->IsValid())
+	{
+		Players.Remove(ObjectId);
+		return;
+	}
+
+	APlayerCharacter* Player = FindActor->Get();
 	if (Player == nullptr)
 		return;
 
@@ -497,14 +558,25 @@ void UMainGameInstance::OnRecvProjectileDestroy(const Protocol::S_PROJECTILE_DES
 
 void UMainGameInstance::SendUseSkill(int32 SkillId)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[Client] Send C_USE_SKILL skillId=%d"), SkillId);
-
-	if (MyObjectId == 0)
+	if (MyObjectId == 0 || !MyPlayer.IsValid())
 		return;
 
 	Protocol::C_USE_SKILL pkt;
 	pkt.set_playerid(MyObjectId);
 	pkt.set_skillid(SkillId);
+
+	if (MyPlayer->LockedTargetActor)
+	{
+		APlayerCharacter* TargetChar = Cast<APlayerCharacter>(MyPlayer->LockedTargetActor);
+		if (TargetChar)
+		{
+			pkt.set_targetid(TargetChar->PlayerInfo.object_id());
+		}
+		else
+		{
+			pkt.set_targetid(0);
+		}
+	}
 
 	SendPacket(ClientPacketHandler::MakeSendBuffer(pkt));
 }
@@ -515,9 +587,38 @@ void UMainGameInstance::SendEnterGamePacket()
 		return;
 
 	Protocol::C_ENTER_GAME EnterGamePkt;
-	auto SendBuffer = ClientPacketHandler::MakeSendBuffer(EnterGamePkt);
+	EnterGamePkt.set_playerindex(0);
 
+	auto SendBuffer = ClientPacketHandler::MakeSendBuffer(EnterGamePkt);
 	GameServerSession->SendPacket(SendBuffer);
+
+	UE_LOG(LogTemp, Warning, TEXT("[SendEnterGamePacket] Sent C_ENTER_GAME"));
+}
+
+void UMainGameInstance::ClearPlayerStateForLevelChange()
+{
+	bChangingLevel = true;
+
+	MyPlayer.Reset();
+	Players.Empty();
+	PendingSpawns.Empty();
+
+	UE_LOG(LogTemp, Warning, TEXT("[ClearPlayerStateForLevelChange] Cleared player refs (MyObjectId=%llu kept)"), MyObjectId);
+}
+
+void UMainGameInstance::NotifyLevelLoadFinished()
+{
+	bChangingLevel = false;
+	UE_LOG(LogTemp, Warning, TEXT("[NotifyLevelLoadFinished] Level load finished. PendingSpawns=%d"), PendingSpawns.Num());
+
+	TArray<Protocol::PlayerInfo> SavedSpawns = PendingSpawns;
+	PendingSpawns.Empty();
+
+	for (const auto& Info : SavedSpawns)
+	{
+		const bool bIsMine = (MyObjectId != 0 && Info.object_id() == MyObjectId);
+		HandleSpawn(Info, bIsMine);
+	}
 }
 
 void UMainGameInstance::HandleDamage(const Protocol::S_DAMAGE_PLAYER& pkt)
@@ -527,20 +628,23 @@ void UMainGameInstance::HandleDamage(const Protocol::S_DAMAGE_PLAYER& pkt)
 
 	UE_LOG(LogTemp, Warning, TEXT("[HandleDamage] ObjId=%llu Damage=%f"), ObjectId, Damage);
 
-	APlayerCharacter** FoundActor = Players.Find(ObjectId);
+	TWeakObjectPtr<APlayerCharacter>* FoundActor = Players.Find(ObjectId);
 	if (FoundActor == nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[HandleDamage] Player not found"));
+		UE_LOG(LogTemp, Warning, TEXT("[HandleDamage] Player not found in map"));
 		return;
 	}
 
-	APlayerCharacter* Target = *FoundActor;
-	if (Target == nullptr)
+	APlayerCharacter* Actor = FoundActor->Get();
+	if (Actor == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[HandleDamage] Invalid actor, remove stale entry"));
+		Players.Remove(ObjectId);
 		return;
+	}
 
-	Target->SubtractHealth(Damage);
-
-	Target->PlayOtherPlayerSkill(0);
+	Actor->SubtractHealth(Damage);
+	Actor->PlayOtherPlayerSkill(0);
 }
 
 void UMainGameInstance::HandleDie(const Protocol::S_PLAYER_DEAD& Pkt)
@@ -550,14 +654,14 @@ void UMainGameInstance::HandleDie(const Protocol::S_PLAYER_DEAD& Pkt)
 	UE_LOG(LogTemp, Warning, TEXT("[HandleDie] this=%p ObjId=%llu Players.Num=%d"),
 		this, ObjectId, Players.Num());
 
-	APlayerCharacter** FoundActor = Players.Find(ObjectId);
+	TWeakObjectPtr<APlayerCharacter>* FoundActor = Players.Find(ObjectId);
 	if (FoundActor == nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[HandleDie] Player not found. ObjId=%llu"), ObjectId);
 		return;
 	}
 
-	APlayerCharacter* TargetCharacter = *FoundActor;
+	APlayerCharacter* TargetCharacter = FoundActor->Get();
 	if (TargetCharacter == nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[HandleDie] TargetCharacter nullptr. ObjId=%llu"), ObjectId);
@@ -582,65 +686,81 @@ void UMainGameInstance::SendAttackPlayer(uint64 TargetId, uint32 SkillId)
 		TargetId, SkillId);
 }
 
-static constexpr int32 ICE_SKILL_ID = 0;
-static constexpr int32 FIREBALL_SKILL_ID = 1;
-
 void UMainGameInstance::OnRecvUseSkill(const Protocol::S_USE_SKILL& pkt)
 {
-	if (GWorld == nullptr) return;
+	UE_LOG(LogTemp, Warning, TEXT("Raw Packet Data -> Skill: %d, TargetID: %lld"), pkt.skillid(), pkt.targetid());
 
-	const int64 PlayerId = (int64)pkt.playerid();
+	const uint64 PlayerId = (uint64)pkt.playerid();
 	const int32 SkillId = (int32)pkt.skillid();
-	const int32 ClientShotId = pkt.clientshotid();
-	const int32 ProjectileId = pkt.projectileid();
- 
-	const bool bIsMine = (PlayerId == MyObjectId);
+	const uint64 TargetId = (uint64)pkt.targetid();
 
-	FVector SpawnPos(pkt.spawnpos().x(), pkt.spawnpos().y(), pkt.spawnpos().z());
-	FVector Dir(pkt.dir().x(), pkt.dir().y(), pkt.dir().z());
-	Dir = Dir.GetSafeNormal();
+	UE_LOG(LogTemp, Warning, TEXT("[OnRecvUseSkill] PlayerId=%lld SkillId=%d TargetId=%lld"),
+		(int64)PlayerId, SkillId, (int64)TargetId);
 
-	if (!bIsMine)
+	APlayerCharacter* Player = GetPlayerById(PlayerId);
+	if (Player == nullptr)
+		return;
+
+	if (Player->IsMyPlayer() == false)
 	{
-		APlayerCharacter** Found = Players.Find(PlayerId);
-		if (Found && *Found)
-		{
-			(*Found)->PlayOtherPlayerSkill(SkillId);
-		}
+		Player->PlayOtherPlayerSkill(SkillId);
+	}
 
+	if (SkillId == 0)
+	{
+		HandleIceSkillPacket(PlayerId, TargetId);
+	}
+}
+
+void UMainGameInstance::HandleIceSkillPacket(uint64 CasterID, uint64 TargetID)
+{
+	APlayerCharacter* Caster = GetPlayerById(CasterID);
+	if (Caster == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("HandleIceSkillPacket: Caster not found (ID: %lld)"), (int64)CasterID);
+		return;
+	}
+
+	AActor* Target = GetPlayerById(TargetID);
+	if (Target == nullptr && Monsters.Contains(TargetID))
+	{
+		Target = Monsters[TargetID];
+	}
+
+	if (Target != nullptr)
+	{
+		if (Caster->IsMyPlayer())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[MyPlayer Skill] Target Found: %s"), *Target->GetName());
+		}
 	}
 	else
 	{
-		if (AActor** PredPtr = PredictedByShotId.Find(ClientShotId))
-		{
-			AActor* Pred = *PredPtr;
-			if (Pred)
-			{
-				Pred->SetActorLocation(SpawnPos);
-				Pred->SetActorRotation(Dir.Rotation());
-
-				if (ProjectileId != 0)
-					ByProjectileId.Add(ProjectileId, Pred);
-			}
-
-			PredictedByShotId.Remove(ClientShotId);
-			return;
-		}
+		UE_LOG(LogTemp, Warning, TEXT("[Skill] Non-targeting (TargetID is 0 or not found)"));
 	}
 
-	TSubclassOf<AActor> ProjClass = nullptr;
-	if (SkillId == ICE_SKILL_ID)
-		ProjClass = IceProjectileBPClass;
-	else if (SkillId == FIREBALL_SKILL_ID)
-		ProjClass = FireballProjectileBPClass;
+	FVector SpawnLocation = Caster->GetActorLocation() + Caster->GetActorForwardVector() * 100.0f;
+	FRotator SpawnRotation = Caster->GetActorRotation();
+	FTransform SpawnTransform(SpawnRotation, SpawnLocation);
 
-	if (!ProjClass) return;
+	AActor* IceActor = GetWorld()->SpawnActorDeferred<AActor>(IceProjectileBPClass, SpawnTransform);
 
-	FActorSpawnParameters Params;
-	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	if (IceActor)
+	{
+		if (FObjectProperty* Prop = FindFProperty<FObjectProperty>(IceActor->GetClass(), TEXT("TargetActor")))
+		{
+			Prop->SetPropertyValue_InContainer(IceActor, Target);
+		}
 
-	AActor* NewProj = GWorld->SpawnActor<AActor>(ProjClass, SpawnPos, Dir.Rotation(), Params);
+		if (FBoolProperty* bMineProp = FindFProperty<FBoolProperty>(IceActor->GetClass(), TEXT("bIsHomingSkillMine")))
+		{
+			bMineProp->SetPropertyValue_InContainer(IceActor, Caster->IsMyPlayer());
+		}
 
-	if (NewProj && ProjectileId != 0)
-		ByProjectileId.Add(ProjectileId, NewProj);
+		if (Caster->IsMyPlayer() == false)
+		{
+			Caster->PlayOtherPlayerSkill(0);
+		}
+		IceActor->FinishSpawning(SpawnTransform);
+	}
 }

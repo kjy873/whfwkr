@@ -145,18 +145,19 @@ void RoomManager::MoveToBattleRoom(PlayerRef player)
     if (!session) return;
 
     RoomRef battleRoom = GetOrCreateBattleRoom();
-    battleRoom->DoAsync([battleRoom, player]()
+
+    battleRoom->DoAsync([battleRoom, player, session]()
         {
             battleRoom->SetRoomType(RoomType::Battle);
             battleRoom->ApplySpawnByRoomType(player);
             battleRoom->HandleEnterPlayerLocked(player, battleRoom);
+
+            Protocol::S_CHANGE_LEVEL pkt;
+            pkt.set_level_name("NewMap");
+
+            auto sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
+            session->Send(sendBuffer);
         });
-
-    Protocol::S_CHANGE_LEVEL pkt;
-    pkt.set_level_name("NewMap");
-
-    auto sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
-    session->Send(sendBuffer);
 }
 
 void RoomManager::MoveToHuntingRoom(PlayerRef player)

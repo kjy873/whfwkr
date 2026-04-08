@@ -3939,50 +3939,10 @@ class S_USE_SKILL final :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kSpawnPosFieldNumber = 5,
-    kDirFieldNumber = 6,
     kPlayerIdFieldNumber = 1,
+    kTargetIdFieldNumber = 3,
     kSkillIdFieldNumber = 2,
-    kClientShotIdFieldNumber = 3,
-    kProjectileIdFieldNumber = 4,
-    kServerTickFieldNumber = 7,
   };
-  // .Protocol.Vector3 spawnPos = 5;
-  bool has_spawnpos() const;
-  private:
-  bool _internal_has_spawnpos() const;
-  public:
-  void clear_spawnpos();
-  const ::Protocol::Vector3& spawnpos() const;
-  PROTOBUF_NODISCARD ::Protocol::Vector3* release_spawnpos();
-  ::Protocol::Vector3* mutable_spawnpos();
-  void set_allocated_spawnpos(::Protocol::Vector3* spawnpos);
-  private:
-  const ::Protocol::Vector3& _internal_spawnpos() const;
-  ::Protocol::Vector3* _internal_mutable_spawnpos();
-  public:
-  void unsafe_arena_set_allocated_spawnpos(
-      ::Protocol::Vector3* spawnpos);
-  ::Protocol::Vector3* unsafe_arena_release_spawnpos();
-
-  // .Protocol.Vector3 dir = 6;
-  bool has_dir() const;
-  private:
-  bool _internal_has_dir() const;
-  public:
-  void clear_dir();
-  const ::Protocol::Vector3& dir() const;
-  PROTOBUF_NODISCARD ::Protocol::Vector3* release_dir();
-  ::Protocol::Vector3* mutable_dir();
-  void set_allocated_dir(::Protocol::Vector3* dir);
-  private:
-  const ::Protocol::Vector3& _internal_dir() const;
-  ::Protocol::Vector3* _internal_mutable_dir();
-  public:
-  void unsafe_arena_set_allocated_dir(
-      ::Protocol::Vector3* dir);
-  ::Protocol::Vector3* unsafe_arena_release_dir();
-
   // uint64 playerId = 1;
   void clear_playerid();
   uint64_t playerid() const;
@@ -3990,6 +3950,15 @@ class S_USE_SKILL final :
   private:
   uint64_t _internal_playerid() const;
   void _internal_set_playerid(uint64_t value);
+  public:
+
+  // uint64 targetId = 3;
+  void clear_targetid();
+  uint64_t targetid() const;
+  void set_targetid(uint64_t value);
+  private:
+  uint64_t _internal_targetid() const;
+  void _internal_set_targetid(uint64_t value);
   public:
 
   // uint32 skillId = 2;
@@ -4001,33 +3970,6 @@ class S_USE_SKILL final :
   void _internal_set_skillid(uint32_t value);
   public:
 
-  // int32 clientShotId = 3;
-  void clear_clientshotid();
-  int32_t clientshotid() const;
-  void set_clientshotid(int32_t value);
-  private:
-  int32_t _internal_clientshotid() const;
-  void _internal_set_clientshotid(int32_t value);
-  public:
-
-  // int32 projectileId = 4;
-  void clear_projectileid();
-  int32_t projectileid() const;
-  void set_projectileid(int32_t value);
-  private:
-  int32_t _internal_projectileid() const;
-  void _internal_set_projectileid(int32_t value);
-  public:
-
-  // uint32 serverTick = 7;
-  void clear_servertick();
-  uint32_t servertick() const;
-  void set_servertick(uint32_t value);
-  private:
-  uint32_t _internal_servertick() const;
-  void _internal_set_servertick(uint32_t value);
-  public:
-
   // @@protoc_insertion_point(class_scope:Protocol.S_USE_SKILL)
  private:
   class _Internal;
@@ -4036,13 +3978,9 @@ class S_USE_SKILL final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
-    ::Protocol::Vector3* spawnpos_;
-    ::Protocol::Vector3* dir_;
     uint64_t playerid_;
+    uint64_t targetid_;
     uint32_t skillid_;
-    int32_t clientshotid_;
-    int32_t projectileid_;
-    uint32_t servertick_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -6493,244 +6431,24 @@ inline void S_USE_SKILL::set_skillid(uint32_t value) {
   // @@protoc_insertion_point(field_set:Protocol.S_USE_SKILL.skillId)
 }
 
-// int32 clientShotId = 3;
-inline void S_USE_SKILL::clear_clientshotid() {
-  _impl_.clientshotid_ = 0;
+// uint64 targetId = 3;
+inline void S_USE_SKILL::clear_targetid() {
+  _impl_.targetid_ = uint64_t{0u};
 }
-inline int32_t S_USE_SKILL::_internal_clientshotid() const {
-  return _impl_.clientshotid_;
+inline uint64_t S_USE_SKILL::_internal_targetid() const {
+  return _impl_.targetid_;
 }
-inline int32_t S_USE_SKILL::clientshotid() const {
-  // @@protoc_insertion_point(field_get:Protocol.S_USE_SKILL.clientShotId)
-  return _internal_clientshotid();
+inline uint64_t S_USE_SKILL::targetid() const {
+  // @@protoc_insertion_point(field_get:Protocol.S_USE_SKILL.targetId)
+  return _internal_targetid();
 }
-inline void S_USE_SKILL::_internal_set_clientshotid(int32_t value) {
+inline void S_USE_SKILL::_internal_set_targetid(uint64_t value) {
   
-  _impl_.clientshotid_ = value;
+  _impl_.targetid_ = value;
 }
-inline void S_USE_SKILL::set_clientshotid(int32_t value) {
-  _internal_set_clientshotid(value);
-  // @@protoc_insertion_point(field_set:Protocol.S_USE_SKILL.clientShotId)
-}
-
-// int32 projectileId = 4;
-inline void S_USE_SKILL::clear_projectileid() {
-  _impl_.projectileid_ = 0;
-}
-inline int32_t S_USE_SKILL::_internal_projectileid() const {
-  return _impl_.projectileid_;
-}
-inline int32_t S_USE_SKILL::projectileid() const {
-  // @@protoc_insertion_point(field_get:Protocol.S_USE_SKILL.projectileId)
-  return _internal_projectileid();
-}
-inline void S_USE_SKILL::_internal_set_projectileid(int32_t value) {
-  
-  _impl_.projectileid_ = value;
-}
-inline void S_USE_SKILL::set_projectileid(int32_t value) {
-  _internal_set_projectileid(value);
-  // @@protoc_insertion_point(field_set:Protocol.S_USE_SKILL.projectileId)
-}
-
-// .Protocol.Vector3 spawnPos = 5;
-inline bool S_USE_SKILL::_internal_has_spawnpos() const {
-  return this != internal_default_instance() && _impl_.spawnpos_ != nullptr;
-}
-inline bool S_USE_SKILL::has_spawnpos() const {
-  return _internal_has_spawnpos();
-}
-inline void S_USE_SKILL::clear_spawnpos() {
-  if (GetArenaForAllocation() == nullptr && _impl_.spawnpos_ != nullptr) {
-    delete _impl_.spawnpos_;
-  }
-  _impl_.spawnpos_ = nullptr;
-}
-inline const ::Protocol::Vector3& S_USE_SKILL::_internal_spawnpos() const {
-  const ::Protocol::Vector3* p = _impl_.spawnpos_;
-  return p != nullptr ? *p : reinterpret_cast<const ::Protocol::Vector3&>(
-      ::Protocol::_Vector3_default_instance_);
-}
-inline const ::Protocol::Vector3& S_USE_SKILL::spawnpos() const {
-  // @@protoc_insertion_point(field_get:Protocol.S_USE_SKILL.spawnPos)
-  return _internal_spawnpos();
-}
-inline void S_USE_SKILL::unsafe_arena_set_allocated_spawnpos(
-    ::Protocol::Vector3* spawnpos) {
-  if (GetArenaForAllocation() == nullptr) {
-    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.spawnpos_);
-  }
-  _impl_.spawnpos_ = spawnpos;
-  if (spawnpos) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:Protocol.S_USE_SKILL.spawnPos)
-}
-inline ::Protocol::Vector3* S_USE_SKILL::release_spawnpos() {
-  
-  ::Protocol::Vector3* temp = _impl_.spawnpos_;
-  _impl_.spawnpos_ = nullptr;
-#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
-  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
-  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
-  if (GetArenaForAllocation() == nullptr) { delete old; }
-#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
-  if (GetArenaForAllocation() != nullptr) {
-    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
-  }
-#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
-  return temp;
-}
-inline ::Protocol::Vector3* S_USE_SKILL::unsafe_arena_release_spawnpos() {
-  // @@protoc_insertion_point(field_release:Protocol.S_USE_SKILL.spawnPos)
-  
-  ::Protocol::Vector3* temp = _impl_.spawnpos_;
-  _impl_.spawnpos_ = nullptr;
-  return temp;
-}
-inline ::Protocol::Vector3* S_USE_SKILL::_internal_mutable_spawnpos() {
-  
-  if (_impl_.spawnpos_ == nullptr) {
-    auto* p = CreateMaybeMessage<::Protocol::Vector3>(GetArenaForAllocation());
-    _impl_.spawnpos_ = p;
-  }
-  return _impl_.spawnpos_;
-}
-inline ::Protocol::Vector3* S_USE_SKILL::mutable_spawnpos() {
-  ::Protocol::Vector3* _msg = _internal_mutable_spawnpos();
-  // @@protoc_insertion_point(field_mutable:Protocol.S_USE_SKILL.spawnPos)
-  return _msg;
-}
-inline void S_USE_SKILL::set_allocated_spawnpos(::Protocol::Vector3* spawnpos) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
-  if (message_arena == nullptr) {
-    delete _impl_.spawnpos_;
-  }
-  if (spawnpos) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(spawnpos);
-    if (message_arena != submessage_arena) {
-      spawnpos = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, spawnpos, submessage_arena);
-    }
-    
-  } else {
-    
-  }
-  _impl_.spawnpos_ = spawnpos;
-  // @@protoc_insertion_point(field_set_allocated:Protocol.S_USE_SKILL.spawnPos)
-}
-
-// .Protocol.Vector3 dir = 6;
-inline bool S_USE_SKILL::_internal_has_dir() const {
-  return this != internal_default_instance() && _impl_.dir_ != nullptr;
-}
-inline bool S_USE_SKILL::has_dir() const {
-  return _internal_has_dir();
-}
-inline void S_USE_SKILL::clear_dir() {
-  if (GetArenaForAllocation() == nullptr && _impl_.dir_ != nullptr) {
-    delete _impl_.dir_;
-  }
-  _impl_.dir_ = nullptr;
-}
-inline const ::Protocol::Vector3& S_USE_SKILL::_internal_dir() const {
-  const ::Protocol::Vector3* p = _impl_.dir_;
-  return p != nullptr ? *p : reinterpret_cast<const ::Protocol::Vector3&>(
-      ::Protocol::_Vector3_default_instance_);
-}
-inline const ::Protocol::Vector3& S_USE_SKILL::dir() const {
-  // @@protoc_insertion_point(field_get:Protocol.S_USE_SKILL.dir)
-  return _internal_dir();
-}
-inline void S_USE_SKILL::unsafe_arena_set_allocated_dir(
-    ::Protocol::Vector3* dir) {
-  if (GetArenaForAllocation() == nullptr) {
-    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.dir_);
-  }
-  _impl_.dir_ = dir;
-  if (dir) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:Protocol.S_USE_SKILL.dir)
-}
-inline ::Protocol::Vector3* S_USE_SKILL::release_dir() {
-  
-  ::Protocol::Vector3* temp = _impl_.dir_;
-  _impl_.dir_ = nullptr;
-#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
-  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
-  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
-  if (GetArenaForAllocation() == nullptr) { delete old; }
-#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
-  if (GetArenaForAllocation() != nullptr) {
-    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
-  }
-#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
-  return temp;
-}
-inline ::Protocol::Vector3* S_USE_SKILL::unsafe_arena_release_dir() {
-  // @@protoc_insertion_point(field_release:Protocol.S_USE_SKILL.dir)
-  
-  ::Protocol::Vector3* temp = _impl_.dir_;
-  _impl_.dir_ = nullptr;
-  return temp;
-}
-inline ::Protocol::Vector3* S_USE_SKILL::_internal_mutable_dir() {
-  
-  if (_impl_.dir_ == nullptr) {
-    auto* p = CreateMaybeMessage<::Protocol::Vector3>(GetArenaForAllocation());
-    _impl_.dir_ = p;
-  }
-  return _impl_.dir_;
-}
-inline ::Protocol::Vector3* S_USE_SKILL::mutable_dir() {
-  ::Protocol::Vector3* _msg = _internal_mutable_dir();
-  // @@protoc_insertion_point(field_mutable:Protocol.S_USE_SKILL.dir)
-  return _msg;
-}
-inline void S_USE_SKILL::set_allocated_dir(::Protocol::Vector3* dir) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
-  if (message_arena == nullptr) {
-    delete _impl_.dir_;
-  }
-  if (dir) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(dir);
-    if (message_arena != submessage_arena) {
-      dir = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, dir, submessage_arena);
-    }
-    
-  } else {
-    
-  }
-  _impl_.dir_ = dir;
-  // @@protoc_insertion_point(field_set_allocated:Protocol.S_USE_SKILL.dir)
-}
-
-// uint32 serverTick = 7;
-inline void S_USE_SKILL::clear_servertick() {
-  _impl_.servertick_ = 0u;
-}
-inline uint32_t S_USE_SKILL::_internal_servertick() const {
-  return _impl_.servertick_;
-}
-inline uint32_t S_USE_SKILL::servertick() const {
-  // @@protoc_insertion_point(field_get:Protocol.S_USE_SKILL.serverTick)
-  return _internal_servertick();
-}
-inline void S_USE_SKILL::_internal_set_servertick(uint32_t value) {
-  
-  _impl_.servertick_ = value;
-}
-inline void S_USE_SKILL::set_servertick(uint32_t value) {
-  _internal_set_servertick(value);
-  // @@protoc_insertion_point(field_set:Protocol.S_USE_SKILL.serverTick)
+inline void S_USE_SKILL::set_targetid(uint64_t value) {
+  _internal_set_targetid(value);
+  // @@protoc_insertion_point(field_set:Protocol.S_USE_SKILL.targetId)
 }
 
 // -------------------------------------------------------------------

@@ -144,12 +144,7 @@ message S_USE_SKILL
 {
     uint64 playerId = 1;
     uint32 skillId = 2;
-
-	int32 clientShotId = 3;
-    int32 projectileId = 4;
-    Vector3 spawnPos = 5;
-    Vector3 dir = 6;
-    uint32 serverTick = 7;
+	uint64 targetId = 3;
 }
 
 message S_DAMAGE_MOB

@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <atomic>
+#include <unordered_map>
 #include "Protocol.pb.h"
 
 class GameSession;
@@ -32,5 +33,13 @@ public:
 	}
 
 	void OnDamaged(int32 damage);
+
+public:
+	bool CanUseSkill(int32 skillId) const;
+	void MarkSkillUsed(int32 skillId);
+	float GetSkillCooldown(int32 skillId) const;
+
+private:
+	std::unordered_map<int32, double> _lastSkillUseTime;
 };
 

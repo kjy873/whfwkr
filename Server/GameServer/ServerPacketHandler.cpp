@@ -48,7 +48,7 @@ bool Handle_C_ENTER_GAME(PacketSessionRef& session, Protocol::C_ENTER_GAME& pkt)
 	if (!room)
 		return false;
 
-	room->ApplySpawnByRoomType(player);
+	player->playerInfo->set_hp(100);
 
 	cout << "[Handle_C_ENTER_GAME] objId=" << player->playerInfo->object_id()
 		<< " roomType=" << static_cast<int>(room->GetRoomType())
@@ -132,6 +132,7 @@ bool Handle_C_CHAT(PacketSessionRef& session, Protocol::C_CHAT& pkt)
 	return true;
 }
 
+
 bool Handle_C_USE_SKILL(PacketSessionRef& session, Protocol::C_USE_SKILL& pkt)
 {
 	cout << "[Server] C_USE_SKILL received skillId=" << pkt.skillid() << endl;
@@ -140,32 +141,21 @@ bool Handle_C_USE_SKILL(PacketSessionRef& session, Protocol::C_USE_SKILL& pkt)
 	if (gameSession == nullptr)
 		return false;
 
-	PlayerRef attacker = gameSession->player;
-	if (attacker == nullptr)
+	PlayerRef player = gameSession->player;
+	if (player == nullptr)
 		return false;
 
-	RoomRef room = attacker->room.lock();
+	RoomRef room = player->room.lock();
 	if (room == nullptr)
 		return false;
 
-	Protocol::S_USE_SKILL outPkt;
-	outPkt.set_playerid(attacker->playerInfo->object_id());
-	outPkt.set_skillid(pkt.skillid());
-	outPkt.set_clientshotid(pkt.clientshotid());
-	outPkt.set_projectileid(0); // 일단 없으면 0
+	room->DoAsync(
+		&Room::BroadcastUseSkill,
+		player->playerInfo->object_id(),
+		pkt.skillid(),
+		pkt.targetid()
+	);
 
-	outPkt.mutable_spawnpos()->set_x(attacker->playerInfo->x());
-	outPkt.mutable_spawnpos()->set_y(attacker->playerInfo->y());
-	outPkt.mutable_spawnpos()->set_z(attacker->playerInfo->z());
-
-	outPkt.mutable_dir()->set_x(pkt.dir().x());
-	outPkt.mutable_dir()->set_y(pkt.dir().y());
-	outPkt.mutable_dir()->set_z(pkt.dir().z());
-
-	outPkt.set_servertick(0); // 나중에 틱 시스템 붙이면 실제 값
-
-	SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(outPkt);
-	room->Broadcast(sendBuffer);
 	return true;
 }
 
