@@ -183,6 +183,16 @@ public:
 		World = GetWorld();
 		return (World != nullptr);
 	}
+
+	UFUNCTION(BlueprintCallable, Category = "AISpawnManager")
+	void AiDestroyed(AActor* DestroyedActor) {
+		for (int i = 0; i < Regions.Num(); i++) {
+			if (Regions[i].SpawnedEnemies.Contains(DestroyedActor)) {
+				DeleteRegionEnemy(i, DestroyedActor);
+				break;
+			}
+		}
+	}
 	
 
 };

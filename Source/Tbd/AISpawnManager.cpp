@@ -99,6 +99,7 @@ bool AAISpawnManager::SpawnEnemies(const ECollisionChannel LandscapeChannel) {
 				TotalEnemyCount++;
 				RegionTotal++;
 				Total++;
+				SpawnedAI->OnDestroyed.AddDynamic(this, &AAISpawnManager::AiDestroyed);
 			}
 			
 		}
