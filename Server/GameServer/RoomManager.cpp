@@ -149,7 +149,7 @@ void RoomManager::MoveToBattleRoom(PlayerRef player)
     battleRoom->DoAsync([battleRoom, player, session]()
         {
             battleRoom->SetRoomType(RoomType::Battle);
-            battleRoom->ApplySpawnByRoomType(player);
+            //battleRoom->ApplySpawnByRoomType(player);
             battleRoom->HandleEnterPlayerLocked(player, battleRoom);
 
             Protocol::S_CHANGE_LEVEL pkt;

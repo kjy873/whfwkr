@@ -99,6 +99,31 @@ void APlayerCharacter::SetDead(bool bDead)
 	}
 }
 
+void APlayerCharacter::Req_UseIceSkill(int32 SkillId, AActor* Target)
+{
+	uint64 TargetId = 0;
+
+	if (Target)
+	{
+		APlayerCharacter* TargetPlayer = Cast<APlayerCharacter>(Target);
+		if (TargetPlayer)
+		{
+			TargetId = TargetPlayer->PlayerInfo.object_id();
+		}
+	}
+
+	Protocol::C_USE_SKILL pkt;
+	pkt.set_skillid(SkillId);
+	pkt.set_targetid(TargetId);
+
+	UMainGameInstance* GI = Cast<UMainGameInstance>(GetGameInstance());
+	if (GI)
+	{
+		auto sendBuffer = ClientPacketHandler::MakeSendBuffer(pkt);
+		GI->SendPacket(sendBuffer);
+	}
+}
+
 void APlayerCharacter::PlayNetworkAttackAnimation()
 {
 	UE_LOG(LogTemp, Warning, TEXT("[PlayerCharacter::PlayNetworkAttackAnimation] Called - Implement in Blueprint to play attack animation"));
@@ -125,3 +150,4 @@ void APlayerCharacter::ApplyNetworkPosition(float DeltaTime)
 
 	SetActorLocationAndRotation(NewPos, NewRot);
 }
+

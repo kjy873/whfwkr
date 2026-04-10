@@ -96,6 +96,9 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	bool bIsHomingSkillMine = false;
 
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void Req_UseIceSkill(int32 SkillId, AActor* Target);
+
 	// Attributes end
 
 	// Network Attack Animation

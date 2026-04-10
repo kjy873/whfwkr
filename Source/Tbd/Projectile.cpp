@@ -1,25 +1,51 @@
 #include "Projectile.h"
 #include "PlayerCharacter.h"
-#include "MonsterBase.h"
+#include "Components/SceneComponent.h"
 #include "Components/SphereComponent.h"
-#include "Kismet/GameplayStatics.h"
-#include "GameFramework/DamageType.h"
+#include "Components/BoxComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-#include "Kismet/GameplayStatics.h"
 
 AProjectile::AProjectile()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
-	RootComponent = CollisionComp;
+	SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("SceneRoot"));
+	RootComponent = SceneRoot;
 
-	CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	CollisionComp->SetCollisionObjectType(ECC_WorldDynamic);
-	CollisionComp->SetCollisionResponseToAllChannels(ECR_Ignore);
-	CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-	CollisionComp->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Overlap);
-	CollisionComp->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+	// Sphere 1
+	SphereCollision1 = CreateDefaultSubobject<USphereComponent>(TEXT("SphereCollision1"));
+	SphereCollision1->SetupAttachment(RootComponent);
+	SphereCollision1->InitSphereRadius(20.f);
+	SphereCollision1->SetCollisionObjectType(ECC_WorldDynamic);
+	SphereCollision1->SetCollisionResponseToAllChannels(ECR_Ignore);
+	SphereCollision1->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	SphereCollision1->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Overlap);
+	SphereCollision1->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+	SphereCollision1->SetGenerateOverlapEvents(true);
+
+	// Sphere 2
+	SphereCollision2 = CreateDefaultSubobject<USphereComponent>(TEXT("SphereCollision2"));
+	SphereCollision2->SetupAttachment(RootComponent);
+	SphereCollision2->InitSphereRadius(40.f);
+	SphereCollision2->SetRelativeLocation(FVector(50.f, 0.f, 0.f));
+	SphereCollision2->SetCollisionObjectType(ECC_WorldDynamic);
+	SphereCollision2->SetCollisionResponseToAllChannels(ECR_Ignore);
+	SphereCollision2->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	SphereCollision2->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Overlap);
+	SphereCollision2->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+	SphereCollision2->SetGenerateOverlapEvents(true);
+
+	// Box
+	BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
+	BoxCollision->SetupAttachment(RootComponent);
+	BoxCollision->SetBoxExtent(FVector(40.f, 20.f, 20.f));
+	BoxCollision->SetRelativeLocation(FVector(60.f, 0.f, 0.f));
+	BoxCollision->SetCollisionObjectType(ECC_WorldDynamic);
+	BoxCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
+	BoxCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	BoxCollision->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Overlap);
+	BoxCollision->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+	BoxCollision->SetGenerateOverlapEvents(true);
 
 	ProjectileMove = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMove"));
 	ProjectileMove->InitialSpeed = 1500.f;
@@ -34,9 +60,19 @@ void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (CollisionComp)
+	if (SphereCollision1)
 	{
-		CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnProjectileOverlap);
+		SphereCollision1->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnProjectileOverlap);
+	}
+
+	if (SphereCollision2)
+	{
+		SphereCollision2->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnProjectileOverlap);
+	}
+
+	if (BoxCollision)
+	{
+		BoxCollision->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnProjectileOverlap);
 	}
 }
 
@@ -45,106 +81,55 @@ void AProjectile::SetProjectileInfo(APlayerCharacter* InOwnerPlayer, int32 InSki
 	OwnerPlayer = InOwnerPlayer;
 	SkillId = InSkillId;
 
-	SetOwner(InOwnerPlayer);
-	SetInstigator(InOwnerPlayer);
+	switch (SkillId)
+	{
+	case 0: // ICE
+		ProjectileMove->SetUpdatedComponent(SphereCollision1);
+		break;
 
-	UE_LOG(LogTemp, Warning, TEXT("[SetProjectileInfo] OwnerPlayer=%s SkillId=%d"),
-		*GetNameSafe(OwnerPlayer),
-		SkillId);
+	case 1: // FIRE
+		ProjectileMove->SetUpdatedComponent(SphereCollision1);
+		break;
+
+	case 2: // KNIGHT
+		ProjectileMove->SetUpdatedComponent(BoxCollision);
+		break;
+
+	default:
+		ProjectileMove->SetUpdatedComponent(SphereCollision1);
+		break;
+	}
 }
 
 void AProjectile::OnProjectileOverlap(
-    UPrimitiveComponent* OverlappedComponent,
-    AActor* OtherActor,
-    UPrimitiveComponent* OtherComp,
-    int32 OtherBodyIndex,
-    bool bFromSweep,
-    const FHitResult& SweepResult)
+	UPrimitiveComponent* OverlappedComponent,
+	AActor* OtherActor,
+	UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex,
+	bool bFromSweep,
+	const FHitResult& SweepResult
+)
 {
-    if (OtherActor == nullptr)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("OtherActor NULL"));
-        return;
-    }
+	if (bHasHit)
+		return;
 
-    AActor* HitActor = OtherActor;
+	if (OtherActor == nullptr || OtherActor == this)
+		return;
 
-    if (OtherComp)
-    {
-        AActor* CompOwner = OtherComp->GetOwner();
-        if (CompOwner)
-        {
-            HitActor = CompOwner;
-        }
-    }
+	if (OtherActor == OwnerPlayer)
+		return;
 
-    UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *GetNameSafe(HitActor));
-    UE_LOG(LogTemp, Warning, TEXT("Hit Class: %s"), *GetNameSafe(HitActor->GetClass()));
-    UE_LOG(LogTemp, Warning, TEXT("Projectile Owner: %s"), *GetNameSafe(GetOwner()));
-    UE_LOG(LogTemp, Warning, TEXT("Projectile Instigator: %s"), *GetNameSafe(GetInstigator()));
+	bHasHit = true;
 
-    if (HitActor == this)
-    {
-        return;
-    }
+	UE_LOG(LogTemp, Warning, TEXT("[Projectile] Hit: %s / Collision: %s"),
+		*GetNameSafe(OtherActor),
+		*GetNameSafe(OverlappedComponent));
 
-    if (HitActor == GetOwner())
-    {
-        return;
-    }
+	APlayerCharacter* HitPlayer = Cast<APlayerCharacter>(OtherActor);
+	if (HitPlayer && OwnerPlayer)
+	{
+		HitPlayer->OnHitBySkill(OwnerPlayer, SkillId);
+	}
 
-    APlayerCharacter* Attacker = OwnerPlayer;
-
-    if (Attacker == nullptr)
-    {
-        Attacker = Cast<APlayerCharacter>(GetOwner());
-    }
-
-    if (Attacker == nullptr)
-    {
-        Attacker = Cast<APlayerCharacter>(GetInstigator());
-    }
-
-    if (Attacker == nullptr)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("OwnerPlayer NULL"));
-        Destroy();
-        return;
-    }
-
-    UE_LOG(LogTemp, Warning, TEXT("OwnerPlayer OK: %s"), *GetNameSafe(Attacker));
-
-    APlayerCharacter* Target = Cast<APlayerCharacter>(HitActor);
-    if (Target)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Target Cast Success"));
-
-        Target->OnHitBySkill(Attacker, SkillId);
-        UE_LOG(LogTemp, Warning, TEXT("Player Hit: %s"), *Target->GetName());
-
-        Destroy();
-        return;
-    }
-
-    AMonsterBase* Monster = Cast<AMonsterBase>(HitActor);
-    if (Monster)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Monster Hit: %s"), *GetNameSafe(HitActor));
-
-        Monster->BP_OnHitBySkill(Attacker, SkillId);
-
-        UGameplayStatics::ApplyDamage(
-            Monster,
-            30.0f,
-            Attacker->GetController(),
-            this,
-            UDamageType::StaticClass()
-        );
-
-        Destroy();
-        return;
-    }
-
-    UE_LOG(LogTemp, Warning, TEXT("Cast Failed"));
-    Destroy();
+	Destroy();
 }

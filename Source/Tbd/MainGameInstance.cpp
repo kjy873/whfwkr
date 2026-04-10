@@ -688,21 +688,17 @@ void UMainGameInstance::SendAttackPlayer(uint64 TargetId, uint32 SkillId)
 
 void UMainGameInstance::OnRecvUseSkill(const Protocol::S_USE_SKILL& pkt)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Raw Packet Data -> Skill: %d, TargetID: %lld"), pkt.skillid(), pkt.targetid());
-
-	const uint64 PlayerId = (uint64)pkt.playerid();
-	const int32 SkillId = (int32)pkt.skillid();
-	const uint64 TargetId = (uint64)pkt.targetid();
-
-	UE_LOG(LogTemp, Warning, TEXT("[OnRecvUseSkill] PlayerId=%lld SkillId=%d TargetId=%lld"),
-		(int64)PlayerId, SkillId, (int64)TargetId);
+	const uint64 PlayerId = pkt.playerid();
+	const int32 SkillId = pkt.skillid();
+	const uint64 TargetId = pkt.targetid();
 
 	APlayerCharacter* Player = GetPlayerById(PlayerId);
-	if (Player == nullptr)
-		return;
+	if (Player == nullptr) return;
 
-	if (Player->IsMyPlayer() == false)
-	{
+	if (Player->IsMyPlayer()) {
+		Player->PlaySkill(SkillId);
+	}
+	else {
 		Player->PlayOtherPlayerSkill(SkillId);
 	}
 
@@ -748,19 +744,11 @@ void UMainGameInstance::HandleIceSkillPacket(uint64 CasterID, uint64 TargetID)
 	if (IceActor)
 	{
 		if (FObjectProperty* Prop = FindFProperty<FObjectProperty>(IceActor->GetClass(), TEXT("TargetActor")))
-		{
 			Prop->SetPropertyValue_InContainer(IceActor, Target);
-		}
 
 		if (FBoolProperty* bMineProp = FindFProperty<FBoolProperty>(IceActor->GetClass(), TEXT("bIsHomingSkillMine")))
-		{
 			bMineProp->SetPropertyValue_InContainer(IceActor, Caster->IsMyPlayer());
-		}
 
-		if (Caster->IsMyPlayer() == false)
-		{
-			Caster->PlayOtherPlayerSkill(0);
-		}
 		IceActor->FinishSpawning(SpawnTransform);
 	}
 }

@@ -1,11 +1,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PlayerCharacter.h"
 #include "GameFramework/Actor.h"
 #include "Projectile.generated.h"
 
+class USceneComponent;
 class USphereComponent;
+class UBoxComponent;
 class UProjectileMovementComponent;
 class APlayerCharacter;
 
@@ -22,22 +23,6 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
-	TObjectPtr<USphereComponent> CollisionComp;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
-	TObjectPtr<UProjectileMovementComponent> ProjectileMove;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
-	float Damage = 10.f;
-
-	UPROPERTY()
-	TObjectPtr<class APlayerCharacter> OwnerPlayer;
-
-	UPROPERTY()
-	int32 SkillId = 0;
-
 	UFUNCTION()
 	void OnProjectileOverlap(
 		UPrimitiveComponent* OverlappedComponent,
@@ -47,4 +32,35 @@ protected:
 		bool bFromSweep,
 		const FHitResult& SweepResult
 	);
+
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
+	TObjectPtr<USceneComponent> SceneRoot;
+
+	// 스피어 1
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
+	TObjectPtr<USphereComponent> SphereCollision1;
+
+	// 스피어 2
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
+	TObjectPtr<USphereComponent> SphereCollision2;
+
+	// 박스
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
+	TObjectPtr<UBoxComponent> BoxCollision;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
+	TObjectPtr<UProjectileMovementComponent> ProjectileMove;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
+	float Damage = 10.f;
+
+	UPROPERTY()
+	TObjectPtr<APlayerCharacter> OwnerPlayer;
+
+	UPROPERTY()
+	int32 SkillId = 0;
+
+	UPROPERTY()
+	bool bHasHit = false;
 };
