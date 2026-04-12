@@ -63,4 +63,8 @@ protected:
 
 	UPROPERTY()
 	bool bHasHit = false;
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Projectile")
+	void DebugFunc();
+	virtual void DebugFunc_Implementation() {};
 };

@@ -131,5 +131,7 @@ void AProjectile::OnProjectileOverlap(
 		HitPlayer->OnHitBySkill(OwnerPlayer, SkillId);
 	}
 
+	DebugFunc();
+
 	Destroy();
 }
