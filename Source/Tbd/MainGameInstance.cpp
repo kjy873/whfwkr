@@ -98,7 +98,6 @@ void UMainGameInstance::Init()
 
 	if (!bClientOnly)
 	{
-		//StartServerProcess();
 		FCoreDelegates::OnPreExit.AddUObject(this, &UMainGameInstance::StopServerProcess);
 		UE_LOG(LogTemp, Warning, TEXT("[MainGameInstance::Init] Server process started (NOT clientonly)"));
 	}
@@ -109,7 +108,7 @@ void UMainGameInstance::Init()
 
 	ClientPacketHandler::Init();
 
-	ConnectToGameServer();
+	//ConnectToGameServer();
 
 	if (UWorld* World = GetWorld()) 
 	{
@@ -303,6 +302,17 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 			MyPlayer = LocalPlayer;
 		}
 
+		if (TWeakObjectPtr<APlayerCharacter>* FoundPtr = Players.Find(ObjectId))
+		{
+			if (FoundPtr->IsValid() && FoundPtr->Get() != LocalPlayer)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Destroy duplicate actor for my objId=%llu actor=%s"),
+					ObjectId, *GetNameSafe(FoundPtr->Get()));
+
+				FoundPtr->Get()->Destroy();
+			}
+		}
+
 		LocalPlayer->bIsMine = true;
 		LocalPlayer->SetPlayerInfo(PlayerInfo);
 
@@ -322,7 +332,7 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 		return;
 	}
 
-	if (ObjectId == MyObjectId)
+	if (ObjectId == MyObjectId && MyObjectId != 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Skip other spawn for my objId=%llu"), ObjectId);
 		return;
@@ -344,8 +354,9 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 
 	if (TargetActor)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Update existing objId=%llu"), ObjectId);
+		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Update existing other objId=%llu"), ObjectId);
 
+		TargetActor->bIsMine = false;
 		TargetActor->SetPlayerInfo(PlayerInfo);
 
 		if (!bZeroSpawn)
@@ -389,10 +400,7 @@ void UMainGameInstance::HandleSpawn(const Protocol::S_SPAWN& SpawnPkt)
 {
 	for (const auto& PlayerInfo : SpawnPkt.players())
 	{
-		const uint64 ObjectId = PlayerInfo.object_id();
-		const bool bIsMine = (MyObjectId != 0 && ObjectId == MyObjectId);
-
-		HandleSpawn(PlayerInfo, bIsMine);
+		HandleSpawn(PlayerInfo, false);
 	}
 }
 
@@ -616,9 +624,20 @@ void UMainGameInstance::NotifyLevelLoadFinished()
 
 	for (const auto& Info : SavedSpawns)
 	{
-		const bool bIsMine = (MyObjectId != 0 && Info.object_id() == MyObjectId);
-		HandleSpawn(Info, bIsMine);
+		HandleSpawn(Info, false);
 	}
+}
+
+void UMainGameInstance::StartGameConnection()
+{
+	if (GameServerSession.IsValid() || Socket != nullptr)
+	{
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[StartGameConnection] Begin connect"));
+	ConnectToGameServer();
+	SendEnterGamePacket();
 }
 
 void UMainGameInstance::HandleDamage(const Protocol::S_DAMAGE_PLAYER& pkt)
