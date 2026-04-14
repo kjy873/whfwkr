@@ -143,19 +143,31 @@ bool Handle_S_CHAT(PacketSessionRef& session, Protocol::S_CHAT& pkt)
 
 bool Handle_S_DAMAGE_PLAYER(PacketSessionRef& session, Protocol::S_DAMAGE_PLAYER& pkt)
 {
+	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_DAMAGE_PLAYER] packet arrived obj=%llu damage=%d"),
+		(unsigned long long)pkt.object_id(), (int32)pkt.damage());
+
 	if (GEngine == nullptr)
 		return false;
 
-	if (GEngine->GetWorldContexts().Num() == 0)
-		return false;
+	bool bHandled = false;
 
-	UMainGameInstance* GI = Cast<UMainGameInstance>(GEngine->GetWorldContexts()[0].OwningGameInstance);
-	if (GI == nullptr)
-		return false;
+	for (const FWorldContext& Context : GEngine->GetWorldContexts())
+	{
+		if (Context.OwningGameInstance == nullptr)
+			continue;
 
-	GI->HandleDamage(pkt);
+		UMainGameInstance* GI = Cast<UMainGameInstance>(Context.OwningGameInstance);
+		if (GI == nullptr)
+			continue;
 
-	return true;
+		UE_LOG(LogTemp, Warning, TEXT("[Handle_S_DAMAGE_PLAYER] dispatch GI=%p WorldType=%d"),
+			GI, (int32)Context.WorldType);
+
+		GI->HandleDamage(pkt);
+		bHandled = true;
+	}
+
+	return bHandled;
 }
 
 bool Handle_S_PLAYER_DEAD(PacketSessionRef& session, Protocol::S_PLAYER_DEAD& pkt)

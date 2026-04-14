@@ -664,6 +664,7 @@ void UMainGameInstance::HandleDamage(const Protocol::S_DAMAGE_PLAYER& pkt)
 
 	Actor->SubtractHealth(Damage);
 	Actor->PlayOtherPlayerSkill(0);
+	Actor->PlayHitReaction();
 }
 
 void UMainGameInstance::HandleDie(const Protocol::S_PLAYER_DEAD& Pkt)
@@ -695,6 +696,11 @@ void UMainGameInstance::HandleDie(const Protocol::S_PLAYER_DEAD& Pkt)
 
 void UMainGameInstance::SendAttackPlayer(uint64 TargetId, uint32 SkillId)
 {
+	UE_LOG(LogTemp, Warning, TEXT("[SendAttackPlayer] target=%llu skill=%d Socket=%d Session=%d"),
+		TargetId, SkillId,
+		Socket != nullptr ? 1 : 0,
+		GameServerSession != nullptr ? 1 : 0);
+
 	Protocol::C_ATTACK_PLAYER pkt;
 	pkt.set_targetplayerid(TargetId);
 	pkt.set_skillid(SkillId);
@@ -742,32 +748,31 @@ void UMainGameInstance::HandleIceSkillPacket(uint64 CasterID, uint64 TargetID)
 		Target = Monsters[TargetID];
 	}
 
-	if (Target != nullptr)
-	{
-		if (Caster->IsMyPlayer())
-		{
-			UE_LOG(LogTemp, Warning, TEXT("[MyPlayer Skill] Target Found: %s"), *Target->GetName());
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[Skill] Non-targeting (TargetID is 0 or not found)"));
-	}
-
 	FVector SpawnLocation = Caster->GetActorLocation() + Caster->GetActorForwardVector() * 100.0f;
 	FRotator SpawnRotation = Caster->GetActorRotation();
 	FTransform SpawnTransform(SpawnRotation, SpawnLocation);
 
-	AActor* IceActor = GetWorld()->SpawnActorDeferred<AActor>(IceProjectileBPClass, SpawnTransform);
+	AActor* SpawnedActor = GetWorld()->SpawnActorDeferred<AActor>(IceProjectileBPClass, SpawnTransform);
+	if (SpawnedActor == nullptr)
+		return;
 
-	if (IceActor)
+	if (FObjectProperty* Prop = FindFProperty<FObjectProperty>(SpawnedActor->GetClass(), TEXT("TargetActor")))
 	{
-		if (FObjectProperty* Prop = FindFProperty<FObjectProperty>(IceActor->GetClass(), TEXT("TargetActor")))
-			Prop->SetPropertyValue_InContainer(IceActor, Target);
-
-		if (FBoolProperty* bMineProp = FindFProperty<FBoolProperty>(IceActor->GetClass(), TEXT("bIsHomingSkillMine")))
-			bMineProp->SetPropertyValue_InContainer(IceActor, Caster->IsMyPlayer());
-
-		IceActor->FinishSpawning(SpawnTransform);
+		Prop->SetPropertyValue_InContainer(SpawnedActor, Target);
 	}
+
+	if (FBoolProperty* bMineProp = FindFProperty<FBoolProperty>(SpawnedActor->GetClass(), TEXT("bIsHomingSkillMine")))
+	{
+		bMineProp->SetPropertyValue_InContainer(SpawnedActor, Caster->IsMyPlayer());
+	}
+
+	AProjectile* Projectile = Cast<AProjectile>(SpawnedActor);
+	if (Projectile)
+	{
+		Projectile->SetProjectileInfo(Caster, 0);
+		UE_LOG(LogTemp, Warning, TEXT("[HandleIceSkillPacket] SetProjectileInfo Owner=%s SkillId=%d"),
+			*GetNameSafe(Caster), 0);
+	}
+
+	SpawnedActor->FinishSpawning(SpawnTransform);
 }

@@ -81,24 +81,32 @@ void AProjectile::SetProjectileInfo(APlayerCharacter* InOwnerPlayer, int32 InSki
 	OwnerPlayer = InOwnerPlayer;
 	SkillId = InSkillId;
 
+	ProjectileMove->SetUpdatedComponent(RootComponent);
+
+	SphereCollision1->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	SphereCollision2->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BoxCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 	switch (SkillId)
 	{
 	case 0: // ICE
-		ProjectileMove->SetUpdatedComponent(SphereCollision1);
+		SphereCollision1->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		break;
 
 	case 1: // FIRE
-		ProjectileMove->SetUpdatedComponent(SphereCollision1);
+		SphereCollision2->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		break;
 
 	case 2: // KNIGHT
-		ProjectileMove->SetUpdatedComponent(BoxCollision);
+		BoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		break;
 
 	default:
-		ProjectileMove->SetUpdatedComponent(SphereCollision1);
+		SphereCollision1->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		break;
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[SetProjectileInfo] Skill=%d"), SkillId);
 }
 
 void AProjectile::OnProjectileOverlap(
@@ -121,11 +129,13 @@ void AProjectile::OnProjectileOverlap(
 
 	bHasHit = true;
 
-	UE_LOG(LogTemp, Warning, TEXT("[Projectile] Hit: %s / Collision: %s"),
-		*GetNameSafe(OtherActor),
-		*GetNameSafe(OverlappedComponent));
-
 	APlayerCharacter* HitPlayer = Cast<APlayerCharacter>(OtherActor);
+
+	UE_LOG(LogTemp, Warning, TEXT("[Projectile] Before OnHitBySkill Target=%s Owner=%s SkillId=%d"),
+		*GetNameSafe(HitPlayer),
+		*GetNameSafe(OwnerPlayer),
+		SkillId);
+
 	if (HitPlayer && OwnerPlayer)
 	{
 		HitPlayer->OnHitBySkill(OwnerPlayer, SkillId);
