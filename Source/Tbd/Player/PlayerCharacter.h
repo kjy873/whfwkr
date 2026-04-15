@@ -4,6 +4,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Protocol.pb.h"
+#include "MainPlayerState.h"
 #include "Attributes.h"
 #include "PlayerCharacter.generated.h"
 
@@ -20,6 +21,10 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 	virtual void BeginPlay() override;
+
+	virtual void PossessedBy(AController* NewController) override;
+	UFUNCTION(BlueprintImplementableEvent)
+	void BP_OnPossessed(AController* NewController);
 
 	Protocol::PlayerInfo PlayerInfo;
 	Protocol::PlayerInfo DestInfo;
@@ -55,40 +60,75 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes")
 	FAttribute Attributes;
 
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	float GetHealthPercent() { return Attributes.GetHealthPercent(); }
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	float GetStaminaPercent() { return Attributes.GetStaminaPercent(); }
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	float GetManaPercent() { return Attributes.GetManaPercent(); }
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	float GetExperiencePercent() { return Attributes.GetExperiencePercent(); }
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attribute")
+	TWeakObjectPtr<AMainPlayerState> MainPlayerState;
 
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddHealth(float Value) { Attributes.AddHealth(Value); }
+	float GetHealthPercent() { return MainPlayerState->GetHealthPercent(); }
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddStamina(float Value) { Attributes.AddStamina(Value); }
+	float GetStaminaPercent() { return MainPlayerState->GetStaminaPercent(); }
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddMana(float Value) { Attributes.AddMana(Value); }
+	float GetManaPercent() { return MainPlayerState->GetManaPercent(); }
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	bool AddExperience(float Value) { return Attributes.AddExperience(Value); }
-	
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddMaxHealth(float Value) { Attributes.AddMaxHealth(Value); }
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddMaxStamina(float Value) { Attributes.AddMaxStamina(Value); }
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddMaxMana(float Value) { Attributes.AddMaxMana(Value); }
+	float GetExperiencePercent() { return MainPlayerState->GetExperiencePercent(); }
 
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void SubtractHealth(float Value) { Attributes.SubtractHealth(Value); }
+	void AddHealth(float Value) { MainPlayerState->AddHealth(Value); }
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void SubtractStamina(float Value) { Attributes.SubtractStamina(Value); }
+	void AddStamina(float Value) { MainPlayerState->AddStamina(Value); }
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void SubtractMana(float Value) { Attributes.SubtractMana(Value); }
+	void AddMana(float Value) { MainPlayerState->AddMana(Value); }
+	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
+	bool AddExperience(float Value) { return MainPlayerState->AddExperience(Value); }
 	
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddBaseDamage(float Value) { Attributes.AddBaseDamage(Value); }
+	void AddMaxHealth(float Value) { MainPlayerState->AddMaxHealth(Value); }
+	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
+	void AddMaxStamina(float Value) { MainPlayerState->AddMaxStamina(Value); }
+	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
+	void AddMaxMana(float Value) { MainPlayerState->AddMaxMana(Value); }
+
+	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
+	void SubtractHealth(float Value) { MainPlayerState->SubtractHealth(Value); }
+	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
+	void SubtractStamina(float Value) { MainPlayerState->SubtractStamina(Value); }
+	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
+	void SubtractMana(float Value) { MainPlayerState->SubtractMana(Value); }
+	
+	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
+	void AddBaseDamage(float Value) { MainPlayerState->AddBaseDamage(Value); }
+
+	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
+	float GetBaseDamage() { return MainPlayerState->GetBaseDamage(); }
+
+	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
+	int GetCharacterLevel() { return MainPlayerState->GetCharacterLevel(); }
+
+	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
+	int GetStrength() const { return MainPlayerState->GetStrength(); }
+	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
+	int GetAgility() const { return MainPlayerState->GetAgility(); }
+	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
+	int GetIntelligence() const { return MainPlayerState->GetIntelligence(); }
+
+	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
+	void AddStrength(int Value) { MainPlayerState->AddStrength(Value); }
+	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
+	void AddAgility(int Value) { MainPlayerState->AddAgility(Value); }
+	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
+	void AddIntelligence(int Value) { MainPlayerState->AddIntelligence(Value); }
+
+	
+	// Attributes end
+
+	// Unlock begin
+	UFUNCTION(BlueprintCallable, Category = "Unlock")
+	bool HasUnlocked(EUnlockType Type) { return MainPlayerState->HasUnlock(Type); }
+	UFUNCTION(BlueprintCallable, Category = "Unlock")
+	void Unlock(EUnlockType Type) { MainPlayerState->Unlock(Type); }
+	UFUNCTION(BlueprintCallable, Category = "Unlock")
+	void Lock(EUnlockType Type) { MainPlayerState->Lock(Type); }
+	// Unlock end
 
 	UPROPERTY(BlueprintReadWrite, Category = "Target")
 	AActor* LockedTargetActor = nullptr;
@@ -99,7 +139,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void Req_UseIceSkill(int32 SkillId, AActor* Target);
 
-	// Attributes end
 
 	// Network Attack Animation
 	UFUNCTION(BlueprintCallable, Category = "Network")

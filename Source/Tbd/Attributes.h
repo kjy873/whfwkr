@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "UObject/NoExportTypes.h"
 #include "Attributes.generated.h"
 
@@ -77,6 +78,8 @@ struct FAttribute
 	inline float GetManaPercent() const { return MaxMana > 0.f ? Mana / MaxMana : 0.f; }
 	inline float GetExperiencePercent() const { return MaxExperience > 0.f ? Experience / MaxExperience : 0.f; }
 
+	inline float GetBaseDamage() const { return BaseDamage; }
+
 	inline void AddMaxHealth(float Value) { MaxHealth += Value; Health += Value; }
 	inline void AddMaxStamina(float Value) { MaxStamina += Value; Stamina += Value; }
 	inline void AddMaxMana(float Value) { MaxMana += Value; Mana += Value; }
@@ -89,6 +92,8 @@ struct FAttribute
 	inline void SubtractMana(float Value) { Mana = FMath::Clamp(Mana - Value, 0.f, MaxMana); }
 
 	inline void AddBaseDamage(float Value) { BaseDamage += Value; }
+
+	inline int GetCharacterLevel() const { return Level; }
 
 	inline bool AddExperience(float Value)
 	{
@@ -105,8 +110,25 @@ struct FAttribute
 		return LevelUp;
 	}
 
+	inline int GetStrength() const { return Strength; }
+	inline int GetAgility() const { return Agility; }
+	inline int GetIntelligence() const { return Intelligence; }
+	inline void AddStrength(int Value) { Strength += Value; }
+	inline void AddAgility(int Value) { Agility += Value; }
+	inline void AddIntelligence(int Value) { Intelligence += Value; }
+
 
 };
+
+
+UENUM(BlueprintType)
+enum class EUnlockType : uint8 {
+	Q,
+	Dodge,
+	NightVision,
+	Minimap
+};
+
 
 UENUM(BlueprintType)
 enum class ECharacterType : uint8 {
@@ -157,5 +179,17 @@ struct FUpgradeData : public FTableRowBase{
 		, ID(0)
 	{
 	}
+	
+};
+
+USTRUCT(BlueprintType)
+struct FSkillUI {
+
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SkillUI")
+	UTexture2D* Icon = nullptr;
+	float CooldownDuration = 0;
+	FGameplayTag CooldownTag;
 
 };

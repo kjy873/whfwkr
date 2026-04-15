@@ -130,4 +130,13 @@ private:
 
 	FProcHandle ServerProcHandle;
 	bool bStartedServer = false;
+
+private:
+	UPROPERTY(EditAnywhere, Category = "Game Settings")
+	TSubclassOf<APlayerCharacter> LocalPlayerClass;
+public:
+	UFUNCTION(BlueprintCallable, Category = "Game Settings")
+	TSubclassOf<APlayerCharacter> GetCharacterClass() const { return LocalPlayerClass; }
+	UFUNCTION(BlueprintCallable, Category = "Game Settings")
+	void SetCharacterClass(TSubclassOf<APlayerCharacter> NewClass) { LocalPlayerClass = NewClass; }
 };

@@ -151,3 +151,18 @@ void APlayerCharacter::ApplyNetworkPosition(float DeltaTime)
 	SetActorLocationAndRotation(NewPos, NewRot);
 }
 
+void APlayerCharacter::PossessedBy(AController* NewController) {
+	Super::PossessedBy(NewController);
+	/*if (IsLocallyControlled())
+	{
+		bIsMine = true;
+	}
+	else
+	{
+		bIsMine = false;
+	}*/
+
+	MainPlayerState = GetPlayerState<AMainPlayerState>();
+
+	BP_OnPossessed(NewController);
+}
