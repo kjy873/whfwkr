@@ -4,7 +4,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Protocol.pb.h"
-#include "MainPlayerState.h"
 #include "Attributes.h"
 #include "PlayerCharacter.generated.h"
 
@@ -22,10 +21,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void BeginPlay() override;
 
-	virtual void PossessedBy(AController* NewController) override;
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnInit();
-
 	Protocol::PlayerInfo PlayerInfo;
 	Protocol::PlayerInfo DestInfo;
 
@@ -35,10 +30,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	bool bIsDead = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OnRep")
-	bool PawnReady = false;
-	bool ControllerReady = false;
-	bool PlayerStateReady = false;
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void PlaySkill(int32 SkillId);
@@ -68,81 +59,74 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes")
 	FAttribute Attributes;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attribute")
-	TWeakObjectPtr<AMainPlayerState> MainPlayerState;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category ="Unlock")
+	TSet<EUnlockType> UnlockedSet;
 
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	float GetHealthPercent() { return MainPlayerState->GetHealthPercent(); }
+	float GetHealthPercent() { return Attributes.GetHealthPercent(); }
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	float GetStaminaPercent() { return MainPlayerState->GetStaminaPercent(); }
+	float GetStaminaPercent() { return Attributes.GetStaminaPercent(); }
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	float GetManaPercent() { return MainPlayerState->GetManaPercent(); }
+	float GetManaPercent() { return Attributes.GetManaPercent(); }
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	float GetExperiencePercent() { return MainPlayerState->GetExperiencePercent(); }
+	float GetExperiencePercent() { return Attributes.GetExperiencePercent(); }
 
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddHealth(float Value) { MainPlayerState->AddHealth(Value); }
+	void AddHealth(float Value) { Attributes.AddHealth(Value); }
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddStamina(float Value) { MainPlayerState->AddStamina(Value); }
+	void AddStamina(float Value) { Attributes.AddStamina(Value); }
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddMana(float Value) { MainPlayerState->AddMana(Value); }
+	void AddMana(float Value) { Attributes.AddMana(Value); }
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	bool AddExperience(float Value) { return MainPlayerState->AddExperience(Value); }
+	bool AddExperience(float Value) { return Attributes.AddExperience(Value); }
 	
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddMaxHealth(float Value) { MainPlayerState->AddMaxHealth(Value); }
+	void AddMaxHealth(float Value) { Attributes.AddMaxHealth(Value); }
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddMaxStamina(float Value) { MainPlayerState->AddMaxStamina(Value); }
+	void AddMaxStamina(float Value) { Attributes.AddMaxStamina(Value); }
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddMaxMana(float Value) { MainPlayerState->AddMaxMana(Value); }
+	void AddMaxMana(float Value) { Attributes.AddMaxMana(Value); }
 
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void SubtractHealth(float Value) { MainPlayerState->SubtractHealth(Value); }
+	void SubtractHealth(float Value) { Attributes.SubtractHealth(Value); }
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void SubtractStamina(float Value) { MainPlayerState->SubtractStamina(Value); }
+	void SubtractStamina(float Value) { Attributes.SubtractStamina(Value); }
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void SubtractMana(float Value) { MainPlayerState->SubtractMana(Value); }
+	void SubtractMana(float Value) { Attributes.SubtractMana(Value); }
 	
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddBaseDamage(float Value) { MainPlayerState->AddBaseDamage(Value); }
+	void AddBaseDamage(float Value) { Attributes.AddBaseDamage(Value); }
 
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	float GetBaseDamage() { return MainPlayerState->GetBaseDamage(); }
+	float GetBaseDamage() { return Attributes.GetBaseDamage(); }
 
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	int GetCharacterLevel() { return MainPlayerState->GetCharacterLevel(); }
+	int GetCharacterLevel() { return Attributes.GetCharacterLevel(); }
 
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	int GetStrength() const { return MainPlayerState->GetStrength(); }
+	int GetStrength() const { return Attributes.GetStrength(); }
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	int GetAgility() const { return MainPlayerState->GetAgility(); }
+	int GetAgility() const { return Attributes.GetAgility(); }
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	int GetIntelligence() const { return MainPlayerState->GetIntelligence(); }
+	int GetIntelligence() const { return Attributes.GetIntelligence(); }
 
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddStrength(int Value) { MainPlayerState->AddStrength(Value); }
+	void AddStrength(int Value) { Attributes.AddStrength(Value); }
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddAgility(int Value) { MainPlayerState->AddAgility(Value); }
+	void AddAgility(int Value) { Attributes.AddAgility(Value); }
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddIntelligence(int Value) { MainPlayerState->AddIntelligence(Value); }
+	void AddIntelligence(int Value) { Attributes.AddIntelligence(Value); }
 
-	
 	// Attributes end
 
-	// Unlock begin
-	UFUNCTION(BlueprintCallable, Category = "Unlock")
-	bool HasUnlocked(EUnlockType Type) { return MainPlayerState->HasUnlock(Type); }
-	UFUNCTION(BlueprintCallable, Category = "Unlock")
-	void Unlock(EUnlockType Type) { MainPlayerState->Unlock(Type); }
-	UFUNCTION(BlueprintCallable, Category = "Unlock")
-	void Lock(EUnlockType Type) { MainPlayerState->Lock(Type); }
-	// Unlock end
-
-	virtual void OnRep_PlayerState() override;
-
-	UFUNCTION(BlueprintCallable, Category = "Initialize")
-	void OnPlayerStateReady();
-
+	// Unlocks begin
+	UFUNCTION(BlueprintCallable, Category = "UnlockFunctions")
+	bool HasUnlock(EUnlockType Type) { return UnlockedSet.Contains(Type); }
+	UFUNCTION(BlueprintCallable, Category = "UnlockFunctions")
+	void Unlock(EUnlockType Type) { UnlockedSet.Add(Type); }
+	UFUNCTION(BlueprintCallable, Category = "UnlockFunctions")
+	void Lock(EUnlockType Type) { UnlockedSet.Remove(Type); }
+	// Unlocks end
 
 	UPROPERTY(BlueprintReadWrite, Category = "Target")
 	AActor* LockedTargetActor = nullptr;

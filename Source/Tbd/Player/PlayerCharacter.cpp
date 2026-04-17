@@ -32,7 +32,6 @@ void APlayerCharacter::BeginPlay()
 		}
 	}
 
-	PawnReady = true;
 }
 
 // Called every frame
@@ -163,44 +162,4 @@ void APlayerCharacter::ApplyNetworkPosition(float DeltaTime)
 	FRotator NewRot = FMath::RInterpTo(GetActorRotation(), TargetRot, DeltaTime, 10.f);
 
 	SetActorLocationAndRotation(NewPos, NewRot);
-}
-
-void APlayerCharacter::PossessedBy(AController* NewController) {
-	Super::PossessedBy(NewController);
-	/*if (IsLocallyControlled())
-	{
-		bIsMine = true;
-	}
-	else
-	{
-		bIsMine = false;
-	}*/
-
-	MainPlayerState = GetPlayerState<AMainPlayerState>();
-
-}
-
-void APlayerCharacter::OnRep_PlayerState()
-{
-	Super::OnRep_PlayerState();
-
-	MainPlayerState = GetPlayerState<AMainPlayerState>();
-
-	if (!MainPlayerState.IsValid()) return;
-
-	if (MainPlayerState->IsInitialized()) {
-		OnPlayerStateReady();
-		return;
-	}
-
-	MainPlayerState->OnInitialized.AddDynamic(this, &APlayerCharacter::OnPlayerStateReady);
-
-}
-
-void APlayerCharacter::OnPlayerStateReady() {
-
-	PlayerStateReady = true;
-
-	OnInit();
-
 }
