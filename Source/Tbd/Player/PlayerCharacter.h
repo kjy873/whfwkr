@@ -44,6 +44,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void PlayDeathAnimation();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void PlayHitReaction();
+
 	UFUNCTION()
 	void OnHitBySkill(APlayerCharacter* Attacker, int32 SkillId);
 

@@ -19,6 +19,10 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	UE_LOG(LogTemp, Warning, TEXT("[PlayerCharacter BeginPlay] %s / ObjId=%lld"),
+		*GetName(),
+		(int64)PlayerInfo.object_id());
+
 	if (IsLocallyControlled())
 	{
 		if (UMainGameInstance* GI = GetGameInstance<UMainGameInstance>())
@@ -40,11 +44,19 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 void APlayerCharacter::OnHitBySkill(APlayerCharacter* Attacker, int32 SkillId)
 {
+	UE_LOG(LogTemp, Warning, TEXT("[OnHitBySkill] Called Target=%s Attacker=%s SkillId=%d"),
+		*GetName(),
+		*GetNameSafe(Attacker),
+		SkillId);
+
 	if (Attacker == nullptr)
 		return;
 
 	if (Attacker->IsMyPlayer() == false)
 		return;
+
+	UE_LOG(LogTemp, Warning, TEXT("[OnHitBySkill] SendAttackPlayer target=%llu"),
+		PlayerInfo.object_id());
 
 	if (UMainGameInstance* GI = GetGameInstance<UMainGameInstance>())
 	{

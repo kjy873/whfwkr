@@ -48,6 +48,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void NotifyLevelLoadFinished();
 
+	UFUNCTION(BlueprintCallable)
+	void StartGameConnection();
+
 	void HandleDamage(const Protocol::S_DAMAGE_PLAYER& pkt);
 	void HandleDie(const Protocol::S_PLAYER_DEAD& Pkt);
 	void SendAttackPlayer(uint64 TargetId, uint32 SkillId);

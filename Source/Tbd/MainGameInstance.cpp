@@ -98,7 +98,6 @@ void UMainGameInstance::Init()
 
 	if (!bClientOnly)
 	{
-		//StartServerProcess();
 		FCoreDelegates::OnPreExit.AddUObject(this, &UMainGameInstance::StopServerProcess);
 		UE_LOG(LogTemp, Warning, TEXT("[MainGameInstance::Init] Server process started (NOT clientonly)"));
 	}
@@ -109,7 +108,7 @@ void UMainGameInstance::Init()
 
 	ClientPacketHandler::Init();
 
-	ConnectToGameServer();
+	//ConnectToGameServer();
 
 	if (UWorld* World = GetWorld()) 
 	{
@@ -303,6 +302,17 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 			MyPlayer = LocalPlayer;
 		}
 
+		if (TWeakObjectPtr<APlayerCharacter>* FoundPtr = Players.Find(ObjectId))
+		{
+			if (FoundPtr->IsValid() && FoundPtr->Get() != LocalPlayer)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Destroy duplicate actor for my objId=%llu actor=%s"),
+					ObjectId, *GetNameSafe(FoundPtr->Get()));
+
+				FoundPtr->Get()->Destroy();
+			}
+		}
+
 		LocalPlayer->bIsMine = true;
 		LocalPlayer->SetPlayerInfo(PlayerInfo);
 
@@ -322,7 +332,7 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 		return;
 	}
 
-	if (ObjectId == MyObjectId)
+	if (ObjectId == MyObjectId && MyObjectId != 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Skip other spawn for my objId=%llu"), ObjectId);
 		return;
@@ -344,8 +354,9 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 
 	if (TargetActor)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Update existing objId=%llu"), ObjectId);
+		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Update existing other objId=%llu"), ObjectId);
 
+		TargetActor->bIsMine = false;
 		TargetActor->SetPlayerInfo(PlayerInfo);
 
 		if (!bZeroSpawn)
@@ -389,10 +400,7 @@ void UMainGameInstance::HandleSpawn(const Protocol::S_SPAWN& SpawnPkt)
 {
 	for (const auto& PlayerInfo : SpawnPkt.players())
 	{
-		const uint64 ObjectId = PlayerInfo.object_id();
-		const bool bIsMine = (MyObjectId != 0 && ObjectId == MyObjectId);
-
-		HandleSpawn(PlayerInfo, bIsMine);
+		HandleSpawn(PlayerInfo, false);
 	}
 }
 
@@ -616,9 +624,20 @@ void UMainGameInstance::NotifyLevelLoadFinished()
 
 	for (const auto& Info : SavedSpawns)
 	{
-		const bool bIsMine = (MyObjectId != 0 && Info.object_id() == MyObjectId);
-		HandleSpawn(Info, bIsMine);
+		HandleSpawn(Info, false);
 	}
+}
+
+void UMainGameInstance::StartGameConnection()
+{
+	if (GameServerSession.IsValid() || Socket != nullptr)
+	{
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[StartGameConnection] Begin connect"));
+	ConnectToGameServer();
+	SendEnterGamePacket();
 }
 
 void UMainGameInstance::HandleDamage(const Protocol::S_DAMAGE_PLAYER& pkt)
@@ -645,6 +664,7 @@ void UMainGameInstance::HandleDamage(const Protocol::S_DAMAGE_PLAYER& pkt)
 
 	Actor->SubtractHealth(Damage);
 	Actor->PlayOtherPlayerSkill(0);
+	Actor->PlayHitReaction();
 }
 
 void UMainGameInstance::HandleDie(const Protocol::S_PLAYER_DEAD& Pkt)
@@ -676,6 +696,11 @@ void UMainGameInstance::HandleDie(const Protocol::S_PLAYER_DEAD& Pkt)
 
 void UMainGameInstance::SendAttackPlayer(uint64 TargetId, uint32 SkillId)
 {
+	UE_LOG(LogTemp, Warning, TEXT("[SendAttackPlayer] target=%llu skill=%d Socket=%d Session=%d"),
+		TargetId, SkillId,
+		Socket != nullptr ? 1 : 0,
+		GameServerSession != nullptr ? 1 : 0);
+
 	Protocol::C_ATTACK_PLAYER pkt;
 	pkt.set_targetplayerid(TargetId);
 	pkt.set_skillid(SkillId);
@@ -723,32 +748,31 @@ void UMainGameInstance::HandleIceSkillPacket(uint64 CasterID, uint64 TargetID)
 		Target = Monsters[TargetID];
 	}
 
-	if (Target != nullptr)
-	{
-		if (Caster->IsMyPlayer())
-		{
-			UE_LOG(LogTemp, Warning, TEXT("[MyPlayer Skill] Target Found: %s"), *Target->GetName());
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[Skill] Non-targeting (TargetID is 0 or not found)"));
-	}
-
 	FVector SpawnLocation = Caster->GetActorLocation() + Caster->GetActorForwardVector() * 100.0f;
 	FRotator SpawnRotation = Caster->GetActorRotation();
 	FTransform SpawnTransform(SpawnRotation, SpawnLocation);
 
-	AActor* IceActor = GetWorld()->SpawnActorDeferred<AActor>(IceProjectileBPClass, SpawnTransform);
+	AActor* SpawnedActor = GetWorld()->SpawnActorDeferred<AActor>(IceProjectileBPClass, SpawnTransform);
+	if (SpawnedActor == nullptr)
+		return;
 
-	if (IceActor)
+	if (FObjectProperty* Prop = FindFProperty<FObjectProperty>(SpawnedActor->GetClass(), TEXT("TargetActor")))
 	{
-		if (FObjectProperty* Prop = FindFProperty<FObjectProperty>(IceActor->GetClass(), TEXT("TargetActor")))
-			Prop->SetPropertyValue_InContainer(IceActor, Target);
-
-		if (FBoolProperty* bMineProp = FindFProperty<FBoolProperty>(IceActor->GetClass(), TEXT("bIsHomingSkillMine")))
-			bMineProp->SetPropertyValue_InContainer(IceActor, Caster->IsMyPlayer());
-
-		IceActor->FinishSpawning(SpawnTransform);
+		Prop->SetPropertyValue_InContainer(SpawnedActor, Target);
 	}
+
+	if (FBoolProperty* bMineProp = FindFProperty<FBoolProperty>(SpawnedActor->GetClass(), TEXT("bIsHomingSkillMine")))
+	{
+		bMineProp->SetPropertyValue_InContainer(SpawnedActor, Caster->IsMyPlayer());
+	}
+
+	AProjectile* Projectile = Cast<AProjectile>(SpawnedActor);
+	if (Projectile)
+	{
+		Projectile->SetProjectileInfo(Caster, 0);
+		UE_LOG(LogTemp, Warning, TEXT("[HandleIceSkillPacket] SetProjectileInfo Owner=%s SkillId=%d"),
+			*GetNameSafe(Caster), 0);
+	}
+
+	SpawnedActor->FinishSpawning(SpawnTransform);
 }
