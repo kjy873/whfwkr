@@ -662,7 +662,7 @@ void UMainGameInstance::HandleDamage(const Protocol::S_DAMAGE_PLAYER& pkt)
 		return;
 	}
 
-	Actor->SubtractHealth(Damage);
+	Actor->AttributeComponent->SubtractHealth(Damage);
 	Actor->PlayOtherPlayerSkill(0);
 	Actor->PlayHitReaction();
 }

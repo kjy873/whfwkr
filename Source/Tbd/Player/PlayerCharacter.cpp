@@ -19,6 +19,11 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (!AttributeComponent)
+	{
+		AttributeComponent = FindComponentByClass<UAttributeComponent>();
+	}
+
 	UE_LOG(LogTemp, Warning, TEXT("[PlayerCharacter BeginPlay] %s / ObjId=%lld"),
 		*GetName(),
 		(int64)PlayerInfo.object_id());
