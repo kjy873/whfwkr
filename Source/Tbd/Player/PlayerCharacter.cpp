@@ -31,6 +31,8 @@ void APlayerCharacter::BeginPlay()
 			UE_LOG(LogTemp, Warning, TEXT("[Client] SendLevelReady from BeginPlay"));
 		}
 	}
+
+	PawnReady = true;
 }
 
 // Called every frame
@@ -176,5 +178,29 @@ void APlayerCharacter::PossessedBy(AController* NewController) {
 
 	MainPlayerState = GetPlayerState<AMainPlayerState>();
 
-	BP_OnPossessed(NewController);
+}
+
+void APlayerCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	MainPlayerState = GetPlayerState<AMainPlayerState>();
+
+	if (!MainPlayerState.IsValid()) return;
+
+	if (MainPlayerState->IsInitialized()) {
+		OnPlayerStateReady();
+		return;
+	}
+
+	MainPlayerState->OnInitialized.AddDynamic(this, &APlayerCharacter::OnPlayerStateReady);
+
+}
+
+void APlayerCharacter::OnPlayerStateReady() {
+
+	PlayerStateReady = true;
+
+	OnInit();
+
 }

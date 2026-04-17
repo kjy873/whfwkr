@@ -24,7 +24,7 @@ public:
 
 	virtual void PossessedBy(AController* NewController) override;
 	UFUNCTION(BlueprintImplementableEvent)
-	void BP_OnPossessed(AController* NewController);
+	void OnInit();
 
 	Protocol::PlayerInfo PlayerInfo;
 	Protocol::PlayerInfo DestInfo;
@@ -34,6 +34,11 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	bool bIsDead = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OnRep")
+	bool PawnReady = false;
+	bool ControllerReady = false;
+	bool PlayerStateReady = false;
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void PlaySkill(int32 SkillId);
@@ -132,6 +137,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Unlock")
 	void Lock(EUnlockType Type) { MainPlayerState->Lock(Type); }
 	// Unlock end
+
+	virtual void OnRep_PlayerState() override;
+
+	UFUNCTION(BlueprintCallable, Category = "Initialize")
+	void OnPlayerStateReady();
+
 
 	UPROPERTY(BlueprintReadWrite, Category = "Target")
 	AActor* LockedTargetActor = nullptr;

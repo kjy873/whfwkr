@@ -8,7 +8,7 @@
 #include "MainPlayerState.generated.h"
 
 
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInitialized);
 /**
  * 
  */
@@ -25,8 +25,11 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Unlocks", meta = (AllowPrivateAccess = "true"))
 	TSet<EUnlockType> UnlockedSet;
 
+	bool Initialized = false; // Attribute 초기화 확인
 
 public:
+
+	AMainPlayerState();
 	// Attrubutes begin
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
 	float GetHealthPercent() { return Attributes.GetHealthPercent(); }
@@ -93,5 +96,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UnlockFunctions")
 	void Lock(EUnlockType Type) { UnlockedSet.Remove(Type); }
 	// Unlocks end
+
+	UFUNCTION(BlueprintCallable, Category = "Initialize")
+	void Initialize();
+
+	UPROPERTY(BlueprintAssignable, Category = "Initialize")
+	FOnInitialized OnInitialized;
+
+	bool IsInitialized() const { return Initialized; }
 	
 };
