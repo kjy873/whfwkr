@@ -17,7 +17,7 @@ class TBD_API UAttributeComponent : public UActorComponent
 	FAttribute Attributes;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Unlock", meta = (AllowPrivateAccess = "true"))
-	TSet<EUnlockType> UnlockedSet;
+	FUpgrades Upgrades;
 
 public:	
 	// Sets default values for this component's properties
@@ -81,16 +81,31 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
 	void AddIntelligence(int Value) { Attributes.AddIntelligence(Value); }
 
+	UFUNCTION(BlueprintCallable, Category = "PlayerData")
+	FAttribute GetAttributes() const { return Attributes; }
+	UFUNCTION(BlueprintCallable, Category = "PlayerData")
+	void SetAttributes(const FAttribute& NewAttributes) { Attributes = NewAttributes; }
+
 	// Attributes end
 
-	// Unlocks begin
-	UFUNCTION(BlueprintCallable, Category = "UnlockFunctions")
-	bool HasUnlock(EUnlockType Type) { return UnlockedSet.Contains(Type); }
-	UFUNCTION(BlueprintCallable, Category = "UnlockFunctions")
-	void Unlock(EUnlockType Type) { UnlockedSet.Add(Type); }
-	UFUNCTION(BlueprintCallable, Category = "UnlockFunctions")
-	void Lock(EUnlockType Type) { UnlockedSet.Remove(Type); }
-	// Unlocks end
+	// Upgrades begin
+
+	UFUNCTION(BlueprintCallable, Category = "PlayerData")
+	const TMap<FName, int>& GetUpgrades() const { return Upgrades.UpgradeCounts; }
+	UFUNCTION(BlueprintCallable, Category = "PlayerData")
+	void SetUpgrades(const TMap<FName, int>& NewUpgrades) { Upgrades.UpgradeCounts = NewUpgrades; }
+	UFUNCTION(BlueprintCallable, Category = "PlayerData")
+	void AddUpgrade(const FName& UpgradeName) { Upgrades.AddUpgrade(UpgradeName); }
+	UFUNCTION(BlueprintCallable, Category = "PlayerData")
+	bool HasUpgrade(const FName& UpgradeName) const { return Upgrades.HasUpgrade(UpgradeName); }
+	UFUNCTION(BlueprintCallable, Category = "PlayerData")
+	int GetUpgradeCount(const FName& UpgradeName) const { return Upgrades.GetUpgradeCount(UpgradeName); }
+	UFUNCTION(BlueprintCallable, Category = "PlayerData")
+	TArray<FName> GetAvailableUpgrades() const { return Upgrades.GetAvailableUpgrades(); }
+	UFUNCTION(BlueprintCallable, Category = "PlayerData")
+	void SetAvailableUpgrades(const TArray<FName>& NewAvailableUpgrades) { Upgrades.SetAvailableUpgrades(NewAvailableUpgrades); }
+
+	// Upgrades end
 
 protected:
 	// Called when the game starts

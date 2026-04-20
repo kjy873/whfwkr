@@ -135,11 +135,43 @@ private:
 	bool bStartedServer = false;
 
 private:
-	UPROPERTY(EditAnywhere, Category = "Game Settings")
-	TSubclassOf<APlayerCharacter> LocalPlayerClass;
+
+	UPROPERTY(EditAnywhere, Category = "PlayerData")
+	ECharacterType LocalPlayerCharacterType;
+
+	UPROPERTY(EditAnywhere, Category = "PlayerData")
+	FAttribute LocalPlayerAttributes;
+
+	UPROPERTY(EditAnywhere, Category = "PlayerData")
+	TSet<EUnlockType> LocalPlayerUnlockedSet;
 public:
-	UFUNCTION(BlueprintCallable, Category = "Game Settings")
-	TSubclassOf<APlayerCharacter> GetCharacterClass() const { return LocalPlayerClass; }
-	UFUNCTION(BlueprintCallable, Category = "Game Settings")
-	void SetCharacterClass(TSubclassOf<APlayerCharacter> NewClass) { LocalPlayerClass = NewClass; }
+	UFUNCTION(BlueprintCallable, Category = "PlayerData")
+	ECharacterType GetCharacterType() const { return LocalPlayerCharacterType; }
+	UFUNCTION(BlueprintCallable, Category = "PlayerData")
+	void SetCharacterType(ECharacterType NewType) { LocalPlayerCharacterType = NewType; }
+private:
+	UPROPERTY(EditAnywhere, Category = "PlayerData")
+	FUpgrades LocalPlayerUpgrades;
+
+public:
+
+	UFUNCTION(BlueprintCallable, Category = "PlayerData")
+	const TMap<FName, int>& GetUpgrades() const { return LocalPlayerUpgrades.UpgradeCounts; }
+	UFUNCTION(BlueprintCallable, Category = "PlayerData")
+	void SetUpgrades(const TMap<FName, int>& NewUpgrades) { LocalPlayerUpgrades.UpgradeCounts = NewUpgrades; }
+	UFUNCTION(BlueprintCallable, Category = "PlayerData")
+	void InitUpgrades(UDataTable* DataTable, ECharacterType CharacterType) { LocalPlayerUpgrades.InitUpgrades(DataTable, CharacterType); }
+	UFUNCTION(BlueprintCallable, Category = "PlayerData")
+	void AddUpgrade(const FName& UpgradeName) { LocalPlayerUpgrades.AddUpgrade(UpgradeName); }
+	UFUNCTION(BlueprintCallable, Category = "PlayerData")
+	bool HasUpgrade(const FName& UpgradeName) const { return LocalPlayerUpgrades.HasUpgrade(UpgradeName); }
+	UFUNCTION(BlueprintCallable, Category = "PlayerData")
+	TArray<FName> GetAvailableUpgrades() const { return LocalPlayerUpgrades.GetAvailableUpgrades(); }
+
+
+	UFUNCTION(BlueprintCallable, Category = "PlayerData")
+	FAttribute GetLocalPlayerAttributes() const { return LocalPlayerAttributes; }
+	UFUNCTION(BlueprintCallable, Category = "PlayerData")
+	void SetLocalPlayerAttributes(const FAttribute& NewAttributes) { LocalPlayerAttributes = NewAttributes; }
+
 };

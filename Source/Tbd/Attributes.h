@@ -129,7 +129,6 @@ enum class EUnlockType : uint8 {
 	Minimap
 };
 
-
 UENUM(BlueprintType)
 enum class ECharacterType : uint8 {
 
@@ -142,6 +141,7 @@ enum class ECharacterType : uint8 {
 	ECT_GameCharacter = ECT_Knight | ECT_Mage
 
 };
+ENUM_CLASS_FLAGS(ECharacterType)
 
 USTRUCT(BlueprintType)
 struct FUpgradeData : public FTableRowBase{
@@ -178,6 +178,90 @@ struct FUpgradeData : public FTableRowBase{
 		, Reusability(false)
 		, ID(0)
 	{
+	}
+
+	bool operator==(const FUpgradeData& Other) const
+	{
+		return ID == Other.ID;
+	}
+	
+};
+
+USTRUCT(BlueprintType)
+struct FHoldUpgradeData {
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HoldUpgradeData")
+	FUpgradeData UpgradeData;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HoldUpgradeData")
+	int Count;
+
+	bool operator==(const FHoldUpgradeData& Other) const
+	{
+		return UpgradeData.ID == Other.UpgradeData.ID;
+	}
+
+};
+
+USTRUCT(BlueprintType)
+struct FUpgrades {
+	GENERATED_BODY()
+	TMap<FName, int> UpgradeCounts;
+	TArray<FName> AvailableUpgrades;
+
+
+	
+	void InitUpgrades(UDataTable* DataTable, ECharacterType CharacterType) {
+		if (!DataTable) return;
+		UpgradeCounts.Empty();
+		AvailableUpgrades.Empty();
+		const TArray<FName> RowNames = DataTable->GetRowNames();
+		for (const FName& RowName : RowNames)
+		{
+			FUpgradeData* Row = DataTable->FindRow<FUpgradeData>(RowName, TEXT(""));
+			if (!Row) continue;
+			if ((Row->CharacterType & CharacterType) != ECharacterType::ECT_None)
+			{
+				UpgradeCounts.Add(Row->Name, 0);
+				AvailableUpgrades.Add(Row->Name);
+			}
+		}
+	}
+
+	void AddUpgrade(const FName& UpgradeName) {
+		int* Count = UpgradeCounts.Find(UpgradeName);
+		if (Count) {
+			(*Count)++;
+		}
+		else {
+			ensureMsgf(false, TEXT("Upgrade not found: %s"), *UpgradeName.ToString());
+		}
+	}
+
+	bool HasUpgrade(const FName& UpgradeName) const {
+		const int* Count = UpgradeCounts.Find(UpgradeName);
+		return Count && *Count > 0;
+	}
+
+	void SetUpgrades(const TMap<FName, int>& NewCounts) {
+		UpgradeCounts = NewCounts;
+	}
+
+	const TMap<FName, int>& GetUpgrades() const {
+		return UpgradeCounts;
+	}
+
+	const int GetUpgradeCount(const FName& UpgradeName) const {
+		const int* Count = UpgradeCounts.Find(UpgradeName);
+		return Count ? *Count : 0;
+	}
+
+	const TArray<FName>& GetAvailableUpgrades() const {
+		return AvailableUpgrades;
+	}
+	void SetAvailableUpgrades(const TArray<FName>& NewAvailableUpgrades) {
+		AvailableUpgrades = NewAvailableUpgrades;
 	}
 	
 };
