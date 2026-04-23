@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Projectile.h"
 #include "Engine/GameInstance.h"
 #include "Tbd.h"
 #include "HAL/PlatformProcess.h"
@@ -12,6 +13,7 @@
 
 class AActor;
 class APlayerCharacter;
+class AProjectile;
 /**
  * 
  */
@@ -56,13 +58,18 @@ public:
 	void SendAttackPlayer(uint64 TargetId, uint32 SkillId);
 
 	void OnRecvUseSkill(const Protocol::S_USE_SKILL& pkt);
+	void OnRecvStartSkillCharge(const Protocol::S_START_SKILL_CHARGE& pkt);
 	void HandleIceSkillPacket(uint64 CasterID, uint64 TargetID);
+	void HandleFireballSkillPacket(uint64 CasterID, float ChargeScale);
 
 	virtual void Init() override;
 	virtual void Shutdown() override;
 
 	UPROPERTY()
 	uint64 MyObjectId = 0;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	float CurrentFireballChargeScale = 0.2f;
 
 	UPROPERTY()
 	TMap<uint64, AActor*> Monsters;
@@ -113,10 +120,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<APlayerCharacter> OtherPlayerClass;
 
+	UFUNCTION(BlueprintCallable)
+	void SendStartSkillCharge(int32 SkillId);
+
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 	TSubclassOf<AActor> IceProjectileBPClass;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
-	TSubclassOf<AActor> FireballProjectileBPClass;
+	TSubclassOf<AProjectile> FireballProjectileBPClass;
 
 	TWeakObjectPtr<APlayerCharacter> MyPlayer;
 	TMap<uint64, TWeakObjectPtr<APlayerCharacter>> Players;

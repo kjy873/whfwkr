@@ -132,11 +132,8 @@ bool Handle_C_CHAT(PacketSessionRef& session, Protocol::C_CHAT& pkt)
 	return true;
 }
 
-
 bool Handle_C_USE_SKILL(PacketSessionRef& session, Protocol::C_USE_SKILL& pkt)
 {
-	cout << "[Server] C_USE_SKILL received skillId=" << pkt.skillid() << endl;
-
 	GameSessionRef gameSession = static_pointer_cast<GameSession>(session);
 	if (gameSession == nullptr)
 		return false;
@@ -149,11 +146,22 @@ bool Handle_C_USE_SKILL(PacketSessionRef& session, Protocol::C_USE_SKILL& pkt)
 	if (room == nullptr)
 		return false;
 
+	uint32 skillId = pkt.skillid();
+	float chargeScale = pkt.chargescale();
+
+	if (!player->CanUseSkill(skillId))
+	{
+		printf("[Server] Cooldown BLOCK skill=%u\n", skillId);
+		return false;
+	}
+
+	player->MarkSkillUsed(skillId);
+
 	room->DoAsync(
 		&Room::BroadcastUseSkill,
 		player->playerInfo->object_id(),
-		pkt.skillid(),
-		pkt.targetid()
+		skillId,
+		chargeScale
 	);
 
 	return true;
@@ -204,6 +212,32 @@ bool Handle_C_LEVEL_READY(PacketSessionRef& session, Protocol::C_LEVEL_READY& pk
 	room->HandleClientLevelReady(player);
 	return true;
 }
+
+bool Handle_C_START_SKILL_CHARGE(PacketSessionRef& session, Protocol::C_START_SKILL_CHARGE& pkt)
+{
+	GameSessionRef gameSession = static_pointer_cast<GameSession>(session);
+	uint32 skillId = pkt.skillid();
+
+	if (gameSession == nullptr)
+		return false;
+
+	PlayerRef player = gameSession->player;
+	if (player == nullptr)
+		return false;
+
+	RoomRef room = player->room.lock();
+	if (room == nullptr)
+		return false;
+
+	if (!player->CanUseSkill(skillId))
+	{
+		printf("[Server] Charge BLOCK skill=%d\n", skillId);
+		return false;
+	}
+
+	room->DoAsync(&Room::BroadcastStartSkillCharge, player->playerInfo->object_id(), pkt.skillid());
+	return true;
+}	
 
 
 //----------------------------------------------------------------------------------------------------------

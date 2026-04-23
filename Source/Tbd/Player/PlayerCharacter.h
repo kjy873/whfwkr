@@ -37,6 +37,9 @@ public:
 	void PlayOtherPlayerSkill(int32 SkillId);
 
 	UFUNCTION(BlueprintImplementableEvent)
+	void PlayOtherPlayerHoldSkill(int32 SkillId);
+
+	UFUNCTION(BlueprintImplementableEvent)
 	void PlayDeathAnimation();
 
 	UFUNCTION(BlueprintImplementableEvent)

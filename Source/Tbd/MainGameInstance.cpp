@@ -130,6 +130,15 @@ void UMainGameInstance::Shutdown()
 	Super::Shutdown();
 }
 
+void UMainGameInstance::SendStartSkillCharge(int32 SkillId)
+{
+	Protocol::C_START_SKILL_CHARGE pkt;
+	pkt.set_skillid(SkillId);
+
+	SendBufferRef SendBuffer = ClientPacketHandler::MakeSendBuffer(pkt);
+	SendPacket(SendBuffer);
+}
+
 void UMainGameInstance::StartServerProcess()
 {
 	if (bStartedServer && ServerProcHandle.IsValid())
@@ -573,6 +582,15 @@ void UMainGameInstance::SendUseSkill(int32 SkillId)
 	pkt.set_playerid(MyObjectId);
 	pkt.set_skillid(SkillId);
 
+	pkt.set_chargescale(CurrentFireballChargeScale);
+
+	pkt.set_clientshotid(0);
+
+	Protocol::Vector3* Dir = pkt.mutable_dir();
+	Dir->set_x(0.f);
+	Dir->set_y(0.f);
+	Dir->set_z(0.f);
+
 	if (MyPlayer->LockedTargetActor)
 	{
 		APlayerCharacter* TargetChar = Cast<APlayerCharacter>(MyPlayer->LockedTargetActor);
@@ -585,8 +603,17 @@ void UMainGameInstance::SendUseSkill(int32 SkillId)
 			pkt.set_targetid(0);
 		}
 	}
+	else
+	{
+		pkt.set_targetid(0);
+	}
 
 	SendPacket(ClientPacketHandler::MakeSendBuffer(pkt));
+
+	UE_LOG(LogTemp, Warning, TEXT("[SendUseSkill] SkillId=%d ChargeScale=%f TargetId=%llu"),
+		SkillId,
+		CurrentFireballChargeScale,
+		(uint64)pkt.targetid());
 }
 
 void UMainGameInstance::SendEnterGamePacket()
@@ -716,21 +743,49 @@ void UMainGameInstance::OnRecvUseSkill(const Protocol::S_USE_SKILL& pkt)
 	const uint64 PlayerId = pkt.playerid();
 	const int32 SkillId = pkt.skillid();
 	const uint64 TargetId = pkt.targetid();
+	const float ChargeScale = pkt.chargescale();
 
 	APlayerCharacter* Player = GetPlayerById(PlayerId);
-	if (Player == nullptr) return;
+	if (Player == nullptr)
+		return;
 
-	if (Player->IsMyPlayer()) {
+	if (Player->IsMyPlayer())
+	{
 		Player->PlaySkill(SkillId);
 	}
-	else {
+	else
+	{
 		Player->PlayOtherPlayerSkill(SkillId);
 	}
 
-	if (SkillId == 0)
+	switch (SkillId)
 	{
+	case 0:
 		HandleIceSkillPacket(PlayerId, TargetId);
+		break;
+
+	case 1:
+		HandleFireballSkillPacket(PlayerId, ChargeScale);
+		break;
+
+	default:
+		break;
 	}
+}
+
+void UMainGameInstance::OnRecvStartSkillCharge(const Protocol::S_START_SKILL_CHARGE& pkt)
+{
+	const uint64 PlayerId = pkt.playerid();
+	const int32 SkillId = pkt.skillid();
+
+	APlayerCharacter* Player = GetPlayerById(PlayerId);
+	if (Player == nullptr)
+		return;
+
+	if (Player->IsMyPlayer())
+		return;
+
+	Player->PlayOtherPlayerHoldSkill(SkillId);
 }
 
 void UMainGameInstance::HandleIceSkillPacket(uint64 CasterID, uint64 TargetID)
@@ -775,4 +830,41 @@ void UMainGameInstance::HandleIceSkillPacket(uint64 CasterID, uint64 TargetID)
 	}
 
 	SpawnedActor->FinishSpawning(SpawnTransform);
+}
+
+void UMainGameInstance::HandleFireballSkillPacket(uint64 CasterID, float ChargeScale)
+{
+	APlayerCharacter* Caster = GetPlayerById(CasterID);
+	if (Caster == nullptr)
+		return;
+
+	if (FireballProjectileBPClass == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FireballProjectileBPClass is null"));
+		return;
+	}
+
+	ChargeScale = FMath::Clamp(ChargeScale, 0.2f, 2.0f);
+
+	FVector Forward = Caster->GetActorForwardVector();
+	FVector SpawnLocation = Caster->GetMesh()->GetSocketLocation(TEXT("RightHandSpellSocket")) + Forward * 100.f;
+	FRotator SpawnRotation = Forward.Rotation();
+
+	AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(
+		FireballProjectileBPClass,
+		SpawnLocation,
+		SpawnRotation
+	);
+
+	if (Projectile == nullptr)
+		return;
+
+	Projectile->SetOwner(Caster);
+	Projectile->SetProjectileInfo(Caster, 1);
+	Projectile->SetChargeScale(ChargeScale);
+	Projectile->ActivateProjectileCollision();
+	Projectile->LaunchProjectile(Forward);
+
+	UE_LOG(LogTemp, Warning, TEXT("[HandleFireballSkillPacket] CasterID=%llu ChargeScale=%f"),
+		CasterID, ChargeScale);
 }

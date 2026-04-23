@@ -37,6 +37,8 @@ enum : uint16
 	PKT_S_PROJECTILE_DESTROY = 1024,
 	PKT_S_CHANGE_LEVEL = 1025,
 	PKT_C_LEVEL_READY = 1026,
+	PKT_C_START_SKILL_CHARGE = 1027,
+	PKT_S_START_SKILL_CHARGE = 1028,
 };
 
 // Custom Handlers
@@ -58,6 +60,7 @@ bool Handle_S_DAMAGE_MOB(PacketSessionRef& session, Protocol::S_DAMAGE_MOB& pkt)
 bool Handle_S_PROJECTILE_HIT(PacketSessionRef& session, Protocol::S_PROJECTILE_HIT& pkt);
 bool Handle_S_PROJECTILE_DESTROY(PacketSessionRef& session, Protocol::S_PROJECTILE_DESTROY& pkt);
 bool Handle_S_CHANGE_LEVEL(PacketSessionRef& session, Protocol::S_CHANGE_LEVEL& pkt);
+bool Handle_S_START_SKILL_CHARGE(PacketSessionRef& session, Protocol::S_START_SKILL_CHARGE& pkt);
 
 class ClientPacketHandler
 {
@@ -83,6 +86,7 @@ public:
 		GPacketHandler[PKT_S_PROJECTILE_HIT] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_PROJECTILE_HIT>(Handle_S_PROJECTILE_HIT, session, buffer, len); };
 		GPacketHandler[PKT_S_PROJECTILE_DESTROY] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_PROJECTILE_DESTROY>(Handle_S_PROJECTILE_DESTROY, session, buffer, len); };
 		GPacketHandler[PKT_S_CHANGE_LEVEL] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_CHANGE_LEVEL>(Handle_S_CHANGE_LEVEL, session, buffer, len); };
+		GPacketHandler[PKT_S_START_SKILL_CHARGE] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_START_SKILL_CHARGE>(Handle_S_START_SKILL_CHARGE, session, buffer, len); };
 	}
 
 	static bool HandlePacket(PacketSessionRef& session, BYTE* buffer, int32 len)
@@ -100,6 +104,7 @@ public:
 	static SendBufferRef MakeSendBuffer(Protocol::C_ATTACK_MOB& pkt) { return MakeSendBuffer(pkt, PKT_C_ATTACK_MOB); }
 	static SendBufferRef MakeSendBuffer(Protocol::C_USE_SKILL& pkt) { return MakeSendBuffer(pkt, PKT_C_USE_SKILL); }
 	static SendBufferRef MakeSendBuffer(Protocol::C_LEVEL_READY& pkt) { return MakeSendBuffer(pkt, PKT_C_LEVEL_READY); }
+	static SendBufferRef MakeSendBuffer(Protocol::C_START_SKILL_CHARGE& pkt) { return MakeSendBuffer(pkt, PKT_C_START_SKILL_CHARGE); }
 
 private:
 	template<typename PacketType, typename ProcessFunc>

@@ -135,16 +135,18 @@ message C_USE_SKILL
     uint64 playerId = 1;
     uint32 skillId = 2;
 
-	int32 clientShotId = 3;
-    Vector3 dir = 4; 
-	uint64 targetId = 5;
+    int32 clientShotId = 3;
+    Vector3 dir = 4;
+    uint64 targetId = 5;
+    float chargeScale = 6;
 }
 
 message S_USE_SKILL
 {
     uint64 playerId = 1;
     uint32 skillId = 2;
-	uint64 targetId = 3;
+    uint64 targetId = 3;
+    float chargeScale = 4;
 }
 
 message S_DAMAGE_MOB
@@ -175,4 +177,15 @@ message S_CHANGE_LEVEL
 message C_LEVEL_READY
 {
 
+}
+
+message C_START_SKILL_CHARGE
+{
+  uint32 skillid = 1;
+}
+
+message S_START_SKILL_CHARGE
+{
+  uint64 playerid = 1;
+  uint32 skillid = 2;
 }
