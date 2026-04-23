@@ -33,7 +33,8 @@ public:
 	void Broadcast(SendBufferRef sendBuffer, uint64 exceptId = 0);
 	void HandleMoveMobLocked(uint64 mobId, float x, float y, float z);
 	void HandleAttackMobLocked(uint64 playerId, uint64 mobId);
-	void BroadcastUseSkill(uint64 playerId, uint32 skillId, uint64 targetId);
+	void BroadcastUseSkill(uint64 playerId, uint32 skillId, float chargeScale);
+	void BroadcastStartSkillCharge(uint64 playerId, uint32 skillId);
 	void HandlePlayerHit(uint64 attackerId, uint64 targetId);
 	void HandleAttackPlayerLocked(uint64 attackerId, uint64 targetId, uint32 skillId);
 

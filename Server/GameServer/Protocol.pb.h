@@ -75,6 +75,9 @@ extern C_MOVEDefaultTypeInternal _C_MOVE_default_instance_;
 class C_MOVE_MOB;
 struct C_MOVE_MOBDefaultTypeInternal;
 extern C_MOVE_MOBDefaultTypeInternal _C_MOVE_MOB_default_instance_;
+class C_START_SKILL_CHARGE;
+struct C_START_SKILL_CHARGEDefaultTypeInternal;
+extern C_START_SKILL_CHARGEDefaultTypeInternal _C_START_SKILL_CHARGE_default_instance_;
 class C_USE_SKILL;
 struct C_USE_SKILLDefaultTypeInternal;
 extern C_USE_SKILLDefaultTypeInternal _C_USE_SKILL_default_instance_;
@@ -129,6 +132,9 @@ extern S_SPAWNDefaultTypeInternal _S_SPAWN_default_instance_;
 class S_SPAWN_MOB;
 struct S_SPAWN_MOBDefaultTypeInternal;
 extern S_SPAWN_MOBDefaultTypeInternal _S_SPAWN_MOB_default_instance_;
+class S_START_SKILL_CHARGE;
+struct S_START_SKILL_CHARGEDefaultTypeInternal;
+extern S_START_SKILL_CHARGEDefaultTypeInternal _S_START_SKILL_CHARGE_default_instance_;
 class S_USE_SKILL;
 struct S_USE_SKILLDefaultTypeInternal;
 extern S_USE_SKILLDefaultTypeInternal _S_USE_SKILL_default_instance_;
@@ -146,6 +152,7 @@ template<> ::Protocol::C_LEVEL_READY* Arena::CreateMaybeMessage<::Protocol::C_LE
 template<> ::Protocol::C_LOGIN* Arena::CreateMaybeMessage<::Protocol::C_LOGIN>(Arena*);
 template<> ::Protocol::C_MOVE* Arena::CreateMaybeMessage<::Protocol::C_MOVE>(Arena*);
 template<> ::Protocol::C_MOVE_MOB* Arena::CreateMaybeMessage<::Protocol::C_MOVE_MOB>(Arena*);
+template<> ::Protocol::C_START_SKILL_CHARGE* Arena::CreateMaybeMessage<::Protocol::C_START_SKILL_CHARGE>(Arena*);
 template<> ::Protocol::C_USE_SKILL* Arena::CreateMaybeMessage<::Protocol::C_USE_SKILL>(Arena*);
 template<> ::Protocol::MobInfo* Arena::CreateMaybeMessage<::Protocol::MobInfo>(Arena*);
 template<> ::Protocol::S_CHANGE_LEVEL* Arena::CreateMaybeMessage<::Protocol::S_CHANGE_LEVEL>(Arena*);
@@ -164,6 +171,7 @@ template<> ::Protocol::S_PROJECTILE_DESTROY* Arena::CreateMaybeMessage<::Protoco
 template<> ::Protocol::S_PROJECTILE_HIT* Arena::CreateMaybeMessage<::Protocol::S_PROJECTILE_HIT>(Arena*);
 template<> ::Protocol::S_SPAWN* Arena::CreateMaybeMessage<::Protocol::S_SPAWN>(Arena*);
 template<> ::Protocol::S_SPAWN_MOB* Arena::CreateMaybeMessage<::Protocol::S_SPAWN_MOB>(Arena*);
+template<> ::Protocol::S_START_SKILL_CHARGE* Arena::CreateMaybeMessage<::Protocol::S_START_SKILL_CHARGE>(Arena*);
 template<> ::Protocol::S_USE_SKILL* Arena::CreateMaybeMessage<::Protocol::S_USE_SKILL>(Arena*);
 template<> ::Protocol::Vector3* Arena::CreateMaybeMessage<::Protocol::Vector3>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
@@ -3743,6 +3751,7 @@ class C_USE_SKILL final :
     kSkillIdFieldNumber = 2,
     kClientShotIdFieldNumber = 3,
     kTargetIdFieldNumber = 5,
+    kChargeScaleFieldNumber = 6,
   };
   // .Protocol.Vector3 dir = 4;
   bool has_dir() const;
@@ -3798,6 +3807,15 @@ class C_USE_SKILL final :
   void _internal_set_targetid(uint64_t value);
   public:
 
+  // float chargeScale = 6;
+  void clear_chargescale();
+  float chargescale() const;
+  void set_chargescale(float value);
+  private:
+  float _internal_chargescale() const;
+  void _internal_set_chargescale(float value);
+  public:
+
   // @@protoc_insertion_point(class_scope:Protocol.C_USE_SKILL)
  private:
   class _Internal;
@@ -3811,6 +3829,7 @@ class C_USE_SKILL final :
     uint32_t skillid_;
     int32_t clientshotid_;
     uint64_t targetid_;
+    float chargescale_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -3942,6 +3961,7 @@ class S_USE_SKILL final :
     kPlayerIdFieldNumber = 1,
     kTargetIdFieldNumber = 3,
     kSkillIdFieldNumber = 2,
+    kChargeScaleFieldNumber = 4,
   };
   // uint64 playerId = 1;
   void clear_playerid();
@@ -3970,6 +3990,15 @@ class S_USE_SKILL final :
   void _internal_set_skillid(uint32_t value);
   public:
 
+  // float chargeScale = 4;
+  void clear_chargescale();
+  float chargescale() const;
+  void set_chargescale(float value);
+  private:
+  float _internal_chargescale() const;
+  void _internal_set_chargescale(float value);
+  public:
+
   // @@protoc_insertion_point(class_scope:Protocol.S_USE_SKILL)
  private:
   class _Internal;
@@ -3981,6 +4010,7 @@ class S_USE_SKILL final :
     uint64_t playerid_;
     uint64_t targetid_;
     uint32_t skillid_;
+    float chargescale_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -4763,6 +4793,313 @@ class C_LEVEL_READY final :
   typedef void DestructorSkippable_;
   struct Impl_ {
   };
+  friend struct ::TableStruct_Protocol_2eproto;
+};
+// -------------------------------------------------------------------
+
+class C_START_SKILL_CHARGE final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:Protocol.C_START_SKILL_CHARGE) */ {
+ public:
+  inline C_START_SKILL_CHARGE() : C_START_SKILL_CHARGE(nullptr) {}
+  ~C_START_SKILL_CHARGE() override;
+  explicit PROTOBUF_CONSTEXPR C_START_SKILL_CHARGE(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  C_START_SKILL_CHARGE(const C_START_SKILL_CHARGE& from);
+  C_START_SKILL_CHARGE(C_START_SKILL_CHARGE&& from) noexcept
+    : C_START_SKILL_CHARGE() {
+    *this = ::std::move(from);
+  }
+
+  inline C_START_SKILL_CHARGE& operator=(const C_START_SKILL_CHARGE& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline C_START_SKILL_CHARGE& operator=(C_START_SKILL_CHARGE&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const C_START_SKILL_CHARGE& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const C_START_SKILL_CHARGE* internal_default_instance() {
+    return reinterpret_cast<const C_START_SKILL_CHARGE*>(
+               &_C_START_SKILL_CHARGE_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    29;
+
+  friend void swap(C_START_SKILL_CHARGE& a, C_START_SKILL_CHARGE& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(C_START_SKILL_CHARGE* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(C_START_SKILL_CHARGE* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  C_START_SKILL_CHARGE* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<C_START_SKILL_CHARGE>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const C_START_SKILL_CHARGE& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const C_START_SKILL_CHARGE& from) {
+    C_START_SKILL_CHARGE::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(C_START_SKILL_CHARGE* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "Protocol.C_START_SKILL_CHARGE";
+  }
+  protected:
+  explicit C_START_SKILL_CHARGE(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kSkillidFieldNumber = 1,
+  };
+  // uint32 skillid = 1;
+  void clear_skillid();
+  uint32_t skillid() const;
+  void set_skillid(uint32_t value);
+  private:
+  uint32_t _internal_skillid() const;
+  void _internal_set_skillid(uint32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:Protocol.C_START_SKILL_CHARGE)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    uint32_t skillid_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_Protocol_2eproto;
+};
+// -------------------------------------------------------------------
+
+class S_START_SKILL_CHARGE final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:Protocol.S_START_SKILL_CHARGE) */ {
+ public:
+  inline S_START_SKILL_CHARGE() : S_START_SKILL_CHARGE(nullptr) {}
+  ~S_START_SKILL_CHARGE() override;
+  explicit PROTOBUF_CONSTEXPR S_START_SKILL_CHARGE(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  S_START_SKILL_CHARGE(const S_START_SKILL_CHARGE& from);
+  S_START_SKILL_CHARGE(S_START_SKILL_CHARGE&& from) noexcept
+    : S_START_SKILL_CHARGE() {
+    *this = ::std::move(from);
+  }
+
+  inline S_START_SKILL_CHARGE& operator=(const S_START_SKILL_CHARGE& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline S_START_SKILL_CHARGE& operator=(S_START_SKILL_CHARGE&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const S_START_SKILL_CHARGE& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const S_START_SKILL_CHARGE* internal_default_instance() {
+    return reinterpret_cast<const S_START_SKILL_CHARGE*>(
+               &_S_START_SKILL_CHARGE_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    30;
+
+  friend void swap(S_START_SKILL_CHARGE& a, S_START_SKILL_CHARGE& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(S_START_SKILL_CHARGE* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(S_START_SKILL_CHARGE* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  S_START_SKILL_CHARGE* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<S_START_SKILL_CHARGE>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const S_START_SKILL_CHARGE& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const S_START_SKILL_CHARGE& from) {
+    S_START_SKILL_CHARGE::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(S_START_SKILL_CHARGE* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "Protocol.S_START_SKILL_CHARGE";
+  }
+  protected:
+  explicit S_START_SKILL_CHARGE(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kPlayeridFieldNumber = 1,
+    kSkillidFieldNumber = 2,
+  };
+  // uint64 playerid = 1;
+  void clear_playerid();
+  uint64_t playerid() const;
+  void set_playerid(uint64_t value);
+  private:
+  uint64_t _internal_playerid() const;
+  void _internal_set_playerid(uint64_t value);
+  public:
+
+  // uint32 skillid = 2;
+  void clear_skillid();
+  uint32_t skillid() const;
+  void set_skillid(uint32_t value);
+  private:
+  uint32_t _internal_skillid() const;
+  void _internal_set_skillid(uint32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:Protocol.S_START_SKILL_CHARGE)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    uint64_t playerid_;
+    uint32_t skillid_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
   friend struct ::TableStruct_Protocol_2eproto;
 };
 // ===================================================================
@@ -6387,6 +6724,26 @@ inline void C_USE_SKILL::set_targetid(uint64_t value) {
   // @@protoc_insertion_point(field_set:Protocol.C_USE_SKILL.targetId)
 }
 
+// float chargeScale = 6;
+inline void C_USE_SKILL::clear_chargescale() {
+  _impl_.chargescale_ = 0;
+}
+inline float C_USE_SKILL::_internal_chargescale() const {
+  return _impl_.chargescale_;
+}
+inline float C_USE_SKILL::chargescale() const {
+  // @@protoc_insertion_point(field_get:Protocol.C_USE_SKILL.chargeScale)
+  return _internal_chargescale();
+}
+inline void C_USE_SKILL::_internal_set_chargescale(float value) {
+  
+  _impl_.chargescale_ = value;
+}
+inline void C_USE_SKILL::set_chargescale(float value) {
+  _internal_set_chargescale(value);
+  // @@protoc_insertion_point(field_set:Protocol.C_USE_SKILL.chargeScale)
+}
+
 // -------------------------------------------------------------------
 
 // S_USE_SKILL
@@ -6449,6 +6806,26 @@ inline void S_USE_SKILL::_internal_set_targetid(uint64_t value) {
 inline void S_USE_SKILL::set_targetid(uint64_t value) {
   _internal_set_targetid(value);
   // @@protoc_insertion_point(field_set:Protocol.S_USE_SKILL.targetId)
+}
+
+// float chargeScale = 4;
+inline void S_USE_SKILL::clear_chargescale() {
+  _impl_.chargescale_ = 0;
+}
+inline float S_USE_SKILL::_internal_chargescale() const {
+  return _impl_.chargescale_;
+}
+inline float S_USE_SKILL::chargescale() const {
+  // @@protoc_insertion_point(field_get:Protocol.S_USE_SKILL.chargeScale)
+  return _internal_chargescale();
+}
+inline void S_USE_SKILL::_internal_set_chargescale(float value) {
+  
+  _impl_.chargescale_ = value;
+}
+inline void S_USE_SKILL::set_chargescale(float value) {
+  _internal_set_chargescale(value);
+  // @@protoc_insertion_point(field_set:Protocol.S_USE_SKILL.chargeScale)
 }
 
 // -------------------------------------------------------------------
@@ -6751,9 +7128,81 @@ inline void S_CHANGE_LEVEL::set_allocated_level_name(std::string* level_name) {
 
 // C_LEVEL_READY
 
+// -------------------------------------------------------------------
+
+// C_START_SKILL_CHARGE
+
+// uint32 skillid = 1;
+inline void C_START_SKILL_CHARGE::clear_skillid() {
+  _impl_.skillid_ = 0u;
+}
+inline uint32_t C_START_SKILL_CHARGE::_internal_skillid() const {
+  return _impl_.skillid_;
+}
+inline uint32_t C_START_SKILL_CHARGE::skillid() const {
+  // @@protoc_insertion_point(field_get:Protocol.C_START_SKILL_CHARGE.skillid)
+  return _internal_skillid();
+}
+inline void C_START_SKILL_CHARGE::_internal_set_skillid(uint32_t value) {
+  
+  _impl_.skillid_ = value;
+}
+inline void C_START_SKILL_CHARGE::set_skillid(uint32_t value) {
+  _internal_set_skillid(value);
+  // @@protoc_insertion_point(field_set:Protocol.C_START_SKILL_CHARGE.skillid)
+}
+
+// -------------------------------------------------------------------
+
+// S_START_SKILL_CHARGE
+
+// uint64 playerid = 1;
+inline void S_START_SKILL_CHARGE::clear_playerid() {
+  _impl_.playerid_ = uint64_t{0u};
+}
+inline uint64_t S_START_SKILL_CHARGE::_internal_playerid() const {
+  return _impl_.playerid_;
+}
+inline uint64_t S_START_SKILL_CHARGE::playerid() const {
+  // @@protoc_insertion_point(field_get:Protocol.S_START_SKILL_CHARGE.playerid)
+  return _internal_playerid();
+}
+inline void S_START_SKILL_CHARGE::_internal_set_playerid(uint64_t value) {
+  
+  _impl_.playerid_ = value;
+}
+inline void S_START_SKILL_CHARGE::set_playerid(uint64_t value) {
+  _internal_set_playerid(value);
+  // @@protoc_insertion_point(field_set:Protocol.S_START_SKILL_CHARGE.playerid)
+}
+
+// uint32 skillid = 2;
+inline void S_START_SKILL_CHARGE::clear_skillid() {
+  _impl_.skillid_ = 0u;
+}
+inline uint32_t S_START_SKILL_CHARGE::_internal_skillid() const {
+  return _impl_.skillid_;
+}
+inline uint32_t S_START_SKILL_CHARGE::skillid() const {
+  // @@protoc_insertion_point(field_get:Protocol.S_START_SKILL_CHARGE.skillid)
+  return _internal_skillid();
+}
+inline void S_START_SKILL_CHARGE::_internal_set_skillid(uint32_t value) {
+  
+  _impl_.skillid_ = value;
+}
+inline void S_START_SKILL_CHARGE::set_skillid(uint32_t value) {
+  _internal_set_skillid(value);
+  // @@protoc_insertion_point(field_set:Protocol.S_START_SKILL_CHARGE.skillid)
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

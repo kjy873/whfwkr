@@ -295,3 +295,16 @@ bool Handle_S_CHANGE_LEVEL(PacketSessionRef& session, Protocol::S_CHANGE_LEVEL& 
 
 	return true;
 }
+
+bool Handle_S_START_SKILL_CHARGE(PacketSessionRef& session, Protocol::S_START_SKILL_CHARGE& pkt)
+{
+	if (GWorld == nullptr)
+		return false;
+
+	UMainGameInstance* GI = Cast<UMainGameInstance>(GWorld->GetGameInstance());
+	if (GI == nullptr)
+		return false;
+
+	GI->OnRecvStartSkillCharge(pkt);
+	return true;
+}

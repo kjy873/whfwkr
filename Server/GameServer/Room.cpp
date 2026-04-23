@@ -458,12 +458,23 @@ void Room::Broadcast(SendBufferRef sendBuffer, uint64 exceptId)
 	}
 }
 
-void Room::BroadcastUseSkill(uint64 playerId, uint32 skillId, uint64 targetId)
+void Room::BroadcastUseSkill(uint64 playerId, uint32 skillId, float chargeScale)
 {
 	Protocol::S_USE_SKILL pkt;
 	pkt.set_playerid(playerId);
 	pkt.set_skillid(skillId);
-	pkt.set_targetid(targetId);
+	pkt.set_targetid(0);
+	pkt.set_chargescale(chargeScale);
+
+	SendBufferRef send = ServerPacketHandler::MakeSendBuffer(pkt);
+	Broadcast(send);
+}
+
+void Room::BroadcastStartSkillCharge(uint64 playerId, uint32 skillId)
+{
+	Protocol::S_START_SKILL_CHARGE pkt;
+	pkt.set_playerid(playerId);
+	pkt.set_skillid(skillId);
 
 	SendBufferRef send = ServerPacketHandler::MakeSendBuffer(pkt);
 	Broadcast(send);

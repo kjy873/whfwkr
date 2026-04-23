@@ -4,73 +4,57 @@
 #include "GameFramework/Actor.h"
 #include "Projectile.generated.h"
 
-class USceneComponent;
+class UProjectileMovementComponent;
 class USphereComponent;
 class UBoxComponent;
-class UProjectileMovementComponent;
 class APlayerCharacter;
 
 UCLASS()
 class TBD_API AProjectile : public AActor
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	AProjectile();
+    AProjectile();
 
-	void SetProjectileInfo(APlayerCharacter* InOwnerPlayer, int32 InSkillId);
-
-protected:
-	virtual void BeginPlay() override;
-
-	UFUNCTION()
-	void OnProjectileOverlap(
-		UPrimitiveComponent* OverlappedComponent,
-		AActor* OtherActor,
-		UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex,
-		bool bFromSweep,
-		const FHitResult& SweepResult
-	);
-
-public:
-	void ActivateProjectileCollision();
+    void SetProjectileInfo(APlayerCharacter* InOwnerPlayer, int32 InSkillId);
+    void ActivateProjectileCollision();
+    void LaunchProjectile(FVector Direction);
+    void SetChargeScale(float InScale);
 
 protected:
-	bool bLaunched = false;
+    virtual void BeginPlay() override;
+
+    UFUNCTION()
+    void OnProjectileOverlap(
+        UPrimitiveComponent* OverlappedComponent,
+        AActor* OtherActor,
+        UPrimitiveComponent* OtherComp,
+        int32 OtherBodyIndex,
+        bool bFromSweep,
+        const FHitResult& SweepResult
+    );
 
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
-	TObjectPtr<USceneComponent> SceneRoot;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    TObjectPtr<USphereComponent> SphereCollision1;
 
-	// 스피어 1
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
-	TObjectPtr<USphereComponent> SphereCollision1;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    TObjectPtr<USphereComponent> SphereCollision2;
 
-	// 스피어 2
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
-	TObjectPtr<USphereComponent> SphereCollision2;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    TObjectPtr<UBoxComponent> BoxCollision;
 
-	// 박스
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
-	TObjectPtr<UBoxComponent> BoxCollision;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    TObjectPtr<UProjectileMovementComponent> ProjectileMove;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
-	TObjectPtr<UProjectileMovementComponent> ProjectileMove;
+    UPROPERTY()
+    APlayerCharacter* OwnerPlayer = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
-	float Damage = 10.f;
+    int32 SkillId = 0;
+    bool bHasHit = false;
+    bool bLaunched = false;
 
-	UPROPERTY()
-	TObjectPtr<APlayerCharacter> OwnerPlayer;
-
-	UPROPERTY()
-	int32 SkillId = 0;
-
-	UPROPERTY()
-	bool bHasHit = false;
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Projectile")
-	void DebugFunc(AActor* actor);
-	virtual void DebugFunc_Implementation(AActor* actor) {};
+    float BaseSphere1Radius = 0.f;
+    float BaseSphere2Radius = 0.f;
 };
