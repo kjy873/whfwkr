@@ -33,6 +33,12 @@ protected:
 		const FHitResult& SweepResult
 	);
 
+public:
+	void ActivateProjectileCollision();
+
+protected:
+	bool bLaunched = false;
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
 	TObjectPtr<USceneComponent> SceneRoot;
