@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include "CoreMinimal.h"
+#include "AttributeComponent.h"
 #include "GameFramework/Character.h"
 #include "Protocol.pb.h"
 #include "Attributes.h"
@@ -55,43 +56,8 @@ public:
 	bool IsMyPlayer() const { return bIsMine; }
 	
 	// Attrubutes begin
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes")
-	FAttribute Attributes;
-
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	float GetHealthPercent() { return Attributes.GetHealthPercent(); }
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	float GetStaminaPercent() { return Attributes.GetStaminaPercent(); }
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	float GetManaPercent() { return Attributes.GetManaPercent(); }
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	float GetExperiencePercent() { return Attributes.GetExperiencePercent(); }
-
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddHealth(float Value) { Attributes.AddHealth(Value); }
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddStamina(float Value) { Attributes.AddStamina(Value); }
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddMana(float Value) { Attributes.AddMana(Value); }
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	bool AddExperience(float Value) { return Attributes.AddExperience(Value); }
-	
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddMaxHealth(float Value) { Attributes.AddMaxHealth(Value); }
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddMaxStamina(float Value) { Attributes.AddMaxStamina(Value); }
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddMaxMana(float Value) { Attributes.AddMaxMana(Value); }
-
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void SubtractHealth(float Value) { Attributes.SubtractHealth(Value); }
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void SubtractStamina(float Value) { Attributes.SubtractStamina(Value); }
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void SubtractMana(float Value) { Attributes.SubtractMana(Value); }
-	
-	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddBaseDamage(float Value) { Attributes.AddBaseDamage(Value); }
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Target")
+	UAttributeComponent* AttributeComponent;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Target")
 	AActor* LockedTargetActor = nullptr;
@@ -102,7 +68,27 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void Req_UseIceSkill(int32 SkillId, AActor* Target);
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
+	FPlayerUpgradeState UpgradeState;
+
+	UFUNCTION(BlueprintCallable, Category = "UpgradeFunctions")
+	void AddUpgrade(const FName& UpgradeName) { UpgradeState.AddUpgrade(UpgradeName); }
+
+	UFUNCTION(BlueprintCallable, Category = "UpgradeFunctions")
+	bool HasUpgrade(const FName& UpgradeName) const { return UpgradeState.HasUpgrade(UpgradeName); }
+
+	UFUNCTION(BlueprintCallable, Category = "UpgradeFunctions")
+	int GetUpgradeCount(const FName& UpgradeName) const { return UpgradeState.GetUpgradeCount(UpgradeName); }
+
+	UFUNCTION(BlueprintCallable, Category = "UpgradeFunctions")
+	void SetUpgrades(const TMap<FName, int>& Src) { UpgradeState.SetUpgrades(Src); }
+
+	UFUNCTION(BlueprintCallable, Category = "UpgradeFunctions")
+	TMap<FName, int> GetUpgrades() const { return UpgradeState.AquiredUpgrades; }
+
 	// Attributes end
+
+
 
 	// Network Attack Animation
 	UFUNCTION(BlueprintCallable, Category = "Network")

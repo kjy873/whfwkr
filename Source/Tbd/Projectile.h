@@ -65,6 +65,6 @@ protected:
 	bool bHasHit = false;
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Projectile")
-	void DebugFunc();
-	virtual void DebugFunc_Implementation() {};
+	void DebugFunc(AActor* actor);
+	virtual void DebugFunc_Implementation(AActor* actor) {};
 };

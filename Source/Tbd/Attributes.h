@@ -89,6 +89,8 @@ struct FAttribute
 	inline void SubtractMana(float Value) { Mana = FMath::Clamp(Mana - Value, 0.f, MaxMana); }
 
 	inline void AddBaseDamage(float Value) { BaseDamage += Value; }
+	
+	inline int GetCharacterLevel() const { return Level; }
 
 	inline bool AddExperience(float Value)
 	{
@@ -105,6 +107,13 @@ struct FAttribute
 		return LevelUp;
 	}
 
+	inline int GetStrength() const { return Strength; }
+	inline int GetAgility() const { return Agility; }
+	inline int GetIntelligence() const { return Intelligence; }
+	inline void AddStrength(int Value) { Strength += Value; }
+	inline void AddAgility(int Value) { Agility += Value; }
+	inline void AddIntelligence(int Value) { Intelligence += Value; }
+
 
 };
 
@@ -120,6 +129,7 @@ enum class ECharacterType : uint8 {
 	ECT_GameCharacter = ECT_Knight | ECT_Mage
 
 };
+ENUM_CLASS_FLAGS(ECharacterType)
 
 USTRUCT(BlueprintType)
 struct FUpgradeData : public FTableRowBase{
@@ -156,6 +166,64 @@ struct FUpgradeData : public FTableRowBase{
 		, Reusability(false)
 		, ID(0)
 	{
+	}
+
+};
+
+USTRUCT(BlueprintType)
+struct FPlayerUpgradeState
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade State")
+	TMap<FName, int> AquiredUpgrades;
+
+	void InitUpgrades(UDataTable* DataTable, ECharacterType CharacterType) {
+		if (!DataTable) return;
+		AquiredUpgrades.Empty();
+		const TArray<FName> RowNames = DataTable->GetRowNames();
+		for (const FName& RowName : RowNames)
+		{
+			FUpgradeData* Row = DataTable->FindRow<FUpgradeData>(RowName, TEXT(""));
+			if (!Row) continue;
+			if ((Row->CharacterType & CharacterType) != ECharacterType::ECT_None)
+			{
+				AquiredUpgrades.Add(Row->Name, 0);
+			}
+		}
+	}
+
+	void AddUpgrade(const FName& UpgradeName) {
+		int* Count = AquiredUpgrades.Find(UpgradeName);
+		if (Count) {
+			(*Count)++;
+		}
+		else {
+			ensureMsgf(false, TEXT("Upgrade not found: %s"), *UpgradeName.ToString());
+		}
+	}
+
+	bool HasUpgrade(const FName& UpgradeName) const {
+		const int* Count = AquiredUpgrades.Find(UpgradeName);
+		return Count && *Count > 0;
+	}
+
+	void SetUpgrades(const TMap<FName, int>& Src) {
+		for (auto& Pair : AquiredUpgrades)
+		{
+			if (const int* NewValue = Src.Find(Pair.Key))
+			{
+				Pair.Value = *NewValue;
+			}
+		}
+	}
+
+	const TMap<FName, int>& GetUpgrades() const {
+		return AquiredUpgrades;
+	}
+
+	int GetUpgradeCount(const FName& UpgradeName) const {
+		const int* Count = AquiredUpgrades.Find(UpgradeName);
+		return Count ? *Count : 0;
 	}
 
 };
