@@ -89,6 +89,7 @@ struct FAttribute
 	inline void SubtractMana(float Value) { Mana = FMath::Clamp(Mana - Value, 0.f, MaxMana); }
 
 	inline void AddBaseDamage(float Value) { BaseDamage += Value; }
+	inline float GetBaseDamage() const { return BaseDamage; }
 	
 	inline int GetCharacterLevel() const { return Level; }
 

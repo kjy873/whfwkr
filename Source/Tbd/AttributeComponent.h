@@ -60,6 +60,9 @@ public:
 	void AddBaseDamage(float Value) { Attributes.AddBaseDamage(Value); }
 
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
+	float GetBaseDamage() const { return Attributes.GetBaseDamage(); }
+
+	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
 	int GetCharacterLevel() const { return Attributes.GetCharacterLevel(); }
 
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
