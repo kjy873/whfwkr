@@ -33,3 +33,23 @@ void UAttributeComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	// ...
 }
 
+void UAttributeComponent::AddStrength(int Value)
+{
+	Attributes.AddStrength(Value);
+	Attributes.AddMaxHealth(Value * 30.0f);
+	Attributes.AddBaseDamage(Value * 1.0f);
+}
+
+void UAttributeComponent::AddAgility(int Value)
+{
+	Attributes.AddAgility(Value);
+	Attributes.AddMaxStamina(Value * 30.0f);
+	Attributes.AddBaseDamage(Value * 1.5f);
+}
+
+void UAttributeComponent::AddIntelligence(int Value)
+{
+	Attributes.AddIntelligence(Value);
+	Attributes.AddMaxMana(Value * 30.0f);
+	Attributes.AddBaseDamage(Value * 3.0f);
+}

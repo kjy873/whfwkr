@@ -192,20 +192,9 @@ struct FPlayerUpgradeState
 		}
 	}
 
-	void AddUpgrade(const FName& UpgradeName) {
-		int* Count = AquiredUpgrades.Find(UpgradeName);
-		if (Count) {
-			(*Count)++;
-		}
-		else {
-			ensureMsgf(false, TEXT("Upgrade not found: %s"), *UpgradeName.ToString());
-		}
-	}
+	void AddUpgrade(const FName& UpgradeName) { AquiredUpgrades.FindOrAdd(UpgradeName)++; }
 
-	bool HasUpgrade(const FName& UpgradeName) const {
-		const int* Count = AquiredUpgrades.Find(UpgradeName);
-		return Count && *Count > 0;
-	}
+	bool HasUpgrade(const FName& UpgradeName) const { return AquiredUpgrades.Contains(UpgradeName); }
 
 	void SetUpgrades(const TMap<FName, int>& Src) {
 		for (auto& Pair : AquiredUpgrades)

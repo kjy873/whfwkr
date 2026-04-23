@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include "CoreMinimal.h"
 #include "AttributeComponent.h"
+#include "UpgradeComponent.h"
 #include "GameFramework/Character.h"
 #include "Protocol.pb.h"
 #include "Attributes.h"
@@ -55,9 +56,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool IsMyPlayer() const { return bIsMine; }
 	
-	// Attrubutes begin
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Target")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attribute")
 	UAttributeComponent* AttributeComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Upgrade")
+	UUpgradeComponent* UpgradeComponent;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Target")
 	AActor* LockedTargetActor = nullptr;
@@ -67,26 +70,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void Req_UseIceSkill(int32 SkillId, AActor* Target);
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
-	FPlayerUpgradeState UpgradeState;
-
-	UFUNCTION(BlueprintCallable, Category = "UpgradeFunctions")
-	void AddUpgrade(const FName& UpgradeName) { UpgradeState.AddUpgrade(UpgradeName); }
-
-	UFUNCTION(BlueprintCallable, Category = "UpgradeFunctions")
-	bool HasUpgrade(const FName& UpgradeName) const { return UpgradeState.HasUpgrade(UpgradeName); }
-
-	UFUNCTION(BlueprintCallable, Category = "UpgradeFunctions")
-	int GetUpgradeCount(const FName& UpgradeName) const { return UpgradeState.GetUpgradeCount(UpgradeName); }
-
-	UFUNCTION(BlueprintCallable, Category = "UpgradeFunctions")
-	void SetUpgrades(const TMap<FName, int>& Src) { UpgradeState.SetUpgrades(Src); }
-
-	UFUNCTION(BlueprintCallable, Category = "UpgradeFunctions")
-	TMap<FName, int> GetUpgrades() const { return UpgradeState.AquiredUpgrades; }
-
-	// Attributes end
 
 
 

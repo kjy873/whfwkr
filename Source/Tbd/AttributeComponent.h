@@ -69,11 +69,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
 	int GetIntelligence() const { return Attributes.GetIntelligence(); }
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddStrength(int Value) { Attributes.AddStrength(Value); }
+	void AddStrength(int Value);
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddAgility(int Value) { Attributes.AddAgility(Value); }
+	void AddAgility(int Value);
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
-	void AddIntelligence(int Value) { Attributes.AddIntelligence(Value); }
+	void AddIntelligence(int Value);
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
