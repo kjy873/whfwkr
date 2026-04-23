@@ -80,8 +80,23 @@ void AProjectile::SetProjectileInfo(APlayerCharacter* InOwnerPlayer, int32 InSki
 {
 	OwnerPlayer = InOwnerPlayer;
 	SkillId = InSkillId;
+	bLaunched = false;
 
+	SetOwner(InOwnerPlayer);
 	ProjectileMove->SetUpdatedComponent(RootComponent);
+
+	SphereCollision1->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	SphereCollision2->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BoxCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	UE_LOG(LogTemp, Warning, TEXT("[SetProjectileInfo] Skill=%d Owner=%s"),
+		SkillId,
+		*GetNameSafe(OwnerPlayer));
+}
+
+void AProjectile::ActivateProjectileCollision()
+{
+	bLaunched = true;
 
 	SphereCollision1->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	SphereCollision2->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -106,7 +121,7 @@ void AProjectile::SetProjectileInfo(APlayerCharacter* InOwnerPlayer, int32 InSki
 		break;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("[SetProjectileInfo] Skill=%d"), SkillId);
+	UE_LOG(LogTemp, Warning, TEXT("[ActivateProjectileCollision] Skill=%d"), SkillId);
 }
 
 void AProjectile::OnProjectileOverlap(
@@ -118,10 +133,13 @@ void AProjectile::OnProjectileOverlap(
 	const FHitResult& SweepResult
 )
 {
-	if (bHasHit)
+	if (!bLaunched)
 		return;
 
 	if (OtherActor == nullptr || OtherActor == this)
+		return;
+
+	if (OtherActor == GetOwner())
 		return;
 
 	if (OtherActor == OwnerPlayer)
