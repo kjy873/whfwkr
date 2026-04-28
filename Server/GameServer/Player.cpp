@@ -50,7 +50,7 @@ float Player::GetSkillCooldown(int32 skillId) const
 	switch (skillId)
 	{
 	case 0: return 0.75f; // Ice
-	case 1: return 5.0f; // Fire
+	case 1: return 2.0f; // Fire
 	default: return 1.0f;
 	}
 }

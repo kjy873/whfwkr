@@ -1,5 +1,6 @@
 #include "Projectile.h"
 #include "Components/SphereComponent.h"
+#include "Components/SceneComponent.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "PlayerCharacter.h"
@@ -8,8 +9,11 @@ AProjectile::AProjectile()
 {
     PrimaryActorTick.bCanEverTick = false;
 
+    SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("SceneRoot"));
+    RootComponent = SceneRoot;
+
     SphereCollision1 = CreateDefaultSubobject<USphereComponent>(TEXT("SphereCollision1"));
-    RootComponent = SphereCollision1;
+    SphereCollision1->SetupAttachment(SceneRoot);
 
     SphereCollision1->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     SphereCollision1->SetGenerateOverlapEvents(true);
@@ -20,7 +24,8 @@ AProjectile::AProjectile()
     SphereCollision1->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Ignore);
 
     SphereCollision2 = CreateDefaultSubobject<USphereComponent>(TEXT("SphereCollision2"));
-    SphereCollision2->SetupAttachment(RootComponent);
+    SphereCollision2->SetupAttachment(SceneRoot);
+
     SphereCollision2->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     SphereCollision2->SetGenerateOverlapEvents(true);
     SphereCollision2->SetCollisionObjectType(ECC_WorldDynamic);
@@ -29,7 +34,8 @@ AProjectile::AProjectile()
     SphereCollision2->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
 
     BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
-    BoxCollision->SetupAttachment(RootComponent);
+    BoxCollision->SetupAttachment(SceneRoot);
+
     BoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     BoxCollision->SetGenerateOverlapEvents(true);
     BoxCollision->SetCollisionObjectType(ECC_WorldDynamic);
@@ -42,6 +48,7 @@ AProjectile::AProjectile()
     ProjectileMove->MaxSpeed = 2000.f;
     ProjectileMove->ProjectileGravityScale = 0.f;
     ProjectileMove->bAutoActivate = false;
+    ProjectileMove->SetUpdatedComponent(SphereCollision1);
 
     SphereCollision1->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnProjectileOverlap);
     SphereCollision2->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnProjectileOverlap);
@@ -64,6 +71,23 @@ void AProjectile::SetProjectileInfo(APlayerCharacter* InOwnerPlayer, int32 InSki
 
     SetOwner(InOwnerPlayer);
     ProjectileMove->SetUpdatedComponent(RootComponent);
+
+    switch (SkillId)
+    {
+    case 0: // Ice
+        ProjectileMove->InitialSpeed = 1200.f;
+        ProjectileMove->MaxSpeed = 1200.f;
+        break;
+
+    case 1: // Fireball
+        ProjectileMove->InitialSpeed = 800.f;
+        ProjectileMove->MaxSpeed = 800.f;
+        break;
+    }
+
+    SphereCollision1->IgnoreActorWhenMoving(InOwnerPlayer, true);
+    SphereCollision2->IgnoreActorWhenMoving(InOwnerPlayer, true);
+    BoxCollision->IgnoreActorWhenMoving(InOwnerPlayer, true);
 
     SphereCollision1->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     SphereCollision2->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -148,10 +172,7 @@ void AProjectile::OnProjectileOverlap(
     if (OtherActor == nullptr || OtherActor == this)
         return;
 
-    if (OtherActor == GetOwner())
-        return;
-
-    if (OtherActor == OwnerPlayer)
+    if (OtherActor == OwnerPlayer || OtherActor == GetOwner() || OtherActor == GetInstigator())
         return;
 
     bHasHit = true;
