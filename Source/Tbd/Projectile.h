@@ -6,6 +6,7 @@
 
 class UProjectileMovementComponent;
 class USphereComponent;
+class USceneComponent;
 class UBoxComponent;
 class APlayerCharacter;
 
@@ -16,7 +17,6 @@ class TBD_API AProjectile : public AActor
 
 public:
     AProjectile();
-
     void SetProjectileInfo(APlayerCharacter* InOwnerPlayer, int32 InSkillId);
     void ActivateProjectileCollision();
     void LaunchProjectile(FVector Direction);
@@ -36,6 +36,9 @@ protected:
     );
 
 protected:
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    TObjectPtr<USceneComponent> SceneRoot;
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     TObjectPtr<USphereComponent> SphereCollision1;
 

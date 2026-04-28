@@ -748,11 +748,7 @@ void UMainGameInstance::OnRecvUseSkill(const Protocol::S_USE_SKILL& pkt)
 	if (Player == nullptr)
 		return;
 
-	if (Player->IsMyPlayer())
-	{
-		Player->PlaySkill(SkillId);
-	}
-	else
+	if (!Player->IsMyPlayer())
 	{
 		Player->PlayOtherPlayerSkill(SkillId);
 	}
@@ -770,6 +766,11 @@ void UMainGameInstance::OnRecvUseSkill(const Protocol::S_USE_SKILL& pkt)
 	default:
 		break;
 	}
+	UE_LOG(LogTemp, Warning, TEXT("[OnRecvUseSkill] PlayerId=%llu MyObjectId=%llu SkillId=%d IsMine=%d"),
+		PlayerId,
+		MyObjectId,
+		SkillId,
+		Player->IsMyPlayer() ? 1 : 0);
 }
 
 void UMainGameInstance::OnRecvStartSkillCharge(const Protocol::S_START_SKILL_CHARGE& pkt)
@@ -824,11 +825,23 @@ void UMainGameInstance::HandleIceSkillPacket(uint64 CasterID, uint64 TargetID)
 	if (Projectile)
 	{
 		Projectile->SetProjectileInfo(Caster, 0);
+
 		UE_LOG(LogTemp, Warning, TEXT("[HandleIceSkillPacket] SetProjectileInfo Owner=%s SkillId=%d"),
 			*GetNameSafe(Caster), 0);
 	}
 
 	SpawnedActor->FinishSpawning(SpawnTransform);
+
+	if (Projectile)
+	{
+		FVector Forward = Caster->GetActorForwardVector();
+
+		Projectile->ActivateProjectileCollision();
+		Projectile->LaunchProjectile(Forward);
+
+		UE_LOG(LogTemp, Warning, TEXT("[HandleIceSkillPacket] Ice Launch Forward=%s"),
+			*Forward.ToString());
+	}
 }
 
 void UMainGameInstance::HandleFireballSkillPacket(uint64 CasterID, float ChargeScale)
@@ -846,7 +859,7 @@ void UMainGameInstance::HandleFireballSkillPacket(uint64 CasterID, float ChargeS
 	ChargeScale = FMath::Clamp(ChargeScale, 0.2f, 2.0f);
 
 	FVector Forward = Caster->GetActorForwardVector();
-	FVector SpawnLocation = Caster->GetMesh()->GetSocketLocation(TEXT("RightHandSpellSocket")) + Forward * 100.f;
+	FVector SpawnLocation = Caster->GetMesh()->GetSocketLocation(TEXT("RightHandSpellSocket")) + Forward * 50.f;
 	FRotator SpawnRotation = Forward.Rotation();
 
 	AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(
@@ -863,7 +876,4 @@ void UMainGameInstance::HandleFireballSkillPacket(uint64 CasterID, float ChargeS
 	Projectile->SetChargeScale(ChargeScale);
 	Projectile->ActivateProjectileCollision();
 	Projectile->LaunchProjectile(Forward);
-
-	UE_LOG(LogTemp, Warning, TEXT("[HandleFireballSkillPacket] CasterID=%llu ChargeScale=%f"),
-		CasterID, ChargeScale);
 }
