@@ -13,6 +13,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStaminaChanged, float, Rate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnManaChanged, float, Rate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEXPChanged, float, Rate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelChanged, int, Rate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStrengthChanged, int, Value);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAgilityChanged, int, Value);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnIntelligenceChanged, int, Value);
+
 
 struct FAttribute;
 
@@ -35,6 +39,12 @@ class TBD_API UAttributeComponent : public UActorComponent
 	FOnEXPChanged OnEXPChanged;
 	UPROPERTY(BlueprintAssignable, Category = "AttributeDelegates")
 	FOnLevelChanged OnLevelChanged;
+	UPROPERTY(BlueprintAssignable, Category = "AttributeDelegates")
+	FOnStrengthChanged OnStrengthChanged;
+	UPROPERTY(BlueprintAssignable, Category = "AttributeDelegates")
+	FOnAgilityChanged OnAgilityChanged;
+	UPROPERTY(BlueprintAssignable, Category = "AttributeDelegates")
+	FOnIntelligenceChanged OnIntelligenceChanged;
 
 
 

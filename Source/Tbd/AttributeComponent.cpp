@@ -38,6 +38,7 @@ void UAttributeComponent::AddStrength(int Value)
 	Attributes.AddStrength(Value);
 	Attributes.AddMaxHealth(Value * 30.0f);
 	Attributes.AddBaseDamage(Value * 1.0f);
+	OnStrengthChanged.Broadcast(Attributes.GetStrength());
 }
 
 void UAttributeComponent::AddAgility(int Value)
@@ -45,6 +46,7 @@ void UAttributeComponent::AddAgility(int Value)
 	Attributes.AddAgility(Value);
 	Attributes.AddMaxStamina(Value * 30.0f);
 	Attributes.AddBaseDamage(Value * 1.5f);
+	OnAgilityChanged.Broadcast(Attributes.GetAgility());
 }
 
 void UAttributeComponent::AddIntelligence(int Value)
@@ -52,4 +54,5 @@ void UAttributeComponent::AddIntelligence(int Value)
 	Attributes.AddIntelligence(Value);
 	Attributes.AddMaxMana(Value * 30.0f);
 	Attributes.AddBaseDamage(Value * 3.0f);
+	OnIntelligenceChanged.Broadcast(Attributes.GetIntelligence());
 }
