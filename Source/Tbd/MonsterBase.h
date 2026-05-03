@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "GameFramework/Character.h"
 #include "MonsterBase.generated.h"
 
@@ -14,7 +15,13 @@ class TBD_API AMonsterBase : public ACharacter
 public:
 	AMonsterBase();
 
+protected:
+	virtual void BeginPlay() override;
+
 public:
-	UFUNCTION(BlueprintImplementableEvent)
-	void BP_OnHitBySkill(APlayerCharacter* Attacker, int32 SkillId);
+	UFUNCTION(BlueprintCallable)
+	void OnHitBySkill(APlayerCharacter* Attacker, int32 SkillId);
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void RecvDamageFromSkill(float Damage, APlayerCharacter* Attacker, int32 SkillId, FGameplayTag DamageType);
 };

@@ -296,40 +296,6 @@ bool Room::EnterPlayer(PlayerRef player, RoomRef self)
 	return true;
 }
 
-void Room::StartReturnToMap1Timer()
-{
-	WRITE_LOCK;
-
-	if (bReturnToMap1TimerStarted)
-		return;
-
-	bReturnToMap1TimerStarted = true;
-
-	RoomRef room = static_pointer_cast<Room>(shared_from_this());
-
-	std::thread([room]()
-		{
-			std::this_thread::sleep_for(std::chrono::seconds(20));
-
-			room->DoAsync([room]()
-				{
-					room->bReturnToMap1TimerStarted = false;
-
-					vector<PlayerRef> playersToMove;
-					for (auto& item : room->_players)
-					{
-						if (item.second)
-							playersToMove.push_back(item.second);
-					}
-
-					for (auto& player : playersToMove)
-					{
-						GRoomManager.MoveToHuntingRoom(player);
-					}
-				});
-		}).detach();
-}
-
 void Room::SendExistingPlayersTo(GameSessionRef session, uint64 excludeObjectId)
 {
 	WRITE_LOCK;
