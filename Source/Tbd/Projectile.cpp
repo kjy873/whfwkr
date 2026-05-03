@@ -1,4 +1,5 @@
 #include "Projectile.h"
+#include "MonsterBase.h"
 #include "Components/SphereComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/BoxComponent.h"
@@ -175,19 +176,37 @@ void AProjectile::OnProjectileOverlap(
     if (OtherActor == OwnerPlayer || OtherActor == GetOwner() || OtherActor == GetInstigator())
         return;
 
-    bHasHit = true;
-
+    // 플레이어 피격 판정
     APlayerCharacter* HitPlayer = Cast<APlayerCharacter>(OtherActor);
-
-    UE_LOG(LogTemp, Warning, TEXT("[Projectile] Before OnHitBySkill Target=%s Owner=%s SkillId=%d"),
-        *GetNameSafe(HitPlayer),
-        *GetNameSafe(OwnerPlayer),
-        SkillId);
-
     if (HitPlayer && OwnerPlayer)
     {
+        bHasHit = true;
+
+        UE_LOG(LogTemp, Warning, TEXT("[Projectile] Hit Player Target=%s Owner=%s SkillId=%d"),
+            *GetNameSafe(HitPlayer),
+            *GetNameSafe(OwnerPlayer),
+            SkillId);
+
         HitPlayer->OnHitBySkill(OwnerPlayer, SkillId);
+
+        Destroy();
+        return;
     }
 
-    Destroy();
+    // 몬스터 피격 판정
+    AMonsterBase* HitMonster = Cast<AMonsterBase>(OtherActor);
+    if (HitMonster && OwnerPlayer)
+    {
+        bHasHit = true;
+
+        UE_LOG(LogTemp, Warning, TEXT("[Projectile] Hit Monster Target=%s Owner=%s SkillId=%d"),
+            *GetNameSafe(HitMonster),
+            *GetNameSafe(OwnerPlayer),
+            SkillId);
+
+        HitMonster->OnHitBySkill(OwnerPlayer, SkillId);
+
+        Destroy();
+        return;
+    }
 }

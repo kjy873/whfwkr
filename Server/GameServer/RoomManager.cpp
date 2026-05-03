@@ -70,7 +70,7 @@ void RoomManager::Update(float deltaTime)
 
         _roundTimer += deltaTime;
 
-        if (_roundTimer < 20.0f)
+        if (_roundTimer < 60.0f)
             return;
 
         _roundTimer = 0.0f;
