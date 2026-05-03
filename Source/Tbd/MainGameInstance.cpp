@@ -328,6 +328,12 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 		LocalPlayer->SetActorLocation(SpawnLocation);
 		LocalPlayer->SetActorRotation(SpawnRotation);
 
+		UUpgradeComponent* UpgradeComp = LocalPlayer->FindComponentByClass<UUpgradeComponent>();
+		if (UpgradeComp)
+		{
+			//UpgradeComp->SetUpgrades(LocalPlayerUpgradeMap);
+		}
+
 		if (UCharacterMovementComponent* MoveComp = LocalPlayer->GetCharacterMovement())
 		{
 			MoveComp->StopMovementImmediately();

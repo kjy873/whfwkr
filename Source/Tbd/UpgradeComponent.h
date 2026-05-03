@@ -39,7 +39,7 @@ public:
 	bool HasUpgrade(const FName& UpgradeName) const { return UpgradeState.HasUpgrade(UpgradeName); }
 
 	UFUNCTION(BlueprintCallable, Category = "Upgrade")
-	void SetupUpgrades(const TMap<FName, int>& Src) { UpgradeState.SetUpgrades(Src); }
+	void SetUpgrades(const TMap<FName, int>& Src) { UpgradeState.SetUpgrades(Src); }
 
 	UFUNCTION(BlueprintCallable, Category = "Upgrade")
 	TMap<FName, int> GetUpgrades() const { return UpgradeState.AquiredUpgrades; }

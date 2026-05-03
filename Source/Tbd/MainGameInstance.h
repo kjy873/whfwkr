@@ -144,4 +144,12 @@ private:
 
 	FProcHandle ServerProcHandle;
 	bool bStartedServer = false;
+
+private:
+	TMap<FName, int> LocalPlayerUpgradeMap;
+public:
+	UFUNCTION(BlueprintCallable, Category = "Upgrade")
+	const TMap<FName, int>& GetLocalPlayerUpgradeMap() const { return LocalPlayerUpgradeMap; }
+	UFUNCTION(BlueprintCallable, Category = "Upgrade")
+	void SetLocalPlayerUpgradeMap(const TMap<FName, int>& NewMap) { LocalPlayerUpgradeMap = NewMap; }
 };

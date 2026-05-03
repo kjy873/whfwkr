@@ -198,13 +198,7 @@ struct FPlayerUpgradeState
 	bool HasUpgrade(const FName& UpgradeName) const { return AquiredUpgrades.Contains(UpgradeName); }
 
 	void SetUpgrades(const TMap<FName, int>& Src) {
-		for (auto& Pair : AquiredUpgrades)
-		{
-			if (const int* NewValue = Src.Find(Pair.Key))
-			{
-				Pair.Value = *NewValue;
-			}
-		}
+		AquiredUpgrades = Src;
 	}
 
 	const TMap<FName, int>& GetUpgrades() const {
