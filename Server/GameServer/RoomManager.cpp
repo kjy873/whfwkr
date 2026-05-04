@@ -70,7 +70,7 @@ void RoomManager::Update(float deltaTime)
 
         _roundTimer += deltaTime;
 
-        if (_roundTimer < 60.0f)
+        if (_roundTimer < 20.0f)
             return;
 
         _roundTimer = 0.0f;
@@ -103,6 +103,10 @@ void RoomManager::StartRound(const vector<PlayerRef>& players)
     _roundPlayers = players;
     _roundTimer = 0.0f;
     _isBattlePhase = false;
+
+    cout << "[StartRound] playerCount=" << _roundPlayers.size()
+        << " tick=" << GetTickCount64()
+        << endl;
 }
 
 void RoomManager::MoveRoundPlayersToBattle()

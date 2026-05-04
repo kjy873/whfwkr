@@ -5,9 +5,8 @@
 #include "CoreMinimal.h"
 #include "Tbd.h"
 
-/**
- * 
- */
+class UMainGameInstance;
+
 class TBD_API PacketSession : public TSharedFromThis<PacketSession>
 {
 public:
@@ -31,5 +30,17 @@ public:
 
 	TQueue<TArray<uint8>> RecvPacketQueue;
 	TQueue<SendBufferRef> SendPacketQueue;
+
+	TWeakObjectPtr<UMainGameInstance> OwnerGameInstance;
+
+	void SetOwnerGameInstance(UMainGameInstance* InGameInstance)
+	{
+		OwnerGameInstance = InGameInstance;
+	}
+
+	UMainGameInstance* GetOwnerGameInstance() const
+	{
+		return OwnerGameInstance.Get();
+	}
 };
 

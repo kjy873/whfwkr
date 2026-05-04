@@ -24,9 +24,19 @@
 
 void UMainGameInstance::ConnectToGameServer()
 {
+	if (Socket != nullptr || GameServerSession.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[ConnectToGameServer] Already connected or connecting. Skip. this=%p Socket=%p SessionValid=%d"),
+			this,
+			Socket,
+			GameServerSession.IsValid());
+		return;
+	}
+
 	FString ConfigIP;
 	if (GConfig->GetString(TEXT("Network"), TEXT("ServerIP"), ConfigIP, GGameIni) && !ConfigIP.IsEmpty())
 		IpAddress = ConfigIP;
+
 	FString ConfigPortStr;
 	if (GConfig->GetString(TEXT("Network"), TEXT("ServerPort"), ConfigPortStr, GGameIni) && ConfigPortStr.IsEmpty() == false)
 	{
@@ -34,54 +44,83 @@ void UMainGameInstance::ConnectToGameServer()
 		if (P > 0 && P < 65536)
 			Port = static_cast<int16>(P);
 	}
+
 	FString CommandLineIP;
 	if (FParse::Value(FCommandLine::Get(), TEXT("TargetIP="), CommandLineIP))
 	{
 		IpAddress = CommandLineIP;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Attempting to connect to: %s"), *IpAddress);
+	UE_LOG(LogTemp, Warning, TEXT("[ConnectToGameServer] Attempting to connect. this=%p IP=%s Port=%d"),
+		this,
+		*IpAddress,
+		Port);
 
 	Players.Empty();
 	MyPlayer = nullptr;
 	MyObjectId = 0;
 
 	Socket = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(TEXT("Stream"), TEXT("Client Socket"));
+	if (Socket == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ConnectToGameServer] CreateSocket failed"));
+		return;
+	}
+
 	Socket->SetNonBlocking(true);
 
 	FIPv4Address Ip;
-	FIPv4Address::Parse(IpAddress, Ip);
+	if (FIPv4Address::Parse(IpAddress, Ip) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[ConnectToGameServer] Invalid IP: %s"), *IpAddress);
+
+		ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->DestroySocket(Socket);
+		Socket = nullptr;
+		return;
+	}
 
 	TSharedRef<FInternetAddr> InternetAddr = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
 	InternetAddr->SetIp(Ip.Value);
 	InternetAddr->SetPort(Port);
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Connecting To Server...")));
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Connecting To Server..."));
 
 	bool Connected = Socket->Connect(*InternetAddr);
 
 	if (Connected)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Connection Success")));
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Connection Success"));
 
-		// Session
 		GameServerSession = MakeShared<PacketSession>(Socket);
+		GameServerSession->SetOwnerGameInstance(this);
 		GameServerSession->Run();
 
-		{
-			Protocol::C_LOGIN Pkt;
-			SendBufferRef SendBuffer = ClientPacketHandler::MakeSendBuffer(Pkt);
-			SendPacket(SendBuffer);
-		}
+		StartRecvPacketsTimer();
+
+		UE_LOG(LogTemp, Warning, TEXT("[ConnectToGameServer] Connected. RecvTimer started. this=%p Socket=%p SessionValid=%d"),
+			this,
+			Socket,
+			GameServerSession.IsValid());
+
+		Protocol::C_LOGIN Pkt;
+		SendBufferRef SendBuffer = ClientPacketHandler::MakeSendBuffer(Pkt);
+		SendPacket(SendBuffer);
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Connection Failed")));
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Connection Failed"));
+
+		UE_LOG(LogTemp, Error, TEXT("[ConnectToGameServer] Connection failed. this=%p"), this);
+
+		ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->DestroySocket(Socket);
+		Socket = nullptr;
+		GameServerSession.Reset();
 	}
 }
 
 void UMainGameInstance::DisconnectToGameServer()
 {
+	StopRecvPacketsTimer();
 
 	if ( Socket == nullptr || GameServerSession == nullptr )
 		return;
@@ -108,20 +147,8 @@ void UMainGameInstance::Init()
 
 	ClientPacketHandler::Init();
 
-	//ConnectToGameServer();
-
-	if (UWorld* World = GetWorld()) 
-	{
-		World->GetTimerManager().SetTimer(
-			RecvPacketsTimerHandle,
-			this,
-			&UMainGameInstance::HandleRecvPackets,
-			0.01f,
-			true
-		);
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("[MainGameInstance::Init] RecvPackets timer started"));
+	UE_LOG(LogTemp, Warning, TEXT("[MainGameInstance::Init] Init complete. RecvPackets timer NOT started here. this=%p"),
+		this);
 }
 
 void UMainGameInstance::Shutdown()
@@ -195,13 +222,16 @@ void UMainGameInstance::StopServerProcess()
 
 void UMainGameInstance::HandleRecvPackets()
 {
-	if ( Socket == nullptr || GameServerSession == nullptr)
+	if (Socket == nullptr || GameServerSession == nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[HandleRecvPackets] Socket or Session is nullptr"));
 		return;
 	}
-	
-	UE_LOG(LogTemp, VeryVerbose, TEXT("[HandleRecvPackets] Calling HandleRecvPackets..."));
+
+	UE_LOG(LogTemp, VeryVerbose, TEXT("[HandleRecvPackets] this=%p World=%s MyObjectId=%llu"),
+		this,
+		*GetNameSafe(GetWorld()),
+		MyObjectId);
+
 	GameServerSession->HandleRecvPackets();
 }
 
@@ -250,6 +280,49 @@ void UMainGameInstance::SendLevelReady()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[SendLevelReady] World nullptr MyObjectId=%llu"), MyObjectId);
 	}
+}
+
+void UMainGameInstance::StartRecvPacketsTimer()
+{
+	UWorld* World = GetWorld();
+	if (World == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[RecvTimer] Start failed. World is nullptr. this=%p"), this);
+		return;
+	}
+
+	if (World->GetTimerManager().IsTimerActive(RecvPacketsTimerHandle))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[RecvTimer] Already active. Skip. this=%p World=%s"),
+			this,
+			*GetNameSafe(World));
+		return;
+	}
+
+	World->GetTimerManager().SetTimer(
+		RecvPacketsTimerHandle,
+		this,
+		&UMainGameInstance::HandleRecvPackets,
+		0.01f,
+		true
+	);
+
+	UE_LOG(LogTemp, Warning, TEXT("[RecvTimer] Started. this=%p World=%s"),
+		this,
+		*GetNameSafe(World));
+}
+
+void UMainGameInstance::StopRecvPacketsTimer()
+{
+	UWorld* World = GetWorld();
+	if (World == nullptr)
+		return;
+
+	World->GetTimerManager().ClearTimer(RecvPacketsTimerHandle);
+
+	UE_LOG(LogTemp, Warning, TEXT("[RecvTimer] Stopped. this=%p World=%s"),
+		this,
+		*GetNameSafe(World));
 }
 
 void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool IsMine)
@@ -678,24 +751,57 @@ void UMainGameInstance::HandleDamage(const Protocol::S_DAMAGE_PLAYER& pkt)
 	uint64 ObjectId = pkt.object_id();
 	float Damage = pkt.damage();
 
-	UE_LOG(LogTemp, Warning, TEXT("[HandleDamage] ObjId=%llu Damage=%f"), ObjectId, Damage);
+	APlayerCharacter* Actor = nullptr;
 
-	TWeakObjectPtr<APlayerCharacter>* FoundActor = Players.Find(ObjectId);
-	if (FoundActor == nullptr)
+
+	UE_LOG(LogTemp, Warning, TEXT("[HandleDamage APPLY] this=%p World=%s Actor=%s ObjId=%llu Damage=%f"),
+		this,
+		*GetNameSafe(GetWorld()),
+		*GetNameSafe(Actor),
+		ObjectId,
+		Damage);
+
+	// 내가 맞은 경우
+	if (ObjectId == MyObjectId)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[HandleDamage] Player not found in map"));
+		Actor = MyPlayer.Get();
+
+		if (Actor == nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[HandleDamage] MyPlayer is null ObjId=%llu"), ObjectId);
+			return;
+		}
+	}
+	// 다른 플레이어가 맞은 경우
+	else
+	{
+		TWeakObjectPtr<APlayerCharacter>* FoundActor = Players.Find(ObjectId);
+		if (FoundActor == nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[HandleDamage] Other player not found in map ObjId=%llu"), ObjectId);
+			return;
+		}
+
+		Actor = FoundActor->Get();
+		if (Actor == nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[HandleDamage] Invalid other actor, remove stale entry ObjId=%llu"), ObjectId);
+			Players.Remove(ObjectId);
+			return;
+		}
+	}
+
+	if (Actor->AttributeComponent == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[HandleDamage] AttributeComponent is null Actor=%s"),
+			*GetNameSafe(Actor));
 		return;
 	}
 
-	APlayerCharacter* Actor = FoundActor->Get();
-	if (Actor == nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[HandleDamage] Invalid actor, remove stale entry"));
-		Players.Remove(ObjectId);
-		return;
-	}
+	UE_LOG(LogTemp, Warning, TEXT("[HandleDamage] ApplyDamage Actor=%s ObjId=%llu Damage=%f"),
+		*GetNameSafe(Actor), ObjectId, Damage);
+
 	Actor->AttributeComponent->SubtractHealth(Damage);
-	Actor->PlayOtherPlayerSkill(0);
 	Actor->PlayHitReaction();
 }
 

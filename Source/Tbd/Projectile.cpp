@@ -173,12 +173,18 @@ void AProjectile::OnProjectileOverlap(
     if (OtherActor == nullptr || OtherActor == this)
         return;
 
+    if (OwnerPlayer == nullptr)
+        return;
+
     if (OtherActor == OwnerPlayer || OtherActor == GetOwner() || OtherActor == GetInstigator())
+        return;
+
+    if (OwnerPlayer->IsMyPlayer() == false)
         return;
 
     // 플레이어 피격 판정
     APlayerCharacter* HitPlayer = Cast<APlayerCharacter>(OtherActor);
-    if (HitPlayer && OwnerPlayer)
+    if (HitPlayer)
     {
         bHasHit = true;
 
@@ -195,7 +201,7 @@ void AProjectile::OnProjectileOverlap(
 
     // 몬스터 피격 판정
     AMonsterBase* HitMonster = Cast<AMonsterBase>(OtherActor);
-    if (HitMonster && OwnerPlayer)
+    if (HitMonster)
     {
         bHasHit = true;
 

@@ -82,6 +82,9 @@ public:
 	void SendPacket(SendBufferRef SendBuffer);
 	void SendLevelReady();
 
+	void StartRecvPacketsTimer();
+	void StopRecvPacketsTimer();
+
 public:
 	void HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool IsMine);
 	void HandleSpawn(const Protocol::S_ENTER_GAME& EnterGamePkt);

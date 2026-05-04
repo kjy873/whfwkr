@@ -446,35 +446,6 @@ void Room::BroadcastStartSkillCharge(uint64 playerId, uint32 skillId)
 	Broadcast(send);
 }
 
-void Room::HandlePlayerHit(uint64 attackerId, uint64 targetId)
-{
-	WRITE_LOCK;
-
-	auto it = _players.find(targetId);
-	if (it == _players.end())
-		return;
-
-	PlayerRef target = it->second;
-	if (target->hp <= 0)
-		return;
-
-	int32 damage = 20;
-	target->hp -= damage;
-
-	Protocol::S_DAMAGE_PLAYER pkt;
-	pkt.set_object_id(targetId);
-	pkt.set_damage(damage);
-
-	Broadcast(ServerPacketHandler::MakeSendBuffer(pkt));
-
-	if (target->hp <= 0)
-	{
-		Protocol::S_PLAYER_DEAD deadPkt;
-		deadPkt.set_object_id(targetId);
-		Broadcast(ServerPacketHandler::MakeSendBuffer(deadPkt));
-	}
-}
-
 void Room::HandleAttackPlayerLocked(uint64 attackerId, uint64 targetId, uint32 skillId)
 {
 	WRITE_LOCK;

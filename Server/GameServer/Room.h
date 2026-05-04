@@ -35,7 +35,6 @@ public:
 	void HandleAttackMobLocked(uint64 playerId, uint64 mobId);
 	void BroadcastUseSkill(uint64 playerId, uint32 skillId, float chargeScale);
 	void BroadcastStartSkillCharge(uint64 playerId, uint32 skillId);
-	void HandlePlayerHit(uint64 attackerId, uint64 targetId);
 	void HandleAttackPlayerLocked(uint64 attackerId, uint64 targetId, uint32 skillId);
 
 	void SetRoomType(RoomType NewType) { _roomType = NewType; }

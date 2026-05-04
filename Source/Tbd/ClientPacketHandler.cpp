@@ -2,6 +2,7 @@
 #include "BufferReader.h"
 #include "Tbd.h"
 #include "MainGameInstance.h"
+#include "PacketSession.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "Player/PlayerCharacter.h"
@@ -143,31 +144,27 @@ bool Handle_S_CHAT(PacketSessionRef& session, Protocol::S_CHAT& pkt)
 
 bool Handle_S_DAMAGE_PLAYER(PacketSessionRef& session, Protocol::S_DAMAGE_PLAYER& pkt)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_DAMAGE_PLAYER] packet arrived obj=%llu damage=%d"),
-		(unsigned long long)pkt.object_id(), (int32)pkt.damage());
+	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_DAMAGE_PLAYER] packet arrived session=%p obj=%llu damage=%d"),
+		session.Get(),
+		(unsigned long long)pkt.object_id(),
+		(int32)pkt.damage());
 
-	if (GEngine == nullptr)
+	if (session == nullptr)
 		return false;
 
-	bool bHandled = false;
-
-	for (const FWorldContext& Context : GEngine->GetWorldContexts())
+	UMainGameInstance* GI = session->GetOwnerGameInstance();
+	if (GI == nullptr)
 	{
-		if (Context.OwningGameInstance == nullptr)
-			continue;
-
-		UMainGameInstance* GI = Cast<UMainGameInstance>(Context.OwningGameInstance);
-		if (GI == nullptr)
-			continue;
-
-		UE_LOG(LogTemp, Warning, TEXT("[Handle_S_DAMAGE_PLAYER] dispatch GI=%p WorldType=%d"),
-			GI, (int32)Context.WorldType);
-
-		GI->HandleDamage(pkt);
-		bHandled = true;
+		UE_LOG(LogTemp, Warning, TEXT("[Handle_S_DAMAGE_PLAYER] OwnerGameInstance is null session=%p"),
+			session.Get());
+		return false;
 	}
 
-	return bHandled;
+	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_DAMAGE_PLAYER] dispatch only owner GI=%p"),
+		GI);
+
+	GI->HandleDamage(pkt);
+	return true;
 }
 
 bool Handle_S_PLAYER_DEAD(PacketSessionRef& session, Protocol::S_PLAYER_DEAD& pkt)
