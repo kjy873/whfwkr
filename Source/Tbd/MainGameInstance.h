@@ -147,6 +147,10 @@ private:
 
 private:
 	TMap<FName, int> LocalPlayerUpgradeMap;
+	TMap<uint64, bool> NextIceRightHandMap;
+	TMap<uint64, float> LastIceFireTimeMap;
+
+	float IceComboResetTime = 1.8f;
 public:
 	UFUNCTION(BlueprintCallable, Category = "Upgrade")
 	const TMap<FName, int>& GetLocalPlayerUpgradeMap() const { return LocalPlayerUpgradeMap; }

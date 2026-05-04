@@ -809,13 +809,82 @@ void UMainGameInstance::HandleIceSkillPacket(uint64 CasterID, uint64 TargetID)
 		Target = Monsters[TargetID];
 	}
 
-	FVector SpawnLocation = Caster->GetActorLocation() + Caster->GetActorForwardVector() * 100.0f;
+	if (IceProjectileBPClass == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[HandleIceSkillPacket] IceProjectileBPClass is nullptr"));
+		return;
+	}
+
+	FVector Forward = Caster->GetActorForwardVector();
+	FVector Right = Caster->GetActorRightVector();
+
+	FVector BaseLocation = Caster->GetActorLocation() + Forward * 100.0f;
+
+	float CurrentTime = GetWorld()->GetTimeSeconds();
+
+	bool bUseRightHand = true;
+
+	bool* SavedNextHand = NextIceRightHandMap.Find(CasterID);
+	float* SavedLastTime = LastIceFireTimeMap.Find(CasterID);
+
+	if (SavedNextHand != nullptr && SavedLastTime != nullptr)
+	{
+		float DeltaTime = CurrentTime - *SavedLastTime;
+
+		if (DeltaTime <= IceComboResetTime)
+		{
+			bUseRightHand = *SavedNextHand;
+		}
+		else
+		{
+			bUseRightHand = true;
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT("[IceCombo] CasterID=%llu DeltaTime=%f ResetTime=%f"),
+			(unsigned long long)CasterID,
+			DeltaTime,
+			IceComboResetTime);
+	}
+	else
+	{
+		bUseRightHand = true;
+
+		UE_LOG(LogTemp, Warning, TEXT("[IceCombo] CasterID=%llu First Ice"),
+			(unsigned long long)CasterID);
+	}
+
+	FVector SpawnLocation;
+	const TCHAR* HandName = bUseRightHand ? TEXT("Right") : TEXT("Left");
+
+	if (bUseRightHand)
+	{
+		SpawnLocation = BaseLocation + Right * 35.0f;
+	}
+	else
+	{
+		SpawnLocation = BaseLocation - Right * 35.0f;
+	}
+
+	LastIceFireTimeMap.Add(CasterID, CurrentTime);
+
+	NextIceRightHandMap.Add(CasterID, !bUseRightHand);
+
+	UE_LOG(LogTemp, Warning, TEXT("[IceCombo] UseHand=%s NextHand=%s CasterID=%llu Time=%f SpawnLocation=%s"),
+		bUseRightHand ? TEXT("Right") : TEXT("Left"),
+		(!bUseRightHand) ? TEXT("Right") : TEXT("Left"),
+		(unsigned long long)CasterID,
+		CurrentTime,
+		*SpawnLocation.ToString());
+
 	FRotator SpawnRotation = Caster->GetActorRotation();
 	FTransform SpawnTransform(SpawnRotation, SpawnLocation);
 
 	AActor* SpawnedActor = GetWorld()->SpawnActorDeferred<AActor>(IceProjectileBPClass, SpawnTransform);
 	if (SpawnedActor == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[HandleIceSkillPacket] SpawnActorDeferred failed"));
 		return;
+	}
 
 	if (FObjectProperty* Prop = FindFProperty<FObjectProperty>(SpawnedActor->GetClass(), TEXT("TargetActor")))
 	{
@@ -832,20 +901,21 @@ void UMainGameInstance::HandleIceSkillPacket(uint64 CasterID, uint64 TargetID)
 	{
 		Projectile->SetProjectileInfo(Caster, 0);
 
-		UE_LOG(LogTemp, Warning, TEXT("[HandleIceSkillPacket] SetProjectileInfo Owner=%s SkillId=%d"),
-			*GetNameSafe(Caster), 0);
+		UE_LOG(LogTemp, Warning, TEXT("[HandleIceSkillPacket] %s SetProjectileInfo Owner=%s SkillId=%d"),
+			HandName,
+			*GetNameSafe(Caster),
+			0);
 	}
 
 	SpawnedActor->FinishSpawning(SpawnTransform);
 
 	if (Projectile)
 	{
-		FVector Forward = Caster->GetActorForwardVector();
-
 		Projectile->ActivateProjectileCollision();
 		Projectile->LaunchProjectile(Forward);
 
-		UE_LOG(LogTemp, Warning, TEXT("[HandleIceSkillPacket] Ice Launch Forward=%s"),
+		UE_LOG(LogTemp, Warning, TEXT("[HandleIceSkillPacket] %s Ice Launch Forward=%s"),
+			HandName,
 			*Forward.ToString());
 	}
 }
