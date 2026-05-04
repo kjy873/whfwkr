@@ -404,13 +404,14 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 		UUpgradeComponent* UpgradeComp = LocalPlayer->FindComponentByClass<UUpgradeComponent>();
 		if (UpgradeComp)
 		{
-			//UpgradeComp->SetUpgrades(LocalPlayerUpgradeMap);
+			UpgradeComp->SetUpgrades(LocalPlayerUpgradeMap);
+			UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Applied upgrades for my objId=%llu"), ObjectId);
 		}
 
-		if (UCharacterMovementComponent* MoveComp = LocalPlayer->GetCharacterMovement())
+		/*if (UCharacterMovementComponent* MoveComp = LocalPlayer->GetCharacterMovement())
 		{
 			MoveComp->StopMovementImmediately();
-		}
+		}*/
 
 		MyObjectId = ObjectId;
 		Players.FindOrAdd(ObjectId) = LocalPlayer;

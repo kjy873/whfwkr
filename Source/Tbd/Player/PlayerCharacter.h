@@ -22,6 +22,7 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	Protocol::PlayerInfo PlayerInfo;
 	Protocol::PlayerInfo DestInfo;
