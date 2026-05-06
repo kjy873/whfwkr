@@ -159,4 +159,6 @@ public:
 	const TMap<FName, int>& GetLocalPlayerUpgradeMap() const { return LocalPlayerUpgradeMap; }
 	UFUNCTION(BlueprintCallable, Category = "Upgrade")
 	void SetLocalPlayerUpgradeMap(const TMap<FName, int>& NewMap) { LocalPlayerUpgradeMap = NewMap; }
+	UFUNCTION(BlueprintCallable, Category = "Upgrade")
+	void AddUpgrade(const FName& UpgradeName) { LocalPlayerUpgradeMap.FindOrAdd(UpgradeName)++; }
 };

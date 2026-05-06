@@ -169,11 +169,6 @@ void APlayerCharacter::ApplyNetworkPosition(float DeltaTime)
 // level transition -> save upgrade
 void APlayerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	Super::EndPlay(EndPlayReason);
-	if (EndPlayReason == EEndPlayReason::LevelTransition) {
-		UMainGameInstance* Instance = Cast<UMainGameInstance>(GetGameInstance());
-		Instance->SetLocalPlayerUpgradeMap(UpgradeComponent->GetUpgrades());
-	}
-	UMainGameInstance* Instance = Cast<UMainGameInstance>(GetGameInstance());
-	Instance->SetLocalPlayerUpgradeMap(UpgradeComponent->GetUpgrades());
+	/*UMainGameInstance* Instance = Cast<UMainGameInstance>(GetGameInstance());
+	Instance->SetLocalPlayerUpgradeMap(UpgradeComponent->GetUpgrades());*/
 }
