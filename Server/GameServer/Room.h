@@ -35,6 +35,7 @@ public:
 	void HandleAttackMobLocked(uint64 playerId, uint64 mobId);
 	void BroadcastUseSkill(uint64 playerId, uint32 skillId, float chargeScale);
 	void BroadcastStartSkillCharge(uint64 playerId, uint32 skillId);
+	void BroadcastPlayerStats(PlayerRef player);
 	void HandleAttackPlayerLocked(uint64 attackerId, uint64 targetId, uint32 skillId);
 
 	void SetRoomType(RoomType NewType) { _roomType = NewType; }
@@ -45,6 +46,8 @@ public:
 	void BroadcastPlayerSpawn(PlayerRef player);
 	void CheckAndStartGame();
 	void ApplySpawnByRoomType(PlayerRef player);
+
+	void HandleMonsterKill(uint64 playerId);
 
 	unordered_map<uint64, PlayerRef> _players;
 private:

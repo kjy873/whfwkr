@@ -142,6 +142,26 @@ bool Handle_S_CHAT(PacketSessionRef& session, Protocol::S_CHAT& pkt)
 	return true;
 }
 
+bool Handle_S_PLAYER_STATS(PacketSessionRef& session, Protocol::S_PLAYER_STATS& pkt)
+{
+	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_PLAYER_STATS] ObjId=%llu K=%d D=%d M=%d"),
+		(unsigned long long)pkt.object_id(),
+		pkt.kill_count(),
+		pkt.death_count(),
+		pkt.monster_kill_count());
+
+	if (GWorld == nullptr)
+		return false;
+
+	UMainGameInstance* GI = Cast<UMainGameInstance>(GWorld->GetGameInstance());
+	if (GI)
+	{
+		GI->HandlePlayerStats(pkt);
+	}
+
+	return true;
+}
+
 bool Handle_S_DAMAGE_PLAYER(PacketSessionRef& session, Protocol::S_DAMAGE_PLAYER& pkt)
 {
 	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_DAMAGE_PLAYER] packet arrived session=%p obj=%llu damage=%d"),
@@ -232,6 +252,8 @@ bool Handle_S_DAMAGE_MOB(PacketSessionRef& session, Protocol::S_DAMAGE_MOB& pkt)
 		GameInstance->HandleDamageMob(pkt);
 	return false;
 }
+
+
 
 bool Handle_S_USE_SKILL(PacketSessionRef& session, Protocol::S_USE_SKILL& pkt)
 {

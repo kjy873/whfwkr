@@ -22,9 +22,13 @@ public:
 	weak_ptr<Room> room;
 
 public:
-	int32 hp = 100;
-	int32 maxHp = 100;
+	int32 Hp = 100;
+	int32 MaxHp = 100;
 	bool isDead = false;
+
+	int32 KillCount = 0;
+	int32 DeathCount = 0;
+	int32 MonsterKillCount = 0;
 
 public:
 	uint64 GetObjectId() const
@@ -32,7 +36,7 @@ public:
 		return playerInfo ? playerInfo->object_id() : 0;
 	}
 
-	void OnDamaged(int32 damage);
+	void OnDamaged(PlayerRef attacker, int32 damage);
 
 public:
 	bool CanUseSkill(int32 skillId) const;

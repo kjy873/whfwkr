@@ -122,11 +122,25 @@ void UMainGameInstance::DisconnectToGameServer()
 {
 	StopRecvPacketsTimer();
 
-	if ( Socket == nullptr || GameServerSession == nullptr )
-		return;
+	if (Socket != nullptr && GameServerSession.IsValid())
+	{
+		Protocol::C_LEAVE_GAME LeavePkt;
+		SEND_PACKET(LeavePkt);
+	}
 
-	Protocol::C_LEAVE_GAME LeavePkt;
-	SEND_PACKET(LeavePkt);
+	if (GameServerSession.IsValid())
+	{
+		GameServerSession.Reset();
+	}
+
+	if (Socket != nullptr)
+	{
+		Socket->Close();
+		ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->DestroySocket(Socket);
+		Socket = nullptr;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[DisconnectToGameServer] Disconnected and socket destroyed"));
 }
 
 void UMainGameInstance::Init()
@@ -153,7 +167,10 @@ void UMainGameInstance::Init()
 
 void UMainGameInstance::Shutdown()
 {
+	DisconnectToGameServer();
+
 	StopServerProcess();
+
 	Super::Shutdown();
 }
 
@@ -164,6 +181,43 @@ void UMainGameInstance::SendStartSkillCharge(int32 SkillId)
 
 	SendBufferRef SendBuffer = ClientPacketHandler::MakeSendBuffer(pkt);
 	SendPacket(SendBuffer);
+}
+
+void UMainGameInstance::SendMonsterKill()
+{
+	if (MyObjectId == 0 || Socket == nullptr || !GameServerSession.IsValid())
+		return;
+
+	Protocol::C_MONSTER_KILL pkt;
+	pkt.set_player_id(MyObjectId);
+
+	SendPacket(ClientPacketHandler::MakeSendBuffer(pkt));
+
+	UE_LOG(LogTemp, Warning, TEXT("[SendMonsterKill] MyObjectId=%llu"), MyObjectId);
+}
+
+bool UMainGameInstance::GetPlayerStatsByObjectId(int64 ObjectId, int32& Kill, int32& Death, int32& MonsterKill)
+{
+	if (FPlayerStatsData* Found = PlayerStatsMap.Find(ObjectId))
+	{
+		Kill = Found->Kill;
+		Death = Found->Death;
+		MonsterKill = Found->MonsterKill;
+
+		UE_LOG(LogTemp, Warning, TEXT("[GetPlayerStatsByObjectId FOUND] ObjId=%lld K=%d D=%d M=%d"),
+			ObjectId, Kill, Death, MonsterKill);
+
+		return true;
+	}
+
+	Kill = 0;
+	Death = 0;
+	MonsterKill = 0;
+
+	UE_LOG(LogTemp, Warning, TEXT("[GetPlayerStatsByObjectId NOT FOUND] ObjId=%lld"),
+		ObjectId);
+
+	return false;
 }
 
 void UMainGameInstance::StartServerProcess()
@@ -224,6 +278,7 @@ void UMainGameInstance::HandleRecvPackets()
 {
 	if (Socket == nullptr || GameServerSession == nullptr)
 	{
+		StopRecvPacketsTimer();
 		return;
 	}
 
@@ -255,6 +310,31 @@ APlayerCharacter* UMainGameInstance::GetPlayerById(uint64 PlayerId)
 	}
 
 	return nullptr;
+}
+
+void UMainGameInstance::HandlePlayerStats(const Protocol::S_PLAYER_STATS& pkt)
+{
+	const int64 ObjectId = static_cast<int64>(pkt.object_id());
+
+	FPlayerStatsData Stats;
+	Stats.Kill = pkt.kill_count();
+	Stats.Death = pkt.death_count();
+	Stats.MonsterKill = pkt.monster_kill_count();
+
+	PlayerStatsMap.Add(ObjectId, Stats);
+
+	if (pkt.object_id() == MyObjectId)
+	{
+		MyKillCount = pkt.kill_count();
+		MyDeathCount = pkt.death_count();
+		MyMonsterKillCount = pkt.monster_kill_count();
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[PlayerStatsMap] ObjId=%lld K=%d D=%d M=%d"),
+		ObjectId,
+		Stats.Kill,
+		Stats.Death,
+		Stats.MonsterKill);
 }
 
 void UMainGameInstance::SendPacket(SendBufferRef SendBuffer)

@@ -22,6 +22,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void OnHitBySkill(APlayerCharacter* Attacker, int32 SkillId);
 
+	UFUNCTION(BlueprintCallable)
+	void NotifyMonsterDead(APlayerCharacter* Killer);
+
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void RecvDamageFromSkill(float Damage, APlayerCharacter* Attacker, int32 SkillId, FGameplayTag DamageType);
 };

@@ -55,7 +55,7 @@ void RoomManager::Update(float deltaTime)
 
         for (auto& p : _roundPlayers)
         {
-            if (p && p->hp > 0)
+            if (p && p->Hp > 0)
                 alivePlayers.push_back(p);
         }
 
@@ -117,7 +117,7 @@ void RoomManager::MoveRoundPlayersToBattle()
         WRITE_LOCK;
         for (auto& p : _roundPlayers)
         {
-            if (p && p->hp > 0)
+            if (p && p->Hp > 0)
                 playersToMove.push_back(p);
         }
     }
@@ -134,7 +134,7 @@ void RoomManager::MoveRoundPlayersToHunting()
         WRITE_LOCK;
         for (auto& p : _roundPlayers)
         {
-            if (p && p->hp > 0)
+            if (p && p->Hp > 0)
                 playersToMove.push_back(p);
         }
     }

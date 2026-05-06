@@ -1,5 +1,6 @@
 #include "MonsterBase.h"
 #include "PlayerCharacter.h"
+#include "MainGameInstance.h"
 
 AMonsterBase::AMonsterBase()
 {
@@ -41,4 +42,23 @@ void AMonsterBase::OnHitBySkill(APlayerCharacter* Attacker, int32 SkillId)
         *DamageType.ToString());
 
     RecvDamageFromSkill(Damage, Attacker, SkillId, DamageType);
+}
+
+void AMonsterBase::NotifyMonsterDead(APlayerCharacter* Killer)
+{
+    if (Killer == nullptr)
+        return;
+
+    if (!Killer->IsMyPlayer())
+        return;
+
+    UMainGameInstance* GI = Cast<UMainGameInstance>(GetGameInstance());
+    if (GI == nullptr)
+        return;
+
+    GI->SendMonsterKill();
+
+    UE_LOG(LogTemp, Warning, TEXT("[NotifyMonsterDead] Killer=%s Monster=%s"),
+        *GetNameSafe(Killer),
+        *GetNameSafe(this));
 }

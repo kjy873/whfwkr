@@ -2,6 +2,7 @@
 #include "Room.h"
 #include "Player.h"
 #include "GameSession.h"
+#include "GameSessionManager.h"
 #include "ObjectUtils.h"
 #include "RoomManager.h"
 #include <thread>
@@ -78,6 +79,23 @@ void Room::ApplySpawnByRoomType(PlayerRef player)
 	cout << "[ApplySpawnByRoomType] objId=" << player->playerInfo->object_id()
 		<< " roomType=" << static_cast<int>(_roomType)
 		<< " pos=(" << centerX << ", " << centerY << ", " << centerZ << ")" << endl;
+}
+
+void Room::HandleMonsterKill(uint64 playerId)
+{
+	WRITE_LOCK;
+
+	auto it = _players.find(playerId);
+	if (it == _players.end())
+		return;
+
+	PlayerRef player = it->second;
+	if (player == nullptr)
+		return;
+
+	player->MonsterKillCount++;
+
+	BroadcastPlayerStats(player);
 }
 
 bool Room::HandleEnterPlayerLocked(PlayerRef player, RoomRef self)
@@ -259,7 +277,7 @@ void Room::CheckBattleEnd()
 		for (auto& item : _players)
 		{
 			PlayerRef player = item.second;
-			if (player && player->hp > 0)
+			if (player && player->Hp > 0)
 				alivePlayers.push_back(player);
 		}
 
@@ -446,6 +464,28 @@ void Room::BroadcastStartSkillCharge(uint64 playerId, uint32 skillId)
 	Broadcast(send);
 }
 
+void Room::BroadcastPlayerStats(PlayerRef player)
+{
+	if (player == nullptr || player->playerInfo == nullptr)
+		return;
+
+	Protocol::S_PLAYER_STATS pkt;
+
+	pkt.set_object_id(player->playerInfo->object_id());
+	pkt.set_kill_count(player->KillCount);
+	pkt.set_death_count(player->DeathCount);
+	pkt.set_monster_kill_count(player->MonsterKillCount);
+
+	cout << "[BroadcastPlayerStats] ObjId=" << player->playerInfo->object_id()
+		<< " K=" << player->KillCount
+		<< " D=" << player->DeathCount
+		<< " M=" << player->MonsterKillCount
+		<< endl;
+
+	SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
+	GSessionManager.Broadcast(sendBuffer);
+}
+
 void Room::HandleAttackPlayerLocked(uint64 attackerId, uint64 targetId, uint32 skillId)
 {
 	WRITE_LOCK;
@@ -458,37 +498,54 @@ void Room::HandleAttackPlayerLocked(uint64 attackerId, uint64 targetId, uint32 s
 	PlayerRef attacker = attackerIt->second;
 	PlayerRef target = targetIt->second;
 
-	if (target->hp <= 0)
+	if (target->Hp <= 0)
 		return;
 
 	int32 damage = 0;
 	switch (skillId)
 	{
-	case 0: damage = 20; break;
-	case 1: damage = 35; break;
+	case 0:
+		damage = 20;
+		break;
+
+	case 1:
+		damage = 35;
+		break;
+
+	default:
+		damage = 0;
+		break;
 	}
 
-	cout << "[Damage] attackerId=" << attackerId
-		<< " targetId=" << targetId
-		<< " beforeHp=" << target->hp
-		<< " damage=" << damage << endl;
-
-	target->hp = max(0, target->hp - damage);
-
-	cout << "[Damage] afterHp=" << target->hp << endl;
+	target->Hp = max(0, target->Hp - damage);
 
 	Protocol::S_DAMAGE_PLAYER pkt;
 	pkt.set_object_id(targetId);
 	pkt.set_damage(damage);
 	Broadcast(ServerPacketHandler::MakeSendBuffer(pkt));
 
-	if (target->hp <= 0)
+	if (target->Hp <= 0)
 	{
-		cout << "[SERVER] Player Dead: " << targetId << endl;
+		target->DeathCount++;
+
+		if (attacker && attacker != target)
+		{
+			attacker->KillCount++;
+		}
 
 		Protocol::S_PLAYER_DEAD deadPkt;
 		deadPkt.set_object_id(targetId);
 		Broadcast(ServerPacketHandler::MakeSendBuffer(deadPkt));
+
+		if (attacker)
+		{
+			BroadcastPlayerStats(attacker);
+		}
+
+		if (target)
+		{
+			BroadcastPlayerStats(target);
+		}
 
 		if (_roomType != RoomType::Battle)
 			return;
@@ -497,7 +554,7 @@ void Room::HandleAttackPlayerLocked(uint64 attackerId, uint64 targetId, uint32 s
 		for (auto& item : _players)
 		{
 			PlayerRef p = item.second;
-			if (p && p->hp > 0)
+			if (p && p->Hp > 0)
 				playersToMove.push_back(p);
 		}
 
@@ -524,7 +581,6 @@ void Room::HandleAttackPlayerLocked(uint64 attackerId, uint64 targetId, uint32 s
 		}
 	}
 }
-
 
 //-----------------------------------------------
 // mob

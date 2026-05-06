@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Player.h"
+#include "Room.h"
 
 Player::Player()
 {
@@ -11,17 +12,27 @@ Player::~Player()
 	delete playerInfo;
 }
 
-void Player::OnDamaged(int32 damage)
+void Player::OnDamaged(PlayerRef attacker, int32 damage)
 {
-	if (isDead)
-		return;
+	Hp -= damage;
 
-	hp -= damage;
-
-	if (hp <= 0)
+	if (Hp <= 0)
 	{
-		hp = 0;
-		isDead = true;
+		DeathCount++;
+
+		if (attacker != nullptr && attacker != shared_from_this())
+		{
+			attacker->KillCount++;
+		}
+
+		RoomRef room = room;
+		if (room)
+		{
+			room->BroadcastPlayerStats(shared_from_this());
+
+			if (attacker)
+				room->BroadcastPlayerStats(attacker);
+		}
 	}
 }
 

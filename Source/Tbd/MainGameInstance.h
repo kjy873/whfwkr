@@ -14,9 +14,22 @@
 class AActor;
 class APlayerCharacter;
 class AProjectile;
-/**
- * 
- */
+
+USTRUCT(BlueprintType)
+struct FPlayerStatsData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite)
+	int32 Kill = 0;
+
+	UPROPERTY(BlueprintReadWrite)
+	int32 Death = 0;
+
+	UPROPERTY(BlueprintReadWrite)
+	int32 MonsterKill = 0;
+};
+
 UCLASS()
 class TBD_API UMainGameInstance : public UGameInstance
 {
@@ -78,6 +91,8 @@ public:
 	TSubclassOf<AActor> MonsterClass;
 
 	APlayerCharacter* GetPlayerById(uint64 PlayerId);
+
+	void HandlePlayerStats(const Protocol::S_PLAYER_STATS& pkt);
 
 	void SendPacket(SendBufferRef SendBuffer);
 	void SendLevelReady();
@@ -141,6 +156,25 @@ public:
 	TMap<int32, AActor*> PredictedByShotId;
 	TMap<int32, AActor*> ByProjectileId;
 	TArray<Protocol::PlayerInfo> PendingSpawns;
+
+	UPROPERTY(BlueprintReadWrite)
+	TMap<int64, FPlayerStatsData> PlayerStatsMap;
+
+public:
+	UPROPERTY(BlueprintReadWrite)
+	int32 MyKillCount = 0;
+
+	UPROPERTY(BlueprintReadWrite)
+	int32 MyDeathCount = 0;
+
+	UPROPERTY(BlueprintReadWrite)
+	int32 MyMonsterKillCount = 0;
+
+	UFUNCTION(BlueprintCallable)
+	void SendMonsterKill();
+
+	UFUNCTION(BlueprintCallable)
+	bool GetPlayerStatsByObjectId(int64 ObjectId, int32& Kill, int32& Death, int32& MonsterKill);
 
 private:
 	FTimerHandle RecvPacketsTimerHandle;

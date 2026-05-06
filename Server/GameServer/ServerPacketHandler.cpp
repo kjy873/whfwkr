@@ -167,6 +167,30 @@ bool Handle_C_USE_SKILL(PacketSessionRef& session, Protocol::C_USE_SKILL& pkt)
 	return true;
 }
 
+bool Handle_C_MONSTER_KILL(PacketSessionRef& session, Protocol::C_MONSTER_KILL& pkt)
+{
+	GameSessionRef gameSession = static_pointer_cast<GameSession>(session);
+	if (gameSession == nullptr)
+		return false;
+
+	PlayerRef player = gameSession->player;
+	if (player == nullptr)
+		return false;
+
+	RoomRef room = player->room.lock();
+	if (room == nullptr)
+		return false;
+
+	uint64 playerId = player->playerInfo->object_id();
+
+	room->DoAsync(
+		&Room::HandleMonsterKill,
+		playerId
+	);
+
+	return true;
+}
+
 bool Handle_C_DEMO_NEXT_LEVEL(PacketSessionRef& session, Protocol::C_DEMO_NEXT_LEVEL& pkt)
 {
 	uint32 targetLevel = pkt.targetlevel();
