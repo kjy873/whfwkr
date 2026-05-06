@@ -407,6 +407,19 @@ struct S_CHANGE_LEVELDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 S_CHANGE_LEVELDefaultTypeInternal _S_CHANGE_LEVEL_default_instance_;
+PROTOBUF_CONSTEXPR C_DEMO_NEXT_LEVEL::C_DEMO_NEXT_LEVEL(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.targetlevel_)*/0u
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct C_DEMO_NEXT_LEVELDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR C_DEMO_NEXT_LEVELDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~C_DEMO_NEXT_LEVELDefaultTypeInternal() {}
+  union {
+    C_DEMO_NEXT_LEVEL _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 C_DEMO_NEXT_LEVELDefaultTypeInternal _C_DEMO_NEXT_LEVEL_default_instance_;
 PROTOBUF_CONSTEXPR C_LEVEL_READY::C_LEVEL_READY(
     ::_pbi::ConstantInitialized) {}
 struct C_LEVEL_READYDefaultTypeInternal {
@@ -446,7 +459,7 @@ struct S_START_SKILL_CHARGEDefaultTypeInternal {
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 S_START_SKILL_CHARGEDefaultTypeInternal _S_START_SKILL_CHARGE_default_instance_;
 }  // namespace Protocol
-static ::_pb::Metadata file_level_metadata_Protocol_2eproto[31];
+static ::_pb::Metadata file_level_metadata_Protocol_2eproto[32];
 static constexpr ::_pb::EnumDescriptor const** file_level_enum_descriptors_Protocol_2eproto = nullptr;
 static constexpr ::_pb::ServiceDescriptor const** file_level_service_descriptors_Protocol_2eproto = nullptr;
 
@@ -671,6 +684,13 @@ const uint32_t TableStruct_Protocol_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::Protocol::S_CHANGE_LEVEL, _impl_.level_name_),
   ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::Protocol::C_DEMO_NEXT_LEVEL, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::Protocol::C_DEMO_NEXT_LEVEL, _impl_.targetlevel_),
+  ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::Protocol::C_LEVEL_READY, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
@@ -721,9 +741,10 @@ static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protode
   { 195, -1, -1, sizeof(::Protocol::S_PROJECTILE_HIT)},
   { 205, -1, -1, sizeof(::Protocol::S_PROJECTILE_DESTROY)},
   { 212, -1, -1, sizeof(::Protocol::S_CHANGE_LEVEL)},
-  { 219, -1, -1, sizeof(::Protocol::C_LEVEL_READY)},
-  { 225, -1, -1, sizeof(::Protocol::C_START_SKILL_CHARGE)},
-  { 232, -1, -1, sizeof(::Protocol::S_START_SKILL_CHARGE)},
+  { 219, -1, -1, sizeof(::Protocol::C_DEMO_NEXT_LEVEL)},
+  { 226, -1, -1, sizeof(::Protocol::C_LEVEL_READY)},
+  { 232, -1, -1, sizeof(::Protocol::C_START_SKILL_CHARGE)},
+  { 239, -1, -1, sizeof(::Protocol::S_START_SKILL_CHARGE)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
@@ -755,6 +776,7 @@ static const ::_pb::Message* const file_default_instances[] = {
   &::Protocol::_S_PROJECTILE_HIT_default_instance_._instance,
   &::Protocol::_S_PROJECTILE_DESTROY_default_instance_._instance,
   &::Protocol::_S_CHANGE_LEVEL_default_instance_._instance,
+  &::Protocol::_C_DEMO_NEXT_LEVEL_default_instance_._instance,
   &::Protocol::_C_LEVEL_READY_default_instance_._instance,
   &::Protocol::_C_START_SKILL_CHARGE_default_instance_._instance,
   &::Protocol::_S_START_SKILL_CHARGE_default_instance_._instance,
@@ -800,10 +822,11 @@ const char descriptor_table_protodef_Protocol_2eproto[] PROTOBUF_SECTION_VARIABL
   " \001(\0132\021.Protocol.Vector3\022\016\n\006damage\030\004 \001(\005\""
   ",\n\024S_PROJECTILE_DESTROY\022\024\n\014projectileId\030"
   "\001 \001(\005\"$\n\016S_CHANGE_LEVEL\022\022\n\nlevel_name\030\001 "
-  "\001(\t\"\017\n\rC_LEVEL_READY\"\'\n\024C_START_SKILL_CH"
-  "ARGE\022\017\n\007skillid\030\001 \001(\r\"9\n\024S_START_SKILL_C"
-  "HARGE\022\020\n\010playerid\030\001 \001(\004\022\017\n\007skillid\030\002 \001(\r"
-  "b\006proto3"
+  "\001(\t\"(\n\021C_DEMO_NEXT_LEVEL\022\023\n\013targetLevel\030"
+  "\001 \001(\r\"\017\n\rC_LEVEL_READY\"\'\n\024C_START_SKILL_"
+  "CHARGE\022\017\n\007skillid\030\001 \001(\r\"9\n\024S_START_SKILL"
+  "_CHARGE\022\020\n\010playerid\030\001 \001(\004\022\017\n\007skillid\030\002 \001"
+  "(\rb\006proto3"
   ;
 static const ::_pbi::DescriptorTable* const descriptor_table_Protocol_2eproto_deps[2] = {
   &::descriptor_table_Enum_2eproto,
@@ -811,9 +834,9 @@ static const ::_pbi::DescriptorTable* const descriptor_table_Protocol_2eproto_de
 };
 static ::_pbi::once_flag descriptor_table_Protocol_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_Protocol_2eproto = {
-    false, false, 1688, descriptor_table_protodef_Protocol_2eproto,
+    false, false, 1730, descriptor_table_protodef_Protocol_2eproto,
     "Protocol.proto",
-    &descriptor_table_Protocol_2eproto_once, descriptor_table_Protocol_2eproto_deps, 2, 31,
+    &descriptor_table_Protocol_2eproto_once, descriptor_table_Protocol_2eproto_deps, 2, 32,
     schemas, file_default_instances, TableStruct_Protocol_2eproto::offsets,
     file_level_metadata_Protocol_2eproto, file_level_enum_descriptors_Protocol_2eproto,
     file_level_service_descriptors_Protocol_2eproto,
@@ -6484,6 +6507,184 @@ void S_CHANGE_LEVEL::InternalSwap(S_CHANGE_LEVEL* other) {
 
 // ===================================================================
 
+class C_DEMO_NEXT_LEVEL::_Internal {
+ public:
+};
+
+C_DEMO_NEXT_LEVEL::C_DEMO_NEXT_LEVEL(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:Protocol.C_DEMO_NEXT_LEVEL)
+}
+C_DEMO_NEXT_LEVEL::C_DEMO_NEXT_LEVEL(const C_DEMO_NEXT_LEVEL& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  C_DEMO_NEXT_LEVEL* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.targetlevel_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  _this->_impl_.targetlevel_ = from._impl_.targetlevel_;
+  // @@protoc_insertion_point(copy_constructor:Protocol.C_DEMO_NEXT_LEVEL)
+}
+
+inline void C_DEMO_NEXT_LEVEL::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.targetlevel_){0u}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+C_DEMO_NEXT_LEVEL::~C_DEMO_NEXT_LEVEL() {
+  // @@protoc_insertion_point(destructor:Protocol.C_DEMO_NEXT_LEVEL)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void C_DEMO_NEXT_LEVEL::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+}
+
+void C_DEMO_NEXT_LEVEL::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void C_DEMO_NEXT_LEVEL::Clear() {
+// @@protoc_insertion_point(message_clear_start:Protocol.C_DEMO_NEXT_LEVEL)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.targetlevel_ = 0u;
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* C_DEMO_NEXT_LEVEL::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // uint32 targetLevel = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.targetlevel_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* C_DEMO_NEXT_LEVEL::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:Protocol.C_DEMO_NEXT_LEVEL)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // uint32 targetLevel = 1;
+  if (this->_internal_targetlevel() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(1, this->_internal_targetlevel(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:Protocol.C_DEMO_NEXT_LEVEL)
+  return target;
+}
+
+size_t C_DEMO_NEXT_LEVEL::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:Protocol.C_DEMO_NEXT_LEVEL)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // uint32 targetLevel = 1;
+  if (this->_internal_targetlevel() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_targetlevel());
+  }
+
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
+}
+
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData C_DEMO_NEXT_LEVEL::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    C_DEMO_NEXT_LEVEL::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*C_DEMO_NEXT_LEVEL::GetClassData() const { return &_class_data_; }
+
+
+void C_DEMO_NEXT_LEVEL::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<C_DEMO_NEXT_LEVEL*>(&to_msg);
+  auto& from = static_cast<const C_DEMO_NEXT_LEVEL&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:Protocol.C_DEMO_NEXT_LEVEL)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_targetlevel() != 0) {
+    _this->_internal_set_targetlevel(from._internal_targetlevel());
+  }
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void C_DEMO_NEXT_LEVEL::CopyFrom(const C_DEMO_NEXT_LEVEL& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:Protocol.C_DEMO_NEXT_LEVEL)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool C_DEMO_NEXT_LEVEL::IsInitialized() const {
+  return true;
+}
+
+void C_DEMO_NEXT_LEVEL::InternalSwap(C_DEMO_NEXT_LEVEL* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_.targetlevel_, other->_impl_.targetlevel_);
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata C_DEMO_NEXT_LEVEL::GetMetadata() const {
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
+      file_level_metadata_Protocol_2eproto[28]);
+}
+
+// ===================================================================
+
 class C_LEVEL_READY::_Internal {
  public:
 };
@@ -6519,7 +6720,7 @@ const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*C_LEVEL_READY::GetClassData() 
 ::PROTOBUF_NAMESPACE_ID::Metadata C_LEVEL_READY::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[28]);
+      file_level_metadata_Protocol_2eproto[29]);
 }
 
 // ===================================================================
@@ -6697,7 +6898,7 @@ void C_START_SKILL_CHARGE::InternalSwap(C_START_SKILL_CHARGE* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata C_START_SKILL_CHARGE::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[29]);
+      file_level_metadata_Protocol_2eproto[30]);
 }
 
 // ===================================================================
@@ -6908,7 +7109,7 @@ void S_START_SKILL_CHARGE::InternalSwap(S_START_SKILL_CHARGE* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata S_START_SKILL_CHARGE::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[30]);
+      file_level_metadata_Protocol_2eproto[31]);
 }
 
 // @@protoc_insertion_point(namespace_scope)
@@ -7025,6 +7226,10 @@ Arena::CreateMaybeMessage< ::Protocol::S_PROJECTILE_DESTROY >(Arena* arena) {
 template<> PROTOBUF_NOINLINE ::Protocol::S_CHANGE_LEVEL*
 Arena::CreateMaybeMessage< ::Protocol::S_CHANGE_LEVEL >(Arena* arena) {
   return Arena::CreateMessageInternal< ::Protocol::S_CHANGE_LEVEL >(arena);
+}
+template<> PROTOBUF_NOINLINE ::Protocol::C_DEMO_NEXT_LEVEL*
+Arena::CreateMaybeMessage< ::Protocol::C_DEMO_NEXT_LEVEL >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::Protocol::C_DEMO_NEXT_LEVEL >(arena);
 }
 template<> PROTOBUF_NOINLINE ::Protocol::C_LEVEL_READY*
 Arena::CreateMaybeMessage< ::Protocol::C_LEVEL_READY >(Arena* arena) {

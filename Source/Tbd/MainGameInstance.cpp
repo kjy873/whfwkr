@@ -282,6 +282,15 @@ void UMainGameInstance::SendLevelReady()
 	}
 }
 
+void UMainGameInstance::DemoChangeLevel(int32 TargetLevel)
+{
+	Protocol::C_DEMO_NEXT_LEVEL pkt;
+	pkt.set_targetlevel(TargetLevel);
+
+	SendBufferRef sendBuffer = ClientPacketHandler::MakeSendBuffer(pkt);
+	SendPacket(sendBuffer);
+}
+
 void UMainGameInstance::StartRecvPacketsTimer()
 {
 	UWorld* World = GetWorld();

@@ -36,9 +36,10 @@ enum : uint16
 	PKT_S_PROJECTILE_HIT = 1023,
 	PKT_S_PROJECTILE_DESTROY = 1024,
 	PKT_S_CHANGE_LEVEL = 1025,
-	PKT_C_LEVEL_READY = 1026,
-	PKT_C_START_SKILL_CHARGE = 1027,
-	PKT_S_START_SKILL_CHARGE = 1028,
+	PKT_C_DEMO_NEXT_LEVEL = 1026,
+	PKT_C_LEVEL_READY = 1027,
+	PKT_C_START_SKILL_CHARGE = 1028,
+	PKT_S_START_SKILL_CHARGE = 1029,
 };
 
 // Custom Handlers
@@ -103,6 +104,7 @@ public:
 	static SendBufferRef MakeSendBuffer(Protocol::C_MOVE_MOB& pkt) { return MakeSendBuffer(pkt, PKT_C_MOVE_MOB); }
 	static SendBufferRef MakeSendBuffer(Protocol::C_ATTACK_MOB& pkt) { return MakeSendBuffer(pkt, PKT_C_ATTACK_MOB); }
 	static SendBufferRef MakeSendBuffer(Protocol::C_USE_SKILL& pkt) { return MakeSendBuffer(pkt, PKT_C_USE_SKILL); }
+	static SendBufferRef MakeSendBuffer(Protocol::C_DEMO_NEXT_LEVEL& pkt) { return MakeSendBuffer(pkt, PKT_C_DEMO_NEXT_LEVEL); }
 	static SendBufferRef MakeSendBuffer(Protocol::C_LEVEL_READY& pkt) { return MakeSendBuffer(pkt, PKT_C_LEVEL_READY); }
 	static SendBufferRef MakeSendBuffer(Protocol::C_START_SKILL_CHARGE& pkt) { return MakeSendBuffer(pkt, PKT_C_START_SKILL_CHARGE); }
 

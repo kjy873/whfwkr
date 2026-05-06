@@ -167,6 +167,15 @@ bool Handle_C_USE_SKILL(PacketSessionRef& session, Protocol::C_USE_SKILL& pkt)
 	return true;
 }
 
+bool Handle_C_DEMO_NEXT_LEVEL(PacketSessionRef& session, Protocol::C_DEMO_NEXT_LEVEL& pkt)
+{
+	uint32 targetLevel = pkt.targetlevel();
+
+	GRoomManager.MoveToDemoLevel(targetLevel);
+
+	return true;
+}
+
 bool Handle_C_ATTACK_PLAYER(PacketSessionRef& session, Protocol::C_ATTACK_PLAYER& pkt)
 {
 	cout << "[Handle_C_ATTACK_PLAYER] target=" << pkt.targetplayerid()

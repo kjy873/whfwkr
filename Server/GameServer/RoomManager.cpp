@@ -70,7 +70,7 @@ void RoomManager::Update(float deltaTime)
 
         _roundTimer += deltaTime;
 
-        if (_roundTimer < 20.0f)
+        if (_roundTimer < 60.0f)
             return;
 
         _roundTimer = 0.0f;
@@ -141,6 +141,44 @@ void RoomManager::MoveRoundPlayersToHunting()
 
     for (auto& p : playersToMove)
         MoveToHuntingRoom(p);
+}
+
+void RoomManager::MoveToDemoLevel(uint32 targetLevel)
+{
+    {
+        WRITE_LOCK;
+
+        if (_roundPlayers.empty())
+        {
+            return;
+        }
+
+        _roundTimer = 0.0f;
+
+        if (targetLevel == 1)
+        {
+            _isBattlePhase = false; //PVE
+        }
+        else if (targetLevel == 2)
+        {
+            _isBattlePhase = true; //PVP
+        }
+        else
+        {
+            return;
+        }
+    }
+
+    if (targetLevel == 1)
+    {
+        cout << "[Demo] Move to PVE" << endl;
+        MoveRoundPlayersToHunting();
+    }
+    else if (targetLevel == 2)
+    {
+        cout << "[Demo] Move to PVP" << endl;
+        MoveRoundPlayersToBattle();
+    }
 }
 
 void RoomManager::MoveToBattleRoom(PlayerRef player)

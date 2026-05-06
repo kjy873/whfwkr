@@ -57,6 +57,9 @@ extern C_ATTACK_PLAYERDefaultTypeInternal _C_ATTACK_PLAYER_default_instance_;
 class C_CHAT;
 struct C_CHATDefaultTypeInternal;
 extern C_CHATDefaultTypeInternal _C_CHAT_default_instance_;
+class C_DEMO_NEXT_LEVEL;
+struct C_DEMO_NEXT_LEVELDefaultTypeInternal;
+extern C_DEMO_NEXT_LEVELDefaultTypeInternal _C_DEMO_NEXT_LEVEL_default_instance_;
 class C_ENTER_GAME;
 struct C_ENTER_GAMEDefaultTypeInternal;
 extern C_ENTER_GAMEDefaultTypeInternal _C_ENTER_GAME_default_instance_;
@@ -146,6 +149,7 @@ PROTOBUF_NAMESPACE_OPEN
 template<> ::Protocol::C_ATTACK_MOB* Arena::CreateMaybeMessage<::Protocol::C_ATTACK_MOB>(Arena*);
 template<> ::Protocol::C_ATTACK_PLAYER* Arena::CreateMaybeMessage<::Protocol::C_ATTACK_PLAYER>(Arena*);
 template<> ::Protocol::C_CHAT* Arena::CreateMaybeMessage<::Protocol::C_CHAT>(Arena*);
+template<> ::Protocol::C_DEMO_NEXT_LEVEL* Arena::CreateMaybeMessage<::Protocol::C_DEMO_NEXT_LEVEL>(Arena*);
 template<> ::Protocol::C_ENTER_GAME* Arena::CreateMaybeMessage<::Protocol::C_ENTER_GAME>(Arena*);
 template<> ::Protocol::C_LEAVE_GAME* Arena::CreateMaybeMessage<::Protocol::C_LEAVE_GAME>(Arena*);
 template<> ::Protocol::C_LEVEL_READY* Arena::CreateMaybeMessage<::Protocol::C_LEVEL_READY>(Arena*);
@@ -4679,6 +4683,154 @@ class S_CHANGE_LEVEL final :
 };
 // -------------------------------------------------------------------
 
+class C_DEMO_NEXT_LEVEL final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:Protocol.C_DEMO_NEXT_LEVEL) */ {
+ public:
+  inline C_DEMO_NEXT_LEVEL() : C_DEMO_NEXT_LEVEL(nullptr) {}
+  ~C_DEMO_NEXT_LEVEL() override;
+  explicit PROTOBUF_CONSTEXPR C_DEMO_NEXT_LEVEL(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  C_DEMO_NEXT_LEVEL(const C_DEMO_NEXT_LEVEL& from);
+  C_DEMO_NEXT_LEVEL(C_DEMO_NEXT_LEVEL&& from) noexcept
+    : C_DEMO_NEXT_LEVEL() {
+    *this = ::std::move(from);
+  }
+
+  inline C_DEMO_NEXT_LEVEL& operator=(const C_DEMO_NEXT_LEVEL& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline C_DEMO_NEXT_LEVEL& operator=(C_DEMO_NEXT_LEVEL&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const C_DEMO_NEXT_LEVEL& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const C_DEMO_NEXT_LEVEL* internal_default_instance() {
+    return reinterpret_cast<const C_DEMO_NEXT_LEVEL*>(
+               &_C_DEMO_NEXT_LEVEL_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    28;
+
+  friend void swap(C_DEMO_NEXT_LEVEL& a, C_DEMO_NEXT_LEVEL& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(C_DEMO_NEXT_LEVEL* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(C_DEMO_NEXT_LEVEL* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  C_DEMO_NEXT_LEVEL* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<C_DEMO_NEXT_LEVEL>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const C_DEMO_NEXT_LEVEL& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const C_DEMO_NEXT_LEVEL& from) {
+    C_DEMO_NEXT_LEVEL::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(C_DEMO_NEXT_LEVEL* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "Protocol.C_DEMO_NEXT_LEVEL";
+  }
+  protected:
+  explicit C_DEMO_NEXT_LEVEL(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kTargetLevelFieldNumber = 1,
+  };
+  // uint32 targetLevel = 1;
+  void clear_targetlevel();
+  uint32_t targetlevel() const;
+  void set_targetlevel(uint32_t value);
+  private:
+  uint32_t _internal_targetlevel() const;
+  void _internal_set_targetlevel(uint32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:Protocol.C_DEMO_NEXT_LEVEL)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    uint32_t targetlevel_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_Protocol_2eproto;
+};
+// -------------------------------------------------------------------
+
 class C_LEVEL_READY final :
     public ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase /* @@protoc_insertion_point(class_definition:Protocol.C_LEVEL_READY) */ {
  public:
@@ -4726,7 +4878,7 @@ class C_LEVEL_READY final :
                &_C_LEVEL_READY_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    28;
+    29;
 
   friend void swap(C_LEVEL_READY& a, C_LEVEL_READY& b) {
     a.Swap(&b);
@@ -4845,7 +4997,7 @@ class C_START_SKILL_CHARGE final :
                &_C_START_SKILL_CHARGE_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    29;
+    30;
 
   friend void swap(C_START_SKILL_CHARGE& a, C_START_SKILL_CHARGE& b) {
     a.Swap(&b);
@@ -4993,7 +5145,7 @@ class S_START_SKILL_CHARGE final :
                &_S_START_SKILL_CHARGE_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    30;
+    31;
 
   friend void swap(S_START_SKILL_CHARGE& a, S_START_SKILL_CHARGE& b) {
     a.Swap(&b);
@@ -7126,6 +7278,30 @@ inline void S_CHANGE_LEVEL::set_allocated_level_name(std::string* level_name) {
 
 // -------------------------------------------------------------------
 
+// C_DEMO_NEXT_LEVEL
+
+// uint32 targetLevel = 1;
+inline void C_DEMO_NEXT_LEVEL::clear_targetlevel() {
+  _impl_.targetlevel_ = 0u;
+}
+inline uint32_t C_DEMO_NEXT_LEVEL::_internal_targetlevel() const {
+  return _impl_.targetlevel_;
+}
+inline uint32_t C_DEMO_NEXT_LEVEL::targetlevel() const {
+  // @@protoc_insertion_point(field_get:Protocol.C_DEMO_NEXT_LEVEL.targetLevel)
+  return _internal_targetlevel();
+}
+inline void C_DEMO_NEXT_LEVEL::_internal_set_targetlevel(uint32_t value) {
+  
+  _impl_.targetlevel_ = value;
+}
+inline void C_DEMO_NEXT_LEVEL::set_targetlevel(uint32_t value) {
+  _internal_set_targetlevel(value);
+  // @@protoc_insertion_point(field_set:Protocol.C_DEMO_NEXT_LEVEL.targetLevel)
+}
+
+// -------------------------------------------------------------------
+
 // C_LEVEL_READY
 
 // -------------------------------------------------------------------
@@ -7199,6 +7375,8 @@ inline void S_START_SKILL_CHARGE::set_skillid(uint32_t value) {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

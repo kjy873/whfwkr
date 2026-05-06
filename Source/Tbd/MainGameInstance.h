@@ -82,6 +82,9 @@ public:
 	void SendPacket(SendBufferRef SendBuffer);
 	void SendLevelReady();
 
+	UFUNCTION(BlueprintCallable)
+	void DemoChangeLevel(int32 TargetLevel);
+
 	void StartRecvPacketsTimer();
 	void StopRecvPacketsTimer();
 

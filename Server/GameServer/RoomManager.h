@@ -15,6 +15,7 @@ public:
     void StartRound(const vector<PlayerRef>& players);
     void MoveRoundPlayersToBattle();
     void MoveRoundPlayersToHunting();
+    void MoveToDemoLevel(uint32 targetLevel);
 
     RoomRef GetBattleRoom() { return _battleRoom; }
 
