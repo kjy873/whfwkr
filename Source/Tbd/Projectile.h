@@ -35,6 +35,11 @@ protected:
         const FHitResult& SweepResult
     );
 
+	UFUNCTION(BlueprintImplementableEvent)
+    void PostProcessHit();
+
+
+
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     TObjectPtr<USceneComponent> SceneRoot;

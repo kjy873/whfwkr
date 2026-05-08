@@ -195,6 +195,8 @@ void AProjectile::OnProjectileOverlap(
 
         HitPlayer->OnHitBySkill(OwnerPlayer, SkillId);
 
+        PostProcessHit();
+
         Destroy();
         return;
     }
@@ -211,6 +213,8 @@ void AProjectile::OnProjectileOverlap(
             SkillId);
 
         HitMonster->OnHitBySkill(OwnerPlayer, SkillId);
+
+        PostProcessHit();
 
         Destroy();
         return;
