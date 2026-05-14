@@ -8,7 +8,7 @@
 
 AProjectile::AProjectile()
 {
-    PrimaryActorTick.bCanEverTick = false;
+    PrimaryActorTick.bCanEverTick = true;
 
     SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("SceneRoot"));
     RootComponent = SceneRoot;
@@ -54,6 +54,17 @@ AProjectile::AProjectile()
     SphereCollision1->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnProjectileOverlap);
     SphereCollision2->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnProjectileOverlap);
     BoxCollision->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnProjectileOverlap);
+}
+
+void AProjectile::SetHomingTarget(AActor* Target)
+{
+    HomingTarget = Target;
+
+    bUseHoming = (SkillId == 0 && Target != nullptr);
+
+    UE_LOG(LogTemp, Warning, TEXT("[SetHomingTarget] Target=%s UseHoming=%d"),
+        *GetNameSafe(HomingTarget),
+        bUseHoming);
 }
 
 void AProjectile::BeginPlay()
@@ -133,8 +144,18 @@ void AProjectile::LaunchProjectile(FVector Direction)
 {
     if (ProjectileMove)
     {
-        ProjectileMove->Velocity = Direction * 2000.f;
+        FVector LaunchDir = Direction.GetSafeNormal();
+
+        float Speed = ProjectileMove->InitialSpeed;
+        if (Speed <= 0.f)
+        {
+            Speed = 1200.f;
+        }
+
+        ProjectileMove->Velocity = LaunchDir * Speed;
         ProjectileMove->Activate();
+
+        SetActorRotation(LaunchDir.Rotation());
     }
 }
 
@@ -153,6 +174,55 @@ void AProjectile::SetChargeScale(float InScale)
     {
         SphereCollision2->SetSphereRadius(BaseSphere2Radius * InScale);
     }
+}
+
+void AProjectile::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+
+    if (!bUseHoming)
+        return;
+
+    if (!bLaunched)
+        return;
+
+    if (bHasHit)
+        return;
+
+    if (HomingTarget == nullptr)
+        return;
+
+    if (ProjectileMove == nullptr)
+        return;
+
+    FVector CurrentLocation = GetActorLocation();
+    FVector TargetLocation = HomingTarget->GetActorLocation();
+
+    FVector TargetDir = (TargetLocation - CurrentLocation).GetSafeNormal();
+    if (TargetDir.IsNearlyZero())
+        return;
+
+    FVector CurrentDir = ProjectileMove->Velocity.GetSafeNormal();
+    if (CurrentDir.IsNearlyZero())
+    {
+        CurrentDir = GetActorForwardVector();
+    }
+
+    FVector NewDir = FMath::VInterpTo(
+        CurrentDir,
+        TargetDir,
+        DeltaTime,
+        HomingInterpSpeed
+    ).GetSafeNormal();
+
+    float Speed = ProjectileMove->Velocity.Size();
+    if (Speed <= 0.f)
+    {
+        Speed = ProjectileMove->InitialSpeed;
+    }
+
+    ProjectileMove->Velocity = NewDir * Speed;
+    SetActorRotation(NewDir.Rotation());
 }
 
 void AProjectile::OnProjectileOverlap(

@@ -4,6 +4,7 @@
 #include "MainGameInstance.h"
 #include "Sockets.h"
 #include "Projectile.h"
+#include "MonsterBase.h"
 #include "Common/TcpSocketBuilder.h"
 #include "Serialization/ArrayWriter.h"
 #include "SocketSubsystem.h"
@@ -759,30 +760,46 @@ void UMainGameInstance::SendUseSkill(int32 SkillId)
 	Dir->set_x(0.f);
 	Dir->set_y(0.f);
 	Dir->set_z(0.f);
+ 
+	uint64 TargetId = 0;
+	AActor* SkillTarget = MyPlayer->LockedTargetActor;
 
-	if (MyPlayer->LockedTargetActor)
+	if (SkillId == 0)
 	{
-		APlayerCharacter* TargetChar = Cast<APlayerCharacter>(MyPlayer->LockedTargetActor);
-		if (TargetChar)
-		{
-			pkt.set_targetid(TargetChar->PlayerInfo.object_id());
-		}
-		else
-		{
-			pkt.set_targetid(0);
-		}
-	}
-	else
-	{
-		pkt.set_targetid(0);
+		LastLocalIceTarget = SkillTarget;
+
+		UE_LOG(LogTemp, Warning, TEXT("[SendUseSkill] Save LastLocalIceTarget=%s"),
+			*GetNameSafe(LastLocalIceTarget));
 	}
 
-	SendPacket(ClientPacketHandler::MakeSendBuffer(pkt));
+	if (SkillTarget)
+	{
+		if (APlayerCharacter* TargetPlayer = Cast<APlayerCharacter>(SkillTarget))
+		{
+			TargetId = TargetPlayer->PlayerInfo.object_id();
+		}
+		else if (AMonsterBase* TargetMonster = Cast<AMonsterBase>(SkillTarget))
+		{
+			for (const auto& Pair : Monsters)
+			{
+				if (Pair.Value == TargetMonster)
+				{
+					TargetId = Pair.Key;
+					break;
+				}
+			}
+		}
+	}
 
-	UE_LOG(LogTemp, Warning, TEXT("[SendUseSkill] SkillId=%d ChargeScale=%f TargetId=%llu"),
+	pkt.set_targetid(TargetId);
+
+	UE_LOG(LogTemp, Warning, TEXT("[SendUseSkill] SkillId=%d ChargeScale=%f LockedTarget=%s TargetId=%llu"),
 		SkillId,
 		CurrentFireballChargeScale,
-		(uint64)pkt.targetid());
+		*GetNameSafe(SkillTarget),
+		TargetId);
+
+	SendPacket(ClientPacketHandler::MakeSendBuffer(pkt));
 }
 
 void UMainGameInstance::SendEnterGamePacket()
@@ -968,10 +985,11 @@ void UMainGameInstance::OnRecvUseSkill(const Protocol::S_USE_SKILL& pkt)
 	default:
 		break;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("[OnRecvUseSkill] PlayerId=%llu MyObjectId=%llu SkillId=%d IsMine=%d"),
+	UE_LOG(LogTemp, Warning, TEXT("[OnRecvUseSkill] PlayerId=%llu MyObjectId=%llu SkillId=%d TargetId=%llu IsMine=%d"),
 		PlayerId,
 		MyObjectId,
 		SkillId,
+		TargetId,
 		Player->IsMyPlayer() ? 1 : 0);
 }
 
@@ -1000,10 +1018,37 @@ void UMainGameInstance::HandleIceSkillPacket(uint64 CasterID, uint64 TargetID)
 	}
 
 	AActor* Target = GetPlayerById(TargetID);
+
 	if (Target == nullptr && Monsters.Contains(TargetID))
 	{
 		Target = Monsters[TargetID];
 	}
+
+	if (Target == nullptr && CasterID == MyObjectId)
+	{
+		Target = LastLocalIceTarget;
+
+		UE_LOG(LogTemp, Warning, TEXT("[HandleIceSkillPacket] Use LastLocalIceTarget=%s"),
+			*GetNameSafe(Target));
+	}
+
+	if (Target == nullptr && TargetID != 0)
+	{
+		for (TActorIterator<AMonsterBase> It(GetWorld()); It; ++It)
+		{
+			AMonsterBase* Monster = *It;
+			if (Monster && static_cast<uint64>(Monster->MonsterId) == TargetID)
+			{
+				Target = Monster;
+				break;
+			}
+		}
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[HandleIceSkillPacket] CasterID=%llu TargetID=%llu Target=%s"),
+		(unsigned long long)CasterID,
+		(unsigned long long)TargetID,
+		*GetNameSafe(Target));
 
 	if (IceProjectileBPClass == nullptr)
 	{
@@ -1062,15 +1107,7 @@ void UMainGameInstance::HandleIceSkillPacket(uint64 CasterID, uint64 TargetID)
 	}
 
 	LastIceFireTimeMap.Add(CasterID, CurrentTime);
-
 	NextIceRightHandMap.Add(CasterID, !bUseRightHand);
-
-	UE_LOG(LogTemp, Warning, TEXT("[IceCombo] UseHand=%s NextHand=%s CasterID=%llu Time=%f SpawnLocation=%s"),
-		bUseRightHand ? TEXT("Right") : TEXT("Left"),
-		(!bUseRightHand) ? TEXT("Right") : TEXT("Left"),
-		(unsigned long long)CasterID,
-		CurrentTime,
-		*SpawnLocation.ToString());
 
 	FRotator SpawnRotation = Caster->GetActorRotation();
 	FTransform SpawnTransform(SpawnRotation, SpawnLocation);
@@ -1096,11 +1133,13 @@ void UMainGameInstance::HandleIceSkillPacket(uint64 CasterID, uint64 TargetID)
 	if (Projectile)
 	{
 		Projectile->SetProjectileInfo(Caster, 0);
+		Projectile->SetHomingTarget(Target);
 
-		UE_LOG(LogTemp, Warning, TEXT("[HandleIceSkillPacket] %s SetProjectileInfo Owner=%s SkillId=%d"),
+		UE_LOG(LogTemp, Warning, TEXT("[HandleIceSkillPacket] %s SetProjectileInfo Owner=%s SkillId=%d Target=%s"),
 			HandName,
 			*GetNameSafe(Caster),
-			0);
+			0,
+			*GetNameSafe(Target));
 	}
 
 	SpawnedActor->FinishSpawning(SpawnTransform);

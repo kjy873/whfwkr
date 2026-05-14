@@ -90,6 +90,9 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> MonsterClass;
 
+	UPROPERTY()
+	AActor* LastLocalIceTarget = nullptr;
+
 	APlayerCharacter* GetPlayerById(uint64 PlayerId);
 
 	void HandlePlayerStats(const Protocol::S_PLAYER_STATS& pkt);
