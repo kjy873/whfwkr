@@ -75,10 +75,6 @@ void Room::ApplySpawnByRoomType(PlayerRef player)
 	player->playerInfo->set_y(centerY);
 	player->playerInfo->set_z(centerZ);
 	player->playerInfo->set_yaw(Utils::GetRandom(0.f, 360.f));
-
-	cout << "[ApplySpawnByRoomType] objId=" << player->playerInfo->object_id()
-		<< " roomType=" << static_cast<int>(_roomType)
-		<< " pos=(" << centerX << ", " << centerY << ", " << centerZ << ")" << endl;
 }
 
 void Room::HandleMonsterKill(uint64 playerId)
@@ -108,23 +104,6 @@ bool Room::HandleEnterPlayerLocked(PlayerRef player, RoomRef self)
 		return false;
 	}
 
-	/*
-	ApplySpawnByRoomType(player);
-	player->playerInfo->set_hp(100);
-
-	{
-		Protocol::S_ENTER_GAME enterGamePkt;
-		enterGamePkt.set_success(true);
-
-		Protocol::PlayerInfo* playerInfo = new Protocol::PlayerInfo();
-		playerInfo->CopyFrom(*player->playerInfo);
-		enterGamePkt.set_allocated_player(playerInfo);
-
-		SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(enterGamePkt);
-		if (auto session = player->session.lock())
-			session->Send(sendBuffer);
-	}
-	*/
 	return true;
 }
 
@@ -146,14 +125,6 @@ void Room::HandleClientLevelReady(PlayerRef player)
 	{
 		ApplySpawnByRoomType(player);
 	}
-
-	cout << "[HandleClientLevelReady] objId="
-		<< player->playerInfo->object_id()
-		<< " roomType=" << static_cast<int>(_roomType)
-		<< " pos=("
-		<< player->playerInfo->x() << ", "
-		<< player->playerInfo->y() << ", "
-		<< player->playerInfo->z() << ")" << endl;
 
 	{
 		Protocol::S_ENTER_GAME enterGamePkt;
@@ -469,14 +440,18 @@ void Room::BroadcastPlayerStats(PlayerRef player)
 	if (player == nullptr || player->playerInfo == nullptr)
 		return;
 
+	GRoomManager.UpdatePlayerScore(player);
+
+	uint64 objectId = player->playerInfo->object_id();
+
 	Protocol::S_PLAYER_STATS pkt;
 
-	pkt.set_object_id(player->playerInfo->object_id());
+	pkt.set_object_id(objectId);
 	pkt.set_kill_count(player->KillCount);
 	pkt.set_death_count(player->DeathCount);
 	pkt.set_monster_kill_count(player->MonsterKillCount);
 
-	cout << "[BroadcastPlayerStats] ObjId=" << player->playerInfo->object_id()
+	cout << "[BroadcastPlayerStats] ObjId=" << objectId
 		<< " K=" << player->KillCount
 		<< " D=" << player->DeathCount
 		<< " M=" << player->MonsterKillCount
@@ -484,6 +459,11 @@ void Room::BroadcastPlayerStats(PlayerRef player)
 
 	SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
 	GSessionManager.Broadcast(sendBuffer);
+}
+
+void Room::BroadcastGameResult()
+{
+	GRoomManager.BroadcastGameResult();
 }
 
 void Room::HandleAttackPlayerLocked(uint64 attackerId, uint64 targetId, uint32 skillId)

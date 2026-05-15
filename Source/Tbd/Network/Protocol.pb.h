@@ -87,6 +87,9 @@ extern C_START_SKILL_CHARGEDefaultTypeInternal _C_START_SKILL_CHARGE_default_ins
 class C_USE_SKILL;
 struct C_USE_SKILLDefaultTypeInternal;
 extern C_USE_SKILLDefaultTypeInternal _C_USE_SKILL_default_instance_;
+class GameResultInfo;
+struct GameResultInfoDefaultTypeInternal;
+extern GameResultInfoDefaultTypeInternal _GameResultInfo_default_instance_;
 class MobInfo;
 struct MobInfoDefaultTypeInternal;
 extern MobInfoDefaultTypeInternal _MobInfo_default_instance_;
@@ -111,6 +114,9 @@ extern S_DESPAWN_MOBDefaultTypeInternal _S_DESPAWN_MOB_default_instance_;
 class S_ENTER_GAME;
 struct S_ENTER_GAMEDefaultTypeInternal;
 extern S_ENTER_GAMEDefaultTypeInternal _S_ENTER_GAME_default_instance_;
+class S_GAME_RESULT;
+struct S_GAME_RESULTDefaultTypeInternal;
+extern S_GAME_RESULTDefaultTypeInternal _S_GAME_RESULT_default_instance_;
 class S_LEAVE_GAME;
 struct S_LEAVE_GAMEDefaultTypeInternal;
 extern S_LEAVE_GAMEDefaultTypeInternal _S_LEAVE_GAME_default_instance_;
@@ -165,6 +171,7 @@ template<> ::Protocol::C_MOVE* Arena::CreateMaybeMessage<::Protocol::C_MOVE>(Are
 template<> ::Protocol::C_MOVE_MOB* Arena::CreateMaybeMessage<::Protocol::C_MOVE_MOB>(Arena*);
 template<> ::Protocol::C_START_SKILL_CHARGE* Arena::CreateMaybeMessage<::Protocol::C_START_SKILL_CHARGE>(Arena*);
 template<> ::Protocol::C_USE_SKILL* Arena::CreateMaybeMessage<::Protocol::C_USE_SKILL>(Arena*);
+template<> ::Protocol::GameResultInfo* Arena::CreateMaybeMessage<::Protocol::GameResultInfo>(Arena*);
 template<> ::Protocol::MobInfo* Arena::CreateMaybeMessage<::Protocol::MobInfo>(Arena*);
 template<> ::Protocol::S_CHANGE_LEVEL* Arena::CreateMaybeMessage<::Protocol::S_CHANGE_LEVEL>(Arena*);
 template<> ::Protocol::S_CHAT* Arena::CreateMaybeMessage<::Protocol::S_CHAT>(Arena*);
@@ -173,6 +180,7 @@ template<> ::Protocol::S_DAMAGE_PLAYER* Arena::CreateMaybeMessage<::Protocol::S_
 template<> ::Protocol::S_DESPAWN* Arena::CreateMaybeMessage<::Protocol::S_DESPAWN>(Arena*);
 template<> ::Protocol::S_DESPAWN_MOB* Arena::CreateMaybeMessage<::Protocol::S_DESPAWN_MOB>(Arena*);
 template<> ::Protocol::S_ENTER_GAME* Arena::CreateMaybeMessage<::Protocol::S_ENTER_GAME>(Arena*);
+template<> ::Protocol::S_GAME_RESULT* Arena::CreateMaybeMessage<::Protocol::S_GAME_RESULT>(Arena*);
 template<> ::Protocol::S_LEAVE_GAME* Arena::CreateMaybeMessage<::Protocol::S_LEAVE_GAME>(Arena*);
 template<> ::Protocol::S_LOGIN* Arena::CreateMaybeMessage<::Protocol::S_LOGIN>(Arena*);
 template<> ::Protocol::S_MOVE* Arena::CreateMaybeMessage<::Protocol::S_MOVE>(Arena*);
@@ -2160,6 +2168,366 @@ class S_PLAYER_STATS final :
 };
 // -------------------------------------------------------------------
 
+class GameResultInfo final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:Protocol.GameResultInfo) */ {
+ public:
+  inline GameResultInfo() : GameResultInfo(nullptr) {}
+  ~GameResultInfo() override;
+  explicit PROTOBUF_CONSTEXPR GameResultInfo(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  GameResultInfo(const GameResultInfo& from);
+  GameResultInfo(GameResultInfo&& from) noexcept
+    : GameResultInfo() {
+    *this = ::std::move(from);
+  }
+
+  inline GameResultInfo& operator=(const GameResultInfo& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline GameResultInfo& operator=(GameResultInfo&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const GameResultInfo& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const GameResultInfo* internal_default_instance() {
+    return reinterpret_cast<const GameResultInfo*>(
+               &_GameResultInfo_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    13;
+
+  friend void swap(GameResultInfo& a, GameResultInfo& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(GameResultInfo* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(GameResultInfo* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  GameResultInfo* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<GameResultInfo>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const GameResultInfo& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const GameResultInfo& from) {
+    GameResultInfo::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(GameResultInfo* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "Protocol.GameResultInfo";
+  }
+  protected:
+  explicit GameResultInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kObjectIdFieldNumber = 1,
+    kKillCountFieldNumber = 2,
+    kDeathCountFieldNumber = 3,
+    kMonsterKillCountFieldNumber = 4,
+    kScoreFieldNumber = 5,
+    kIsWinnerFieldNumber = 6,
+  };
+  // uint64 object_id = 1;
+  void clear_object_id();
+  uint64_t object_id() const;
+  void set_object_id(uint64_t value);
+  private:
+  uint64_t _internal_object_id() const;
+  void _internal_set_object_id(uint64_t value);
+  public:
+
+  // int32 kill_count = 2;
+  void clear_kill_count();
+  int32_t kill_count() const;
+  void set_kill_count(int32_t value);
+  private:
+  int32_t _internal_kill_count() const;
+  void _internal_set_kill_count(int32_t value);
+  public:
+
+  // int32 death_count = 3;
+  void clear_death_count();
+  int32_t death_count() const;
+  void set_death_count(int32_t value);
+  private:
+  int32_t _internal_death_count() const;
+  void _internal_set_death_count(int32_t value);
+  public:
+
+  // int32 monster_kill_count = 4;
+  void clear_monster_kill_count();
+  int32_t monster_kill_count() const;
+  void set_monster_kill_count(int32_t value);
+  private:
+  int32_t _internal_monster_kill_count() const;
+  void _internal_set_monster_kill_count(int32_t value);
+  public:
+
+  // int32 score = 5;
+  void clear_score();
+  int32_t score() const;
+  void set_score(int32_t value);
+  private:
+  int32_t _internal_score() const;
+  void _internal_set_score(int32_t value);
+  public:
+
+  // bool is_winner = 6;
+  void clear_is_winner();
+  bool is_winner() const;
+  void set_is_winner(bool value);
+  private:
+  bool _internal_is_winner() const;
+  void _internal_set_is_winner(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:Protocol.GameResultInfo)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    uint64_t object_id_;
+    int32_t kill_count_;
+    int32_t death_count_;
+    int32_t monster_kill_count_;
+    int32_t score_;
+    bool is_winner_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_Protocol_2eproto;
+};
+// -------------------------------------------------------------------
+
+class S_GAME_RESULT final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:Protocol.S_GAME_RESULT) */ {
+ public:
+  inline S_GAME_RESULT() : S_GAME_RESULT(nullptr) {}
+  ~S_GAME_RESULT() override;
+  explicit PROTOBUF_CONSTEXPR S_GAME_RESULT(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  S_GAME_RESULT(const S_GAME_RESULT& from);
+  S_GAME_RESULT(S_GAME_RESULT&& from) noexcept
+    : S_GAME_RESULT() {
+    *this = ::std::move(from);
+  }
+
+  inline S_GAME_RESULT& operator=(const S_GAME_RESULT& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline S_GAME_RESULT& operator=(S_GAME_RESULT&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const S_GAME_RESULT& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const S_GAME_RESULT* internal_default_instance() {
+    return reinterpret_cast<const S_GAME_RESULT*>(
+               &_S_GAME_RESULT_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    14;
+
+  friend void swap(S_GAME_RESULT& a, S_GAME_RESULT& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(S_GAME_RESULT* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(S_GAME_RESULT* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  S_GAME_RESULT* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<S_GAME_RESULT>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const S_GAME_RESULT& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const S_GAME_RESULT& from) {
+    S_GAME_RESULT::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(S_GAME_RESULT* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "Protocol.S_GAME_RESULT";
+  }
+  protected:
+  explicit S_GAME_RESULT(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kResultsFieldNumber = 1,
+  };
+  // repeated .Protocol.GameResultInfo results = 1;
+  int results_size() const;
+  private:
+  int _internal_results_size() const;
+  public:
+  void clear_results();
+  ::Protocol::GameResultInfo* mutable_results(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::Protocol::GameResultInfo >*
+      mutable_results();
+  private:
+  const ::Protocol::GameResultInfo& _internal_results(int index) const;
+  ::Protocol::GameResultInfo* _internal_add_results();
+  public:
+  const ::Protocol::GameResultInfo& results(int index) const;
+  ::Protocol::GameResultInfo* add_results();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::Protocol::GameResultInfo >&
+      results() const;
+
+  // @@protoc_insertion_point(class_scope:Protocol.S_GAME_RESULT)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::Protocol::GameResultInfo > results_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_Protocol_2eproto;
+};
+// -------------------------------------------------------------------
+
 class C_ATTACK_PLAYER final :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:Protocol.C_ATTACK_PLAYER) */ {
  public:
@@ -2208,7 +2576,7 @@ class C_ATTACK_PLAYER final :
                &_C_ATTACK_PLAYER_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    13;
+    15;
 
   friend void swap(C_ATTACK_PLAYER& a, C_ATTACK_PLAYER& b) {
     a.Swap(&b);
@@ -2367,7 +2735,7 @@ class S_DAMAGE_PLAYER final :
                &_S_DAMAGE_PLAYER_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    14;
+    16;
 
   friend void swap(S_DAMAGE_PLAYER& a, S_DAMAGE_PLAYER& b) {
     a.Swap(&b);
@@ -2526,7 +2894,7 @@ class S_PLAYER_DEAD final :
                &_S_PLAYER_DEAD_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    15;
+    17;
 
   friend void swap(S_PLAYER_DEAD& a, S_PLAYER_DEAD& b) {
     a.Swap(&b);
@@ -2674,7 +3042,7 @@ class Vector3 final :
                &_Vector3_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    16;
+    18;
 
   friend void swap(Vector3& a, Vector3& b) {
     a.Swap(&b);
@@ -2844,7 +3212,7 @@ class MobInfo final :
                &_MobInfo_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    17;
+    19;
 
   friend void swap(MobInfo& a, MobInfo& b) {
     a.Swap(&b);
@@ -3054,7 +3422,7 @@ class S_SPAWN_MOB final :
                &_S_SPAWN_MOB_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    18;
+    20;
 
   friend void swap(S_SPAWN_MOB& a, S_SPAWN_MOB& b) {
     a.Swap(&b);
@@ -3211,7 +3579,7 @@ class S_DESPAWN_MOB final :
                &_S_DESPAWN_MOB_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    19;
+    21;
 
   friend void swap(S_DESPAWN_MOB& a, S_DESPAWN_MOB& b) {
     a.Swap(&b);
@@ -3373,7 +3741,7 @@ class S_MOVE_MOB final :
                &_S_MOVE_MOB_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    20;
+    22;
 
   friend void swap(S_MOVE_MOB& a, S_MOVE_MOB& b) {
     a.Swap(&b);
@@ -3530,7 +3898,7 @@ class C_MOVE_MOB final :
                &_C_MOVE_MOB_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    21;
+    23;
 
   friend void swap(C_MOVE_MOB& a, C_MOVE_MOB& b) {
     a.Swap(&b);
@@ -3718,7 +4086,7 @@ class C_ATTACK_MOB final :
                &_C_ATTACK_MOB_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    22;
+    24;
 
   friend void swap(C_ATTACK_MOB& a, C_ATTACK_MOB& b) {
     a.Swap(&b);
@@ -3866,7 +4234,7 @@ class C_USE_SKILL final :
                &_C_USE_SKILL_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    23;
+    25;
 
   friend void swap(C_USE_SKILL& a, C_USE_SKILL& b) {
     a.Swap(&b);
@@ -4078,7 +4446,7 @@ class S_USE_SKILL final :
                &_S_USE_SKILL_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    24;
+    26;
 
   friend void swap(S_USE_SKILL& a, S_USE_SKILL& b) {
     a.Swap(&b);
@@ -4259,7 +4627,7 @@ class S_DAMAGE_MOB final :
                &_S_DAMAGE_MOB_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    25;
+    27;
 
   friend void swap(S_DAMAGE_MOB& a, S_DAMAGE_MOB& b) {
     a.Swap(&b);
@@ -4429,7 +4797,7 @@ class C_MONSTER_KILL final :
                &_C_MONSTER_KILL_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    26;
+    28;
 
   friend void swap(C_MONSTER_KILL& a, C_MONSTER_KILL& b) {
     a.Swap(&b);
@@ -4577,7 +4945,7 @@ class S_PROJECTILE_HIT final :
                &_S_PROJECTILE_HIT_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    27;
+    29;
 
   friend void swap(S_PROJECTILE_HIT& a, S_PROJECTILE_HIT& b) {
     a.Swap(&b);
@@ -4767,7 +5135,7 @@ class S_PROJECTILE_DESTROY final :
                &_S_PROJECTILE_DESTROY_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    28;
+    30;
 
   friend void swap(S_PROJECTILE_DESTROY& a, S_PROJECTILE_DESTROY& b) {
     a.Swap(&b);
@@ -4915,7 +5283,7 @@ class S_CHANGE_LEVEL final :
                &_S_CHANGE_LEVEL_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    29;
+    31;
 
   friend void swap(S_CHANGE_LEVEL& a, S_CHANGE_LEVEL& b) {
     a.Swap(&b);
@@ -5068,7 +5436,7 @@ class C_DEMO_NEXT_LEVEL final :
                &_C_DEMO_NEXT_LEVEL_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    30;
+    32;
 
   friend void swap(C_DEMO_NEXT_LEVEL& a, C_DEMO_NEXT_LEVEL& b) {
     a.Swap(&b);
@@ -5215,7 +5583,7 @@ class C_LEVEL_READY final :
                &_C_LEVEL_READY_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    31;
+    33;
 
   friend void swap(C_LEVEL_READY& a, C_LEVEL_READY& b) {
     a.Swap(&b);
@@ -5334,7 +5702,7 @@ class C_START_SKILL_CHARGE final :
                &_C_START_SKILL_CHARGE_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    32;
+    34;
 
   friend void swap(C_START_SKILL_CHARGE& a, C_START_SKILL_CHARGE& b) {
     a.Swap(&b);
@@ -5482,7 +5850,7 @@ class S_START_SKILL_CHARGE final :
                &_S_START_SKILL_CHARGE_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    33;
+    35;
 
   friend void swap(S_START_SKILL_CHARGE& a, S_START_SKILL_CHARGE& b) {
     a.Swap(&b);
@@ -6284,6 +6652,174 @@ inline void S_PLAYER_STATS::_internal_set_monster_kill_count(int32_t value) {
 inline void S_PLAYER_STATS::set_monster_kill_count(int32_t value) {
   _internal_set_monster_kill_count(value);
   // @@protoc_insertion_point(field_set:Protocol.S_PLAYER_STATS.monster_kill_count)
+}
+
+// -------------------------------------------------------------------
+
+// GameResultInfo
+
+// uint64 object_id = 1;
+inline void GameResultInfo::clear_object_id() {
+  _impl_.object_id_ = uint64_t{0u};
+}
+inline uint64_t GameResultInfo::_internal_object_id() const {
+  return _impl_.object_id_;
+}
+inline uint64_t GameResultInfo::object_id() const {
+  // @@protoc_insertion_point(field_get:Protocol.GameResultInfo.object_id)
+  return _internal_object_id();
+}
+inline void GameResultInfo::_internal_set_object_id(uint64_t value) {
+  
+  _impl_.object_id_ = value;
+}
+inline void GameResultInfo::set_object_id(uint64_t value) {
+  _internal_set_object_id(value);
+  // @@protoc_insertion_point(field_set:Protocol.GameResultInfo.object_id)
+}
+
+// int32 kill_count = 2;
+inline void GameResultInfo::clear_kill_count() {
+  _impl_.kill_count_ = 0;
+}
+inline int32_t GameResultInfo::_internal_kill_count() const {
+  return _impl_.kill_count_;
+}
+inline int32_t GameResultInfo::kill_count() const {
+  // @@protoc_insertion_point(field_get:Protocol.GameResultInfo.kill_count)
+  return _internal_kill_count();
+}
+inline void GameResultInfo::_internal_set_kill_count(int32_t value) {
+  
+  _impl_.kill_count_ = value;
+}
+inline void GameResultInfo::set_kill_count(int32_t value) {
+  _internal_set_kill_count(value);
+  // @@protoc_insertion_point(field_set:Protocol.GameResultInfo.kill_count)
+}
+
+// int32 death_count = 3;
+inline void GameResultInfo::clear_death_count() {
+  _impl_.death_count_ = 0;
+}
+inline int32_t GameResultInfo::_internal_death_count() const {
+  return _impl_.death_count_;
+}
+inline int32_t GameResultInfo::death_count() const {
+  // @@protoc_insertion_point(field_get:Protocol.GameResultInfo.death_count)
+  return _internal_death_count();
+}
+inline void GameResultInfo::_internal_set_death_count(int32_t value) {
+  
+  _impl_.death_count_ = value;
+}
+inline void GameResultInfo::set_death_count(int32_t value) {
+  _internal_set_death_count(value);
+  // @@protoc_insertion_point(field_set:Protocol.GameResultInfo.death_count)
+}
+
+// int32 monster_kill_count = 4;
+inline void GameResultInfo::clear_monster_kill_count() {
+  _impl_.monster_kill_count_ = 0;
+}
+inline int32_t GameResultInfo::_internal_monster_kill_count() const {
+  return _impl_.monster_kill_count_;
+}
+inline int32_t GameResultInfo::monster_kill_count() const {
+  // @@protoc_insertion_point(field_get:Protocol.GameResultInfo.monster_kill_count)
+  return _internal_monster_kill_count();
+}
+inline void GameResultInfo::_internal_set_monster_kill_count(int32_t value) {
+  
+  _impl_.monster_kill_count_ = value;
+}
+inline void GameResultInfo::set_monster_kill_count(int32_t value) {
+  _internal_set_monster_kill_count(value);
+  // @@protoc_insertion_point(field_set:Protocol.GameResultInfo.monster_kill_count)
+}
+
+// int32 score = 5;
+inline void GameResultInfo::clear_score() {
+  _impl_.score_ = 0;
+}
+inline int32_t GameResultInfo::_internal_score() const {
+  return _impl_.score_;
+}
+inline int32_t GameResultInfo::score() const {
+  // @@protoc_insertion_point(field_get:Protocol.GameResultInfo.score)
+  return _internal_score();
+}
+inline void GameResultInfo::_internal_set_score(int32_t value) {
+  
+  _impl_.score_ = value;
+}
+inline void GameResultInfo::set_score(int32_t value) {
+  _internal_set_score(value);
+  // @@protoc_insertion_point(field_set:Protocol.GameResultInfo.score)
+}
+
+// bool is_winner = 6;
+inline void GameResultInfo::clear_is_winner() {
+  _impl_.is_winner_ = false;
+}
+inline bool GameResultInfo::_internal_is_winner() const {
+  return _impl_.is_winner_;
+}
+inline bool GameResultInfo::is_winner() const {
+  // @@protoc_insertion_point(field_get:Protocol.GameResultInfo.is_winner)
+  return _internal_is_winner();
+}
+inline void GameResultInfo::_internal_set_is_winner(bool value) {
+  
+  _impl_.is_winner_ = value;
+}
+inline void GameResultInfo::set_is_winner(bool value) {
+  _internal_set_is_winner(value);
+  // @@protoc_insertion_point(field_set:Protocol.GameResultInfo.is_winner)
+}
+
+// -------------------------------------------------------------------
+
+// S_GAME_RESULT
+
+// repeated .Protocol.GameResultInfo results = 1;
+inline int S_GAME_RESULT::_internal_results_size() const {
+  return _impl_.results_.size();
+}
+inline int S_GAME_RESULT::results_size() const {
+  return _internal_results_size();
+}
+inline void S_GAME_RESULT::clear_results() {
+  _impl_.results_.Clear();
+}
+inline ::Protocol::GameResultInfo* S_GAME_RESULT::mutable_results(int index) {
+  // @@protoc_insertion_point(field_mutable:Protocol.S_GAME_RESULT.results)
+  return _impl_.results_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::Protocol::GameResultInfo >*
+S_GAME_RESULT::mutable_results() {
+  // @@protoc_insertion_point(field_mutable_list:Protocol.S_GAME_RESULT.results)
+  return &_impl_.results_;
+}
+inline const ::Protocol::GameResultInfo& S_GAME_RESULT::_internal_results(int index) const {
+  return _impl_.results_.Get(index);
+}
+inline const ::Protocol::GameResultInfo& S_GAME_RESULT::results(int index) const {
+  // @@protoc_insertion_point(field_get:Protocol.S_GAME_RESULT.results)
+  return _internal_results(index);
+}
+inline ::Protocol::GameResultInfo* S_GAME_RESULT::_internal_add_results() {
+  return _impl_.results_.Add();
+}
+inline ::Protocol::GameResultInfo* S_GAME_RESULT::add_results() {
+  ::Protocol::GameResultInfo* _add = _internal_add_results();
+  // @@protoc_insertion_point(field_add:Protocol.S_GAME_RESULT.results)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::Protocol::GameResultInfo >&
+S_GAME_RESULT::results() const {
+  // @@protoc_insertion_point(field_list:Protocol.S_GAME_RESULT.results)
+  return _impl_.results_;
 }
 
 // -------------------------------------------------------------------
@@ -7820,6 +8356,10 @@ inline void S_START_SKILL_CHARGE::set_skillid(uint32_t value) {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

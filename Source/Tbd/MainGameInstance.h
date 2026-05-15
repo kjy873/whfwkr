@@ -14,19 +14,21 @@
 class AActor;
 class APlayerCharacter;
 class AProjectile;
+class RecvWorker;
+class SendWorker;
 
 USTRUCT(BlueprintType)
 struct FPlayerStatsData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	int32 Kill = 0;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	int32 Death = 0;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	int32 MonsterKill = 0;
 };
 
@@ -96,6 +98,26 @@ public:
 	APlayerCharacter* GetPlayerById(uint64 PlayerId);
 
 	void HandlePlayerStats(const Protocol::S_PLAYER_STATS& pkt);
+
+	void HandleGameResult(const Protocol::S_GAME_RESULT& pkt);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Result")
+	void BP_OnGameResultReceived();
+
+	UPROPERTY(BlueprintReadOnly, Category = "Result")
+	bool bIsWinner = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Result")
+	int32 MyResultScore = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Result")
+	int32 MyResultKill = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Result")
+	int32 MyResultDeath = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Result")
+	int32 MyResultMonsterKill = 0;
 
 	void SendPacket(SendBufferRef SendBuffer);
 	void SendLevelReady();

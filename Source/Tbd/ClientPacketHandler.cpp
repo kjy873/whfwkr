@@ -162,6 +162,46 @@ bool Handle_S_PLAYER_STATS(PacketSessionRef& session, Protocol::S_PLAYER_STATS& 
 	return true;
 }
 
+bool Handle_S_GAME_RESULT(PacketSessionRef& session, Protocol::S_GAME_RESULT& pkt)
+{
+	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_GAME_RESULT] ENTER ResultCount=%d"), pkt.results_size());
+
+	for (int32 i = 0; i < pkt.results_size(); i++)
+	{
+		const Protocol::GameResultInfo& Result = pkt.results(i);
+
+		UE_LOG(LogTemp, Warning,
+			TEXT("[Handle_S_GAME_RESULT] ObjId=%llu K=%d D=%d M=%d Score=%d Winner=%d"),
+			Result.object_id(),
+			Result.kill_count(),
+			Result.death_count(),
+			Result.monster_kill_count(),
+			Result.score(),
+			Result.is_winner() ? 1 : 0
+		);
+	}
+
+	if (session == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Handle_S_GAME_RESULT] session nullptr"));
+		return true;
+	}
+
+	UMainGameInstance* GameInstance = session->GetOwnerGameInstance();
+	if (GameInstance == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Handle_S_GAME_RESULT] OwnerGameInstance nullptr"));
+		return true;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_GAME_RESULT] Call HandleGameResult MyObjectId=%llu"),
+		GameInstance->MyObjectId);
+
+	GameInstance->HandleGameResult(pkt);
+
+	return true;
+}
+
 bool Handle_S_DAMAGE_PLAYER(PacketSessionRef& session, Protocol::S_DAMAGE_PLAYER& pkt)
 {
 	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_DAMAGE_PLAYER] packet arrived session=%p obj=%llu damage=%d"),
