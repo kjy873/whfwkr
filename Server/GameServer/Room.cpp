@@ -398,18 +398,35 @@ bool Room::LeavePlayer(uint64 objectId)
 
 void Room::Broadcast(SendBufferRef sendBuffer, uint64 exceptId)
 {
+	PacketHeader* header = reinterpret_cast<PacketHeader*>(sendBuffer->Buffer());
 	int32 sentCount = 0;
+
 	for (auto& item : _players)
 	{
 		PlayerRef player = item.second;
-		if (player->playerInfo->object_id() == exceptId)
-			continue;
-
-		if (GameSessionRef session = player->session.lock())
+		if (player == nullptr)
 		{
-			session->Send(sendBuffer);
-			sentCount++;
+			printf("[Room Broadcast] player null\n");
+			continue;
 		}
+
+		uint64 objectId = player->playerInfo->object_id();
+
+		if (objectId == exceptId)
+		{
+			printf("[Room Broadcast] skip except playerId=%llu\n", objectId);
+			continue;
+		}
+
+		GameSessionRef session = player->session.lock();
+		if (session == nullptr)
+		{
+			printf("[Room Broadcast] session null playerId=%llu\n", objectId);
+			continue;
+		}
+
+		session->Send(sendBuffer);
+		sentCount++;
 	}
 }
 
@@ -422,7 +439,10 @@ void Room::BroadcastUseSkill(uint64 playerId, uint32 skillId, float chargeScale)
 	pkt.set_chargescale(chargeScale);
 
 	SendBufferRef send = ServerPacketHandler::MakeSendBuffer(pkt);
-	Broadcast(send);
+
+	PacketHeader* header = reinterpret_cast<PacketHeader*>(send->Buffer());
+
+	Broadcast(send, 0);
 }
 
 void Room::BroadcastStartSkillCharge(uint64 playerId, uint32 skillId)

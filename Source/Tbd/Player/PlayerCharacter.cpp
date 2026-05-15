@@ -126,7 +126,7 @@ void APlayerCharacter::Req_UseIceSkill(int32 SkillId, AActor* Target)
 	if (GI == nullptr)
 		return;
 
-	GI->SendUseSkill(SkillId);
+	GI->SendUseSkill(SkillId, 1);
 }
 
 void APlayerCharacter::PlayNetworkAttackAnimation()

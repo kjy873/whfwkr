@@ -17,12 +17,31 @@ class TBD_API AProjectile : public AActor
 
 public:
     AProjectile();
-    void SetProjectileInfo(APlayerCharacter* InOwnerPlayer, int32 InSkillId);
-    void ActivateProjectileCollision();
-    void LaunchProjectile(FVector Direction);
+
+    UFUNCTION(BlueprintCallable)
+    void SetProjectileInfo(int32 InSkillId, AActor* InOwnerPlayer);
+
+    UFUNCTION(BlueprintCallable)
+    void LaunchProjectile(const FVector& Direction);
+
     void SetChargeScale(float InScale);
 
     virtual void Tick(float DeltaTime) override;
+
+    void CheckManualOverlap();
+    void HandleProjectileHit(AActor* OtherActor);
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
+    float HitCheckRadius = 80.f;
+
+    UFUNCTION(BlueprintCallable)
+    void ActivateProjectileCollision();
+
+    UPROPERTY()
+    FVector MoveDirection = FVector::ZeroVector;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float MoveSpeed = 2000.f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Homing")
     AActor* HomingTarget = nullptr;
@@ -70,7 +89,7 @@ protected:
     TObjectPtr<UProjectileMovementComponent> ProjectileMove;
 
     UPROPERTY()
-    APlayerCharacter* OwnerPlayer = nullptr;
+    AActor* OwnerPlayer = nullptr;
 
     int32 SkillId = 0;
     bool bHasHit = false;

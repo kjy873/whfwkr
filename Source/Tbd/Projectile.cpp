@@ -16,40 +16,47 @@ AProjectile::AProjectile()
     SphereCollision1 = CreateDefaultSubobject<USphereComponent>(TEXT("SphereCollision1"));
     SphereCollision1->SetupAttachment(SceneRoot);
 
-    SphereCollision1->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-    SphereCollision1->SetGenerateOverlapEvents(true);
     SphereCollision1->SetCollisionObjectType(ECC_WorldDynamic);
     SphereCollision1->SetCollisionResponseToAllChannels(ECR_Ignore);
     SphereCollision1->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
     SphereCollision1->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
     SphereCollision1->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Ignore);
 
+    SphereCollision1->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    SphereCollision1->SetGenerateOverlapEvents(true);
+
+
     SphereCollision2 = CreateDefaultSubobject<USphereComponent>(TEXT("SphereCollision2"));
     SphereCollision2->SetupAttachment(SceneRoot);
 
-    SphereCollision2->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-    SphereCollision2->SetGenerateOverlapEvents(true);
     SphereCollision2->SetCollisionObjectType(ECC_WorldDynamic);
     SphereCollision2->SetCollisionResponseToAllChannels(ECR_Ignore);
     SphereCollision2->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
     SphereCollision2->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+    SphereCollision2->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Ignore);
+
+    SphereCollision2->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    SphereCollision2->SetGenerateOverlapEvents(true);
+
 
     BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
     BoxCollision->SetupAttachment(SceneRoot);
 
-    BoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-    BoxCollision->SetGenerateOverlapEvents(true);
     BoxCollision->SetCollisionObjectType(ECC_WorldDynamic);
     BoxCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
     BoxCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
     BoxCollision->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+    BoxCollision->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Ignore);
+
+    BoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    BoxCollision->SetGenerateOverlapEvents(true);
+
 
     ProjectileMove = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMove"));
     ProjectileMove->InitialSpeed = 2000.f;
     ProjectileMove->MaxSpeed = 2000.f;
     ProjectileMove->ProjectileGravityScale = 0.f;
     ProjectileMove->bAutoActivate = false;
-    ProjectileMove->SetUpdatedComponent(SphereCollision1);
 
     SphereCollision1->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnProjectileOverlap);
     SphereCollision2->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnProjectileOverlap);
@@ -75,96 +82,84 @@ void AProjectile::BeginPlay()
     BaseSphere2Radius = SphereCollision2 ? SphereCollision2->GetUnscaledSphereRadius() : 0.f;
 }
 
-void AProjectile::SetProjectileInfo(APlayerCharacter* InOwnerPlayer, int32 InSkillId)
+void AProjectile::SetProjectileInfo(int32 InSkillId, AActor* InOwnerPlayer)
 {
-    OwnerPlayer = InOwnerPlayer;
     SkillId = InSkillId;
-    bLaunched = false;
-
+    OwnerPlayer = InOwnerPlayer;
     SetOwner(InOwnerPlayer);
-    ProjectileMove->SetUpdatedComponent(RootComponent);
 
-    switch (SkillId)
+    if (OwnerPlayer)
     {
-    case 0: // Ice
-        ProjectileMove->InitialSpeed = 1200.f;
-        ProjectileMove->MaxSpeed = 1200.f;
-        break;
+        if (SphereCollision1)
+            SphereCollision1->IgnoreActorWhenMoving(OwnerPlayer, true);
 
-    case 1: // Fireball
-        ProjectileMove->InitialSpeed = 800.f;
-        ProjectileMove->MaxSpeed = 800.f;
-        break;
+        if (SphereCollision2)
+            SphereCollision2->IgnoreActorWhenMoving(OwnerPlayer, true);
+
+        if (BoxCollision)
+            BoxCollision->IgnoreActorWhenMoving(OwnerPlayer, true);
     }
 
-    SphereCollision1->IgnoreActorWhenMoving(InOwnerPlayer, true);
-    SphereCollision2->IgnoreActorWhenMoving(InOwnerPlayer, true);
-    BoxCollision->IgnoreActorWhenMoving(InOwnerPlayer, true);
-
-    SphereCollision1->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-    SphereCollision2->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-    BoxCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-    UE_LOG(LogTemp, Warning, TEXT("[SetProjectileInfo] Skill=%d Owner=%s"),
+    UE_LOG(LogTemp, Warning, TEXT("[SetProjectileInfo] Skill=%d Owner=%s GetOwner=%s"),
         SkillId,
-        *GetNameSafe(OwnerPlayer));
+        *GetNameSafe(OwnerPlayer),
+        *GetNameSafe(GetOwner()));
 }
 
 void AProjectile::ActivateProjectileCollision()
 {
+    bHasHit = false;
     bLaunched = true;
+     
+    MoveDirection = GetActorForwardVector().GetSafeNormal();
 
-    SphereCollision1->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-    SphereCollision2->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-    BoxCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-    switch (SkillId)
+    if (MoveDirection.IsNearlyZero())
     {
-    case 0: // ICE
-        SphereCollision1->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-        break;
-
-    case 1: // FIRE
-        SphereCollision2->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-        break;
-
-    case 2: // KNIGHT
-        BoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-        break;
-
-    default:
-        SphereCollision1->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-        break;
+        MoveDirection = FVector::ForwardVector;
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("[ActivateProjectileCollision] Skill=%d"), SkillId);
+    UE_LOG(LogTemp, Warning, TEXT("[ActivateProjectileCollision] Skill=%d Owner=%s Dir=%s"),
+        SkillId,
+        *GetNameSafe(OwnerPlayer),
+        *MoveDirection.ToString());
 }
 
-void AProjectile::LaunchProjectile(FVector Direction)
+void AProjectile::LaunchProjectile(const FVector& Direction)
 {
-    if (ProjectileMove)
+    bHasHit = false;
+    bLaunched = true;
+
+    MoveDirection = Direction.GetSafeNormal();
+
+    if (MoveDirection.IsNearlyZero())
     {
-        FVector LaunchDir = Direction.GetSafeNormal();
-
-        float Speed = ProjectileMove->InitialSpeed;
-        if (Speed <= 0.f)
-        {
-            Speed = 1200.f;
-        }
-
-        ProjectileMove->Velocity = LaunchDir * Speed;
-        ProjectileMove->Activate();
-
-        SetActorRotation(LaunchDir.Rotation());
+        MoveDirection = GetActorForwardVector().GetSafeNormal();
     }
+
+    if (MoveDirection.IsNearlyZero())
+    {
+        MoveDirection = FVector::ForwardVector;
+    }
+
+    SetActorRotation(MoveDirection.Rotation());
+
+    UE_LOG(LogTemp, Warning, TEXT("[LaunchProjectile] Skill=%d Owner=%s Dir=%s Speed=%f Loc=%s"),
+        SkillId,
+        *GetNameSafe(OwnerPlayer),
+        *MoveDirection.ToString(),
+        MoveSpeed,
+        *GetActorLocation().ToString());
 }
 
 void AProjectile::SetChargeScale(float InScale)
 {
-    InScale = FMath::Clamp(InScale, 0.2f, 2.0f);
+    InScale = FMath::Clamp(InScale, 1.0f, 3.0f);
+
+    UE_LOG(LogTemp, Warning, TEXT("[Projectile SetChargeScale] InScale=%f"), InScale);
 
     SetActorScale3D(FVector(InScale));
 
+    /*
     if (SphereCollision1 && BaseSphere1Radius > 0.f)
     {
         SphereCollision1->SetSphereRadius(BaseSphere1Radius * InScale);
@@ -174,14 +169,12 @@ void AProjectile::SetChargeScale(float InScale)
     {
         SphereCollision2->SetSphereRadius(BaseSphere2Radius * InScale);
     }
+    */
 }
 
 void AProjectile::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-
-    if (!bUseHoming)
-        return;
 
     if (!bLaunched)
         return;
@@ -189,40 +182,179 @@ void AProjectile::Tick(float DeltaTime)
     if (bHasHit)
         return;
 
-    if (HomingTarget == nullptr)
-        return;
-
-    if (ProjectileMove == nullptr)
-        return;
-
-    FVector CurrentLocation = GetActorLocation();
-    FVector TargetLocation = HomingTarget->GetActorLocation();
-
-    FVector TargetDir = (TargetLocation - CurrentLocation).GetSafeNormal();
-    if (TargetDir.IsNearlyZero())
-        return;
-
-    FVector CurrentDir = ProjectileMove->Velocity.GetSafeNormal();
-    if (CurrentDir.IsNearlyZero())
+    if (bUseHoming && HomingTarget != nullptr)
     {
-        CurrentDir = GetActorForwardVector();
+        FVector CurrentLocation = GetActorLocation();
+        FVector TargetLocation = HomingTarget->GetActorLocation();
+
+        FVector TargetDir = (TargetLocation - CurrentLocation).GetSafeNormal();
+
+        if (!TargetDir.IsNearlyZero())
+        {
+            FVector CurrentDir = MoveDirection.GetSafeNormal();
+
+            if (CurrentDir.IsNearlyZero())
+            {
+                CurrentDir = GetActorForwardVector();
+            }
+
+            FVector NewDir = FMath::VInterpTo(
+                CurrentDir,
+                TargetDir,
+                DeltaTime,
+                HomingInterpSpeed
+            ).GetSafeNormal();
+
+            if (!NewDir.IsNearlyZero())
+            {
+                MoveDirection = NewDir;
+                SetActorRotation(MoveDirection.Rotation());
+            }
+        }
     }
 
-    FVector NewDir = FMath::VInterpTo(
-        CurrentDir,
-        TargetDir,
-        DeltaTime,
-        HomingInterpSpeed
-    ).GetSafeNormal();
+    FVector FinalDirection = MoveDirection.GetSafeNormal();
 
-    float Speed = ProjectileMove->Velocity.Size();
-    if (Speed <= 0.f)
+    if (FinalDirection.IsNearlyZero())
     {
-        Speed = ProjectileMove->InitialSpeed;
+        FinalDirection = GetActorForwardVector().GetSafeNormal();
+        MoveDirection = FinalDirection;
     }
 
-    ProjectileMove->Velocity = NewDir * Speed;
-    SetActorRotation(NewDir.Rotation());
+    AddActorWorldOffset(FinalDirection * MoveSpeed * DeltaTime, false);
+
+    UE_LOG(LogTemp, Warning, TEXT("[Projectile Tick] Loc=%s Dir=%s Speed=%f"),
+        *GetActorLocation().ToString(),
+        *FinalDirection.ToString(),
+        MoveSpeed);
+
+    CheckManualOverlap();
+}
+
+void AProjectile::CheckManualOverlap()
+{
+    if (!bLaunched || bHasHit)
+        return;
+
+    UWorld* World = GetWorld();
+    if (World == nullptr)
+        return;
+
+    FVector CheckLocation = GetActorLocation();
+
+    if (SphereCollision1)
+    {
+        CheckLocation = SphereCollision1->GetComponentLocation();
+    }
+
+    float Radius = HitCheckRadius;
+
+    if (SphereCollision1)
+    {
+        Radius = FMath::Max(HitCheckRadius, SphereCollision1->GetScaledSphereRadius());
+    }
+
+    TArray<FOverlapResult> OverlapResults;
+
+    FCollisionObjectQueryParams ObjectParams;
+    ObjectParams.AddObjectTypesToQuery(ECC_Pawn);
+    ObjectParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+
+    FCollisionQueryParams QueryParams;
+    QueryParams.AddIgnoredActor(this);
+
+    if (OwnerPlayer)
+    {
+        QueryParams.AddIgnoredActor(OwnerPlayer);
+    }
+
+    bool bOverlapped = World->OverlapMultiByObjectType(
+        OverlapResults,
+        CheckLocation,
+        FQuat::Identity,
+        ObjectParams,
+        FCollisionShape::MakeSphere(Radius),
+        QueryParams
+    );
+
+    if (!bOverlapped)
+        return;
+
+    for (const FOverlapResult& Result : OverlapResults)
+    {
+        AActor* OtherActor = Result.GetActor();
+
+        if (OtherActor == nullptr)
+            continue;
+
+        if (OtherActor == this)
+            continue;
+
+        if (OtherActor == OwnerPlayer || OtherActor == GetOwner())
+            continue;
+
+        UE_LOG(LogTemp, Warning, TEXT("[Projectile ManualOverlap HIT] Self=%s Other=%s Owner=%s SkillId=%d Radius=%f"),
+            *GetNameSafe(this),
+            *GetNameSafe(OtherActor),
+            *GetNameSafe(OwnerPlayer),
+            SkillId,
+            Radius);
+
+        HandleProjectileHit(OtherActor);
+        return;
+    }
+}
+
+void AProjectile::HandleProjectileHit(AActor* OtherActor)
+{
+    if (!bLaunched)
+        return;
+
+    if (bHasHit)
+        return;
+
+    if (OtherActor == nullptr || OtherActor == this)
+        return;
+
+    if (OtherActor == OwnerPlayer || OtherActor == GetOwner())
+        return;
+
+    APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(OwnerPlayer);
+
+    if (OwnerCharacter == nullptr)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[HandleProjectileHit RETURN] OwnerCharacter cast failed Owner=%s"),
+            *GetNameSafe(OwnerPlayer));
+        return;
+    }
+
+    APlayerCharacter* HitPlayer = Cast<APlayerCharacter>(OtherActor);
+    if (HitPlayer)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[HandleProjectileHit] Hit Player Target=%s Owner=%s SkillId=%d"),
+            *GetNameSafe(HitPlayer),
+            *GetNameSafe(OwnerCharacter),
+            SkillId);
+
+        bHasHit = true;
+        HitPlayer->OnHitBySkill(OwnerCharacter, SkillId);
+        Destroy();
+        return;
+    }
+
+    AMonsterBase* HitMonster = Cast<AMonsterBase>(OtherActor);
+    if (HitMonster)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[HandleProjectileHit] Hit Monster Target=%s Owner=%s SkillId=%d"),
+            *GetNameSafe(HitMonster),
+            *GetNameSafe(OwnerCharacter),
+            SkillId);
+
+        bHasHit = true;
+        HitMonster->OnHitBySkill(OwnerCharacter, SkillId);
+        Destroy();
+        return;
+    }
 }
 
 void AProjectile::OnProjectileOverlap(
@@ -234,23 +366,53 @@ void AProjectile::OnProjectileOverlap(
     const FHitResult& SweepResult
 )
 {
+    UE_LOG(LogTemp, Warning, TEXT("[Projectile Overlap ENTER] Self=%s Other=%s OwnerPlayer=%s GetOwner=%s bLaunched=%d bHasHit=%d SkillId=%d"),
+        *GetNameSafe(this),
+        *GetNameSafe(OtherActor),
+        *GetNameSafe(OwnerPlayer),
+        *GetNameSafe(GetOwner()),
+        bLaunched,
+        bHasHit,
+        SkillId);
+
     if (!bLaunched)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[Projectile Overlap RETURN] Not launched"));
         return;
+    }
 
     if (bHasHit)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[Projectile Overlap RETURN] Already hit"));
         return;
+    }
 
     if (OtherActor == nullptr || OtherActor == this)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[Projectile Overlap RETURN] Null or self"));
         return;
+    }
 
-    if (OwnerPlayer == nullptr)
+    if (OtherActor == OwnerPlayer || OtherActor == GetOwner())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[Projectile Overlap RETURN] Owner ignored"));
         return;
+    }
 
-    if (OtherActor == OwnerPlayer || OtherActor == GetOwner() || OtherActor == GetInstigator())
-        return;
+    UE_LOG(LogTemp, Warning, TEXT("[Projectile Damage TRY] Other=%s SkillId=%d"),
+        *GetNameSafe(OtherActor),
+        SkillId);
 
-    if (OwnerPlayer->IsMyPlayer() == false)
+    bHasHit = true;
+
+    APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(OwnerPlayer);
+
+    if (OwnerCharacter == nullptr)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[Projectile Overlap RETURN] OwnerCharacter cast failed OwnerPlayer=%s"),
+            *GetNameSafe(OwnerPlayer));
         return;
+    }
 
     // 플레이어 피격 판정
     APlayerCharacter* HitPlayer = Cast<APlayerCharacter>(OtherActor);
@@ -263,9 +425,12 @@ void AProjectile::OnProjectileOverlap(
             *GetNameSafe(OwnerPlayer),
             SkillId);
 
-        HitPlayer->OnHitBySkill(OwnerPlayer, SkillId);
+        HitPlayer->OnHitBySkill(OwnerCharacter, SkillId);
 
         PostProcessHit();
+
+        UE_LOG(LogTemp, Warning, TEXT("[Projectile Destroy] Hit Player=%s"),
+            *GetNameSafe(HitPlayer));
 
         Destroy();
         return;
@@ -282,11 +447,18 @@ void AProjectile::OnProjectileOverlap(
             *GetNameSafe(OwnerPlayer),
             SkillId);
 
-        HitMonster->OnHitBySkill(OwnerPlayer, SkillId);
+        HitMonster->OnHitBySkill(OwnerCharacter, SkillId);
 
         PostProcessHit();
+
+        UE_LOG(LogTemp, Warning, TEXT("[Projectile Destroy] Hit Monster=%s"),
+            *GetNameSafe(HitMonster));
 
         Destroy();
         return;
     }
+
+    UE_LOG(LogTemp, Warning, TEXT("[Projectile Overlap NO HIT] Other=%s Class=%s"),
+        *GetNameSafe(OtherActor),
+        *GetNameSafe(OtherActor->GetClass()));
 }

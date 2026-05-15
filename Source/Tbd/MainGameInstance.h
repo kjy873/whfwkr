@@ -51,7 +51,7 @@ public:
 	void SendAttackMob(int64 MobId);
 
 	UFUNCTION(BlueprintCallable)
-	void SendUseSkill(int32 SkillId);
+	void SendUseSkill(int32 SkillId, float ChargeScale);
 
 	UFUNCTION(BlueprintCallable)
 	void SendEnterGamePacket();

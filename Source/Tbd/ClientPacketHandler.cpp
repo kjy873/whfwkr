@@ -293,8 +293,6 @@ bool Handle_S_DAMAGE_MOB(PacketSessionRef& session, Protocol::S_DAMAGE_MOB& pkt)
 	return false;
 }
 
-
-
 bool Handle_S_USE_SKILL(PacketSessionRef& session, Protocol::S_USE_SKILL& pkt)
 {
 	if (GWorld == nullptr)
@@ -304,10 +302,11 @@ bool Handle_S_USE_SKILL(PacketSessionRef& session, Protocol::S_USE_SKILL& pkt)
 	if (GI == nullptr)
 		return false;
 
-	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_USE_SKILL] MyId=%lld FromPlayerId=%lld SkillId=%d"),
+	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_USE_SKILL] MyId=%lld FromPlayerId=%lld SkillId=%d ChargeScale=%f"),
 		(int64)GI->MyObjectId,
 		(int64)pkt.playerid(),
-		(int32)pkt.skillid());
+		(int32)pkt.skillid(),
+		pkt.chargescale());
 
 	GI->OnRecvUseSkill(pkt);
 	return true;

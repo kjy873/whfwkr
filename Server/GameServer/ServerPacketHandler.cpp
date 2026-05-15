@@ -127,20 +127,40 @@ bool Handle_C_CHAT(PacketSessionRef& session, Protocol::C_CHAT& pkt)
 
 bool Handle_C_USE_SKILL(PacketSessionRef& session, Protocol::C_USE_SKILL& pkt)
 {
+	cout << "[Server Handle_C_USE_SKILL] skillId="
+		<< pkt.skillid()
+		<< " targetId=" << pkt.targetid()
+		<< " chargeScale=" << pkt.chargescale()
+		<< endl;
+
 	GameSessionRef gameSession = static_pointer_cast<GameSession>(session);
 	if (gameSession == nullptr)
+	{
+		printf("[C_USE_SKILL RETURN] gameSession null\n");
 		return false;
+	}
 
 	PlayerRef player = gameSession->player;
 	if (player == nullptr)
+	{
+		printf("[C_USE_SKILL RETURN] player null\n");
 		return false;
+	}
 
 	RoomRef room = player->room.lock();
 	if (room == nullptr)
+	{
+		printf("[C_USE_SKILL RETURN] room null\n");
 		return false;
+	}
 
 	uint32 skillId = pkt.skillid();
 	float chargeScale = pkt.chargescale();
+
+	printf("[C_USE_SKILL ENTER] playerId=%llu skillId=%u chargeScale=%f\n",
+		player->playerInfo->object_id(),
+		skillId,
+		chargeScale);
 
 	if (!player->CanUseSkill(skillId))
 	{
@@ -156,6 +176,8 @@ bool Handle_C_USE_SKILL(PacketSessionRef& session, Protocol::C_USE_SKILL& pkt)
 		skillId,
 		chargeScale
 	);
+
+	printf("[C_USE_SKILL] DoAsync BroadcastUseSkill queued\n");
 
 	return true;
 }
