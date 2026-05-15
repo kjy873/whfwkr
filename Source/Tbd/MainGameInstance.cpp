@@ -182,6 +182,18 @@ void UMainGameInstance::SendStartSkillCharge(int32 SkillId)
 	SendPacket(SendBuffer);
 }
 
+void UMainGameInstance::ResetIceSkillState()
+{
+	LastLocalIceTarget = nullptr;
+	LastIceFireTimeMap.Empty();
+	NextIceRightHandMap.Empty();
+
+	bForceNextIceRightHand = true;
+	bLocalIceRequestAfterLevelReset = false;
+
+	UE_LOG(LogTemp, Warning, TEXT("[ResetIceSkillState] Ice combo state cleared. Force next ice right hand"));
+}
+
 void UMainGameInstance::SendMonsterKill()
 {
 	if (MyObjectId == 0 || Socket == nullptr || !GameServerSession.IsValid())
@@ -377,18 +389,24 @@ void UMainGameInstance::SendPacket(SendBufferRef SendBuffer)
 
 void UMainGameInstance::SendLevelReady()
 {
+	ResetIceSkillState();
+
 	Protocol::C_LEVEL_READY pkt;
 	auto SendBuffer = ClientPacketHandler::MakeSendBuffer(pkt);
 	SendPacket(SendBuffer);
 
 	if (UWorld* World = GetWorld())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[SendLevelReady] map=%s MyObjectId=%llu"),
-			*World->GetMapName(), MyObjectId);
+		UE_LOG(LogTemp, Warning, TEXT("[SendLevelReady] map=%s MyObjectId=%llu ForceNextIceRight=%d"),
+			*World->GetMapName(),
+			MyObjectId,
+			bForceNextIceRightHand ? 1 : 0);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[SendLevelReady] World nullptr MyObjectId=%llu"), MyObjectId);
+		UE_LOG(LogTemp, Warning, TEXT("[SendLevelReady] World nullptr MyObjectId=%llu ForceNextIceRight=%d"),
+			MyObjectId,
+			bForceNextIceRightHand ? 1 : 0);
 	}
 }
 
@@ -797,8 +815,13 @@ void UMainGameInstance::SendUseSkill(int32 SkillId, float ChargeScale)
 	{
 		LastLocalIceTarget = SkillTarget;
 
-		UE_LOG(LogTemp, Warning, TEXT("[SendUseSkill] Save LastLocalIceTarget=%s"),
-			*GetNameSafe(LastLocalIceTarget));
+		if (bForceNextIceRightHand)
+		{
+			bLocalIceRequestAfterLevelReset = true;
+
+			LastIceFireTimeMap.Remove(MyObjectId);
+			NextIceRightHandMap.Remove(MyObjectId);
+		}
 	}
 
 	if (SkillTarget)
@@ -853,12 +876,16 @@ void UMainGameInstance::ClearPlayerStateForLevelChange()
 	Players.Empty();
 	PendingSpawns.Empty();
 
+	ResetIceSkillState();
+
 	UE_LOG(LogTemp, Warning, TEXT("[ClearPlayerStateForLevelChange] Cleared player refs (MyObjectId=%llu kept)"), MyObjectId);
 }
 
 void UMainGameInstance::NotifyLevelLoadFinished()
 {
 	bChangingLevel = false;
+	ResetIceSkillState();
+
 	UE_LOG(LogTemp, Warning, TEXT("[NotifyLevelLoadFinished] Level load finished. PendingSpawns=%d"), PendingSpawns.Num());
 
 	TArray<Protocol::PlayerInfo> SavedSpawns = PendingSpawns;
@@ -1010,7 +1037,7 @@ void UMainGameInstance::OnRecvUseSkill(const Protocol::S_USE_SKILL& pkt)
 		*GetNameSafe(Player),
 		Player->IsMyPlayer() ? 1 : 0);
 
-	if (!Player->IsMyPlayer())
+	if (!Player->IsMyPlayer() && SkillId != 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[OnRecvUseSkill] PlayOtherPlayerSkill SkillId=%d"), SkillId);
 		Player->PlayOtherPlayerSkill(SkillId);
@@ -1101,63 +1128,94 @@ void UMainGameInstance::HandleIceSkillPacket(uint64 CasterID, uint64 TargetID)
 		return;
 	}
 
-	FVector Forward = Caster->GetActorForwardVector();
-	FVector Right = Caster->GetActorRightVector();
+	UWorld* World = GetWorld();
+	if (World == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[HandleIceSkillPacket] World is nullptr"));
+		return;
+	}
 
-	FVector BaseLocation = Caster->GetActorLocation() + Forward * 100.0f;
-
-	float CurrentTime = GetWorld()->GetTimeSeconds();
+	float CurrentTime = World->GetTimeSeconds();
 
 	bool bUseRightHand = true;
 
-	bool* SavedNextHand = NextIceRightHandMap.Find(CasterID);
-	float* SavedLastTime = LastIceFireTimeMap.Find(CasterID);
-
-	if (SavedNextHand != nullptr && SavedLastTime != nullptr)
+	if (bForceNextIceRightHand && bLocalIceRequestAfterLevelReset && CasterID == MyObjectId)
 	{
-		float DeltaTime = CurrentTime - *SavedLastTime;
+		bUseRightHand = true;
 
-		if (DeltaTime <= IceComboResetTime)
+		bForceNextIceRightHand = false;
+		bLocalIceRequestAfterLevelReset = false;
+
+		LastIceFireTimeMap.Remove(CasterID);
+		NextIceRightHandMap.Remove(CasterID);
+
+		UE_LOG(LogTemp, Warning, TEXT("[IceCombo] Force first LOCAL ice right hand after level change CasterID=%llu"),
+			(unsigned long long)CasterID);
+	}
+	else
+	{
+		bool* SavedNextHand = NextIceRightHandMap.Find(CasterID);
+		float* SavedLastTime = LastIceFireTimeMap.Find(CasterID);
+
+		if (SavedNextHand != nullptr && SavedLastTime != nullptr)
 		{
-			bUseRightHand = *SavedNextHand;
+			float DeltaTime = CurrentTime - *SavedLastTime;
+
+			if (DeltaTime <= IceComboResetTime)
+			{
+				bUseRightHand = *SavedNextHand;
+			}
+			else
+			{
+				bUseRightHand = true;
+			}
+
+			UE_LOG(LogTemp, Warning, TEXT("[IceCombo] CasterID=%llu DeltaTime=%f ResetTime=%f UseRight=%d"),
+				(unsigned long long)CasterID,
+				DeltaTime,
+				IceComboResetTime,
+				bUseRightHand ? 1 : 0);
 		}
 		else
 		{
 			bUseRightHand = true;
+
+			UE_LOG(LogTemp, Warning, TEXT("[IceCombo] CasterID=%llu First Ice UseRight=1"),
+				(unsigned long long)CasterID);
 		}
-
-		UE_LOG(LogTemp, Warning, TEXT("[IceCombo] CasterID=%llu DeltaTime=%f ResetTime=%f"),
-			(unsigned long long)CasterID,
-			DeltaTime,
-			IceComboResetTime);
 	}
-	else
+
+	FVector Forward = Caster->GetActorForwardVector().GetSafeNormal();
+	if (Forward.IsNearlyZero())
 	{
-		bUseRightHand = true;
-
-		UE_LOG(LogTemp, Warning, TEXT("[IceCombo] CasterID=%llu First Ice"),
-			(unsigned long long)CasterID);
+		Forward = Caster->GetActorRotation().Vector().GetSafeNormal();
 	}
 
-	FVector SpawnLocation;
+	FName SocketName = bUseRightHand
+		? TEXT("RightHandSpellSocket")
+		: TEXT("LeftHandSocket");
+
+	FVector SpawnLocation =
+		Caster->GetMesh()->GetSocketLocation(SocketName)
+		+ Forward * 80.f;
+
+	FRotator SpawnRotation = Forward.Rotation();
+
 	const TCHAR* HandName = bUseRightHand ? TEXT("Right") : TEXT("Left");
 
-	if (bUseRightHand)
-	{
-		SpawnLocation = BaseLocation + Right * 35.0f;
-	}
-	else
-	{
-		SpawnLocation = BaseLocation - Right * 35.0f;
-	}
+	UE_LOG(LogTemp, Warning, TEXT("[IceSpawnSocket] Hand=%s Socket=%s Loc=%s"),
+		HandName,
+		*SocketName.ToString(),
+		*SpawnLocation.ToString());
+
+	Caster->BP_PlayIceSkillByHand(bUseRightHand);
 
 	LastIceFireTimeMap.Add(CasterID, CurrentTime);
 	NextIceRightHandMap.Add(CasterID, !bUseRightHand);
 
-	FRotator SpawnRotation = Caster->GetActorRotation();
 	FTransform SpawnTransform(SpawnRotation, SpawnLocation);
 
-	AActor* SpawnedActor = GetWorld()->SpawnActorDeferred<AActor>(IceProjectileBPClass, SpawnTransform);
+	AActor* SpawnedActor = World->SpawnActorDeferred<AActor>(IceProjectileBPClass, SpawnTransform);
 	if (SpawnedActor == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("[HandleIceSkillPacket] SpawnActorDeferred failed"));

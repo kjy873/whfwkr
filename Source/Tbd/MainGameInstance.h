@@ -169,6 +169,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SendStartSkillCharge(int32 SkillId);
 
+	void ResetIceSkillState();
+
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 	TSubclassOf<AActor> IceProjectileBPClass;
 
@@ -215,7 +217,9 @@ private:
 	TMap<uint64, bool> NextIceRightHandMap;
 	TMap<uint64, float> LastIceFireTimeMap;
 
-	float IceComboResetTime = 1.8f;
+	bool bForceNextIceRightHand = false;
+	bool bLocalIceRequestAfterLevelReset = false;
+	float IceComboResetTime = 1.5f;
 public:
 	UFUNCTION(BlueprintCallable, Category = "Upgrade")
 	const TMap<FName, int>& GetLocalPlayerUpgradeMap() const { return LocalPlayerUpgradeMap; }

@@ -36,6 +36,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void PlaySkill(int32 SkillId);
 
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void BP_PlayIceSkillByHand(bool bUseRightHand);
+
 	UFUNCTION(BlueprintImplementableEvent)
 	void PlayOtherPlayerSkill(int32 SkillId);
 
