@@ -22,6 +22,19 @@ public:
     void LaunchProjectile(FVector Direction);
     void SetChargeScale(float InScale);
 
+    virtual void Tick(float DeltaTime) override;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Homing")
+    AActor* HomingTarget = nullptr;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Homing")
+    bool bUseHoming = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Homing")
+    float HomingInterpSpeed = 3.0f;
+
+    void SetHomingTarget(AActor* Target);
+
 protected:
     virtual void BeginPlay() override;
 

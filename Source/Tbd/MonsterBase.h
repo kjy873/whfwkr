@@ -15,6 +15,9 @@ class TBD_API AMonsterBase : public ACharacter
 public:
 	AMonsterBase();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster")
+	int32 MonsterId = 0;
+
 protected:
 	virtual void BeginPlay() override;
 
