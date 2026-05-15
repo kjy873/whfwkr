@@ -1,5 +1,12 @@
 #pragma once
 
+struct PlayerScoreData
+{
+    int32 KillCount = 0;
+    int32 DeathCount = 0;
+    int32 MonsterKillCount = 0;
+};
+
 class RoomManager
 {
 public:
@@ -22,10 +29,22 @@ public:
     static RoomRef _battleRoom;
     static RoomRef _lobbyRoom;
 
+public:
+    void UpdatePlayerScore(PlayerRef player);
+    void BroadcastGameResult();
+    void ClearScoreMap();
+
+private:
+    std::unordered_map<uint64, PlayerScoreData> _scoreMap;
+
 private:
     USE_LOCK;
     vector<RoomRef> _rooms;
     uint64 _roomIdGenerator = 1;
+
+    int32 _currentRound = 0;
+    int32 _maxRound = 2;
+    bool _gameFinished = false;
 
     vector<PlayerRef> _roundPlayers;
     float _roundTimer = 0.0f;

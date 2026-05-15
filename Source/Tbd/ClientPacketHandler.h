@@ -23,25 +23,26 @@ enum : uint16
 	PKT_C_CHAT = 1010,
 	PKT_S_CHAT = 1011,
 	PKT_S_PLAYER_STATS = 1012,
-	PKT_C_ATTACK_PLAYER = 1013,
-	PKT_S_DAMAGE_PLAYER = 1014,
-	PKT_S_PLAYER_DEAD = 1015,
-	PKT_S_SPAWN_MOB = 1016,
-	PKT_S_DESPAWN_MOB = 1017,
-	PKT_S_MOVE_MOB = 1018,
-	PKT_C_MOVE_MOB = 1019,
-	PKT_C_ATTACK_MOB = 1020,
-	PKT_C_USE_SKILL = 1021,
-	PKT_S_USE_SKILL = 1022,
-	PKT_S_DAMAGE_MOB = 1023,
-	PKT_C_MONSTER_KILL = 1024,
-	PKT_S_PROJECTILE_HIT = 1025,
-	PKT_S_PROJECTILE_DESTROY = 1026,
-	PKT_S_CHANGE_LEVEL = 1027,
-	PKT_C_DEMO_NEXT_LEVEL = 1028,
-	PKT_C_LEVEL_READY = 1029,
-	PKT_C_START_SKILL_CHARGE = 1030,
-	PKT_S_START_SKILL_CHARGE = 1031,
+	PKT_S_GAME_RESULT = 1013,
+	PKT_C_ATTACK_PLAYER = 1014,
+	PKT_S_DAMAGE_PLAYER = 1015,
+	PKT_S_PLAYER_DEAD = 1016,
+	PKT_S_SPAWN_MOB = 1017,
+	PKT_S_DESPAWN_MOB = 1018,
+	PKT_S_MOVE_MOB = 1019,
+	PKT_C_MOVE_MOB = 1020,
+	PKT_C_ATTACK_MOB = 1021,
+	PKT_C_USE_SKILL = 1022,
+	PKT_S_USE_SKILL = 1023,
+	PKT_S_DAMAGE_MOB = 1024,
+	PKT_C_MONSTER_KILL = 1025,
+	PKT_S_PROJECTILE_HIT = 1026,
+	PKT_S_PROJECTILE_DESTROY = 1027,
+	PKT_S_CHANGE_LEVEL = 1028,
+	PKT_C_DEMO_NEXT_LEVEL = 1029,
+	PKT_C_LEVEL_READY = 1030,
+	PKT_C_START_SKILL_CHARGE = 1031,
+	PKT_S_START_SKILL_CHARGE = 1032,
 };
 
 // Custom Handlers
@@ -54,6 +55,7 @@ bool Handle_S_DESPAWN(PacketSessionRef& session, Protocol::S_DESPAWN& pkt);
 bool Handle_S_MOVE(PacketSessionRef& session, Protocol::S_MOVE& pkt);
 bool Handle_S_CHAT(PacketSessionRef& session, Protocol::S_CHAT& pkt);
 bool Handle_S_PLAYER_STATS(PacketSessionRef& session, Protocol::S_PLAYER_STATS& pkt);
+bool Handle_S_GAME_RESULT(PacketSessionRef& session, Protocol::S_GAME_RESULT& pkt);
 bool Handle_S_DAMAGE_PLAYER(PacketSessionRef& session, Protocol::S_DAMAGE_PLAYER& pkt);
 bool Handle_S_PLAYER_DEAD(PacketSessionRef& session, Protocol::S_PLAYER_DEAD& pkt);
 bool Handle_S_SPAWN_MOB(PacketSessionRef& session, Protocol::S_SPAWN_MOB& pkt);
@@ -81,6 +83,7 @@ public:
 		GPacketHandler[PKT_S_MOVE] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_MOVE>(Handle_S_MOVE, session, buffer, len); };
 		GPacketHandler[PKT_S_CHAT] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_CHAT>(Handle_S_CHAT, session, buffer, len); };
 		GPacketHandler[PKT_S_PLAYER_STATS] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_PLAYER_STATS>(Handle_S_PLAYER_STATS, session, buffer, len); };
+		GPacketHandler[PKT_S_GAME_RESULT] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_GAME_RESULT>(Handle_S_GAME_RESULT, session, buffer, len); };
 		GPacketHandler[PKT_S_DAMAGE_PLAYER] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_DAMAGE_PLAYER>(Handle_S_DAMAGE_PLAYER, session, buffer, len); };
 		GPacketHandler[PKT_S_PLAYER_DEAD] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_PLAYER_DEAD>(Handle_S_PLAYER_DEAD, session, buffer, len); };
 		GPacketHandler[PKT_S_SPAWN_MOB] = [](PacketSessionRef& session, BYTE* buffer, int32 len) { return HandlePacket<Protocol::S_SPAWN_MOB>(Handle_S_SPAWN_MOB, session, buffer, len); };

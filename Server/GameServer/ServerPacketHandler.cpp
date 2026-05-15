@@ -50,13 +50,6 @@ bool Handle_C_ENTER_GAME(PacketSessionRef& session, Protocol::C_ENTER_GAME& pkt)
 
 	player->playerInfo->set_hp(100);
 
-	cout << "[Handle_C_ENTER_GAME] objId=" << player->playerInfo->object_id()
-		<< " roomType=" << static_cast<int>(room->GetRoomType())
-		<< " pos=("
-		<< player->playerInfo->x() << ", "
-		<< player->playerInfo->y() << ", "
-		<< player->playerInfo->z() << ")" << endl;
-
 	room->DoAsync([room, player, gameSession]()
 		{
 			Protocol::S_ENTER_GAME enterPkt;

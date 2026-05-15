@@ -14,6 +14,7 @@
 #include "Player/MyPlayerCharacter.h"
 #include "Player/UC_NetworkPlayerComponent.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/PlayerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/World.h"
 #include "DrawDebugHelpers.h"
@@ -22,6 +23,8 @@
 #include "HAL/PlatformProcess.h"
 #include "Misc/CoreDelegates.h"
 #include "EngineUtils.h"
+#include "Network/NetworkWorker.h"
+#include "Kismet/GameplayStatics.h"
 
 void UMainGameInstance::ConnectToGameServer()
 {
@@ -123,25 +126,20 @@ void UMainGameInstance::DisconnectToGameServer()
 {
 	StopRecvPacketsTimer();
 
-	if (Socket != nullptr && GameServerSession.IsValid())
-	{
-		Protocol::C_LEAVE_GAME LeavePkt;
-		SEND_PACKET(LeavePkt);
-	}
-
 	if (GameServerSession.IsValid())
 	{
+		GameServerSession->Disconnect();
 		GameServerSession.Reset();
 	}
 
-	if (Socket != nullptr)
+	if (Socket)
 	{
 		Socket->Close();
 		ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->DestroySocket(Socket);
 		Socket = nullptr;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("[DisconnectToGameServer] Disconnected and socket destroyed"));
+	UE_LOG(LogTemp, Warning, TEXT("[DisconnectToGameServer] Done"));
 }
 
 void UMainGameInstance::Init()
@@ -336,6 +334,37 @@ void UMainGameInstance::HandlePlayerStats(const Protocol::S_PLAYER_STATS& pkt)
 		Stats.Kill,
 		Stats.Death,
 		Stats.MonsterKill);
+}
+
+void UMainGameInstance::HandleGameResult(const Protocol::S_GAME_RESULT& pkt)
+{
+	bIsWinner = false;
+	MyResultScore = 0;
+	MyResultKill = 0;
+	MyResultDeath = 0;
+	MyResultMonsterKill = 0;
+
+	for (const Protocol::GameResultInfo& Result : pkt.results())
+	{
+		if (Result.object_id() == MyObjectId)
+		{
+			MyResultKill = Result.kill_count();
+			MyResultDeath = Result.death_count();
+			MyResultMonsterKill = Result.monster_kill_count();
+			MyResultScore = Result.score();
+			bIsWinner = Result.is_winner();
+			break;
+		}
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[HandleGameResult] Winner=%d Score=%d K=%d D=%d M=%d"),
+		bIsWinner ? 1 : 0,
+		MyResultScore,
+		MyResultKill,
+		MyResultDeath,
+		MyResultMonsterKill);
+
+	BP_OnGameResultReceived();
 }
 
 void UMainGameInstance::SendPacket(SendBufferRef SendBuffer)
@@ -850,7 +879,6 @@ void UMainGameInstance::StartGameConnection()
 
 	UE_LOG(LogTemp, Warning, TEXT("[StartGameConnection] Begin connect"));
 	ConnectToGameServer();
-	SendEnterGamePacket();
 }
 
 void UMainGameInstance::HandleDamage(const Protocol::S_DAMAGE_PLAYER& pkt)
