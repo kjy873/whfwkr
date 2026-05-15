@@ -98,7 +98,7 @@ void APlayerCharacter::SetDead(bool bDead)
 		if (GetCharacterMovement())
 		{
 			GetCharacterMovement()->StopMovementImmediately();
-			GetCharacterMovement()->DisableMovement();
+			//GetCharacterMovement()->DisableMovement();
 		}
 
 		PlayDeathAnimation();
