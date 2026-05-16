@@ -338,6 +338,7 @@ void AProjectile::HandleProjectileHit(AActor* OtherActor)
 
         bHasHit = true;
         HitPlayer->OnHitBySkill(OwnerCharacter, SkillId);
+        PostProcessHit();
         Destroy();
         return;
     }
@@ -352,6 +353,7 @@ void AProjectile::HandleProjectileHit(AActor* OtherActor)
 
         bHasHit = true;
         HitMonster->OnHitBySkill(OwnerCharacter, SkillId);
+        PostProcessHit();
         Destroy();
         return;
     }
@@ -374,6 +376,8 @@ void AProjectile::OnProjectileOverlap(
         bLaunched,
         bHasHit,
         SkillId);
+
+    HandleProjectileHit(OtherActor);
 
     if (!bLaunched)
     {
@@ -425,9 +429,7 @@ void AProjectile::OnProjectileOverlap(
             *GetNameSafe(OwnerPlayer),
             SkillId);
 
-        HitPlayer->OnHitBySkill(OwnerCharacter, SkillId);
-
-        PostProcessHit();
+        HitPlayer->OnHitBySkill(OwnerCharacter, SkillId);    
 
         UE_LOG(LogTemp, Warning, TEXT("[Projectile Destroy] Hit Player=%s"),
             *GetNameSafe(HitPlayer));
@@ -448,8 +450,6 @@ void AProjectile::OnProjectileOverlap(
             SkillId);
 
         HitMonster->OnHitBySkill(OwnerCharacter, SkillId);
-
-        PostProcessHit();
 
         UE_LOG(LogTemp, Warning, TEXT("[Projectile Destroy] Hit Monster=%s"),
             *GetNameSafe(HitMonster));
