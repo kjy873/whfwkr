@@ -53,6 +53,19 @@ bool Player::CanUseSkill(int32 skillId) const
 void Player::MarkSkillUsed(int32 skillId)
 {
 	double now = ::GetTickCount64() / 1000.0;
+
+	if (skillId == 0)
+	{
+		_iceShotCount++;
+
+		if (_iceShotCount < 2)
+			return;
+
+		_iceShotCount = 0;
+		_lastSkillUseTime[skillId] = now;
+		return;
+	}
+
 	_lastSkillUseTime[skillId] = now;
 }
 
@@ -60,7 +73,7 @@ float Player::GetSkillCooldown(int32 skillId) const
 {
 	switch (skillId)
 	{
-	case 0: return 0.0f; // Ice
+	case 0: return 0.5f; // Ice
 	case 1: return 4.0f; // Fire
 	default: return 1.0f;
 	}

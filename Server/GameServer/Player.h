@@ -45,5 +45,6 @@ public:
 
 private:
 	std::unordered_map<int32, double> _lastSkillUseTime;
+	int32 _iceShotCount = 0;
 };
 
