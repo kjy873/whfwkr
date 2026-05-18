@@ -38,6 +38,7 @@ public:
 	void BroadcastPlayerStats(PlayerRef player);
 	void BroadcastGameResult();
 	void HandleAttackPlayerLocked(uint64 attackerId, uint64 targetId, uint32 skillId);
+	void HandleRespawnPlayerLocked(uint64 playerId);
 
 	void SetRoomType(RoomType NewType) { _roomType = NewType; }
 	RoomType GetRoomType() const { return _roomType; }

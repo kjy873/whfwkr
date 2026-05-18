@@ -24,6 +24,9 @@ public:
     void MoveRoundPlayersToHunting();
     void MoveToDemoLevel(uint32 targetLevel);
 
+    void RespawnRoundPlayer(PlayerRef player);
+    void ResetPlayerForPhase(PlayerRef player, bool bMoveToPVE);
+
     RoomRef GetBattleRoom() { return _battleRoom; }
 
     static RoomRef _battleRoom;

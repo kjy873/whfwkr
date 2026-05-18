@@ -72,6 +72,12 @@ public:
 	void HandleDie(const Protocol::S_PLAYER_DEAD& Pkt);
 	void SendAttackPlayer(uint64 TargetId, uint32 SkillId);
 
+	UFUNCTION(BlueprintCallable)
+	void SendRespawn();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
+	void BP_OnMyPlayerDead();
+
 	void OnRecvUseSkill(const Protocol::S_USE_SKILL& pkt);
 	void OnRecvStartSkillCharge(const Protocol::S_START_SKILL_CHARGE& pkt);
 	void HandleIceSkillPacket(uint64 CasterID, uint64 TargetID);

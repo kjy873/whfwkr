@@ -89,9 +89,30 @@ bool Handle_C_LEAVE_GAME(PacketSessionRef& session, Protocol::C_LEAVE_GAME& pkt)
 	return true;
 }
 
+bool Handle_C_RESPAWN(PacketSessionRef& session, Protocol::C_RESPAWN& pkt)
+{
+	GameSessionRef gameSession = static_pointer_cast<GameSession>(session);
+	if (gameSession == nullptr)
+		return false;
+
+	PlayerRef player = gameSession->player.load();
+	if (player == nullptr)
+		return false;
+
+	RoomRef room = player->room.lock();
+	if (room == nullptr)
+		return false;
+
+	room->DoAsync(
+		&Room::HandleRespawnPlayerLocked,
+		player->playerInfo->object_id()
+	);
+
+	return true;
+}
+
 bool Handle_C_MOVE(PacketSessionRef& session, Protocol::C_MOVE& pkt)
 {
-
 	auto gameSession = static_pointer_cast<GameSession>(session);
 	if (gameSession == nullptr)
 	{

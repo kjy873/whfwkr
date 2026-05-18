@@ -54,8 +54,8 @@ void Room::ApplySpawnByRoomType(PlayerRef player)
 
 	if (_roomType == RoomType::Lobby)
 	{
-		centerX = Utils::GetRandom(-260.f, 0.f);
-		centerY = Utils::GetRandom(-90.f, 0.f);
+		centerX = Utils::GetRandom(-260.f, 100.f);
+		centerY = Utils::GetRandom(-90.f, 100.f);
 		centerZ = 0.f;
 	}
 	else if (_roomType == RoomType::Hunting)
@@ -66,8 +66,8 @@ void Room::ApplySpawnByRoomType(PlayerRef player)
 	}
 	else if (_roomType == RoomType::Battle)
 	{
-		centerX = 4275.f;
-		centerY = 4184.f;
+		centerX = Utils::GetRandom(4275.f, 4800.f);
+		centerY = Utils::GetRandom(4184.f, 4500.f);
 		centerZ = -1187.210769f;
 	}
 
@@ -490,18 +490,66 @@ void Room::HandleAttackPlayerLocked(uint64 attackerId, uint64 targetId, uint32 s
 {
 	WRITE_LOCK;
 
+	cout << "[HandleAttackPlayerLocked ENTER]"
+		<< " attackerId=" << attackerId
+		<< " targetId=" << targetId
+		<< " skillId=" << skillId
+		<< " roomType=" << static_cast<int32>(_roomType)
+		<< " players=" << _players.size()
+		<< endl;
+
 	auto attackerIt = _players.find(attackerId);
 	auto targetIt = _players.find(targetId);
-	if (attackerIt == _players.end() || targetIt == _players.end())
+
+	if (attackerIt == _players.end())
+	{
+		cout << "[HandleAttackPlayerLocked BLOCK] attacker not found attackerId="
+			<< attackerId << endl;
 		return;
+	}
+
+	if (targetIt == _players.end())
+	{
+		cout << "[HandleAttackPlayerLocked BLOCK] target not found targetId="
+			<< targetId << endl;
+		return;
+	}
 
 	PlayerRef attacker = attackerIt->second;
 	PlayerRef target = targetIt->second;
 
-	if (target->Hp <= 0)
+	if (attacker == nullptr || target == nullptr)
+	{
+		cout << "[HandleAttackPlayerLocked BLOCK] attacker or target null" << endl;
 		return;
+	}
+
+	cout << "[HandleAttackPlayerLocked FOUND]"
+		<< " attacker=" << attacker->playerInfo->object_id()
+		<< " target=" << target->playerInfo->object_id()
+		<< " targetHp=" << target->Hp
+		<< " targetInfoHp=" << target->playerInfo->hp()
+		<< endl;
+
+	if (attacker == target)
+	{
+		cout << "[HandleAttackPlayerLocked BLOCK] self attack objId="
+			<< attackerId << endl;
+		return;
+	}
+
+	if (target->Hp <= 0)
+	{
+		cout << "[HandleAttackPlayerLocked BLOCK] target already dead"
+			<< " targetId=" << targetId
+			<< " Hp=" << target->Hp
+			<< " playerInfoHp=" << target->playerInfo->hp()
+			<< endl;
+		return;
+	}
 
 	int32 damage = 0;
+
 	switch (skillId)
 	{
 	case 0:
@@ -517,15 +565,37 @@ void Room::HandleAttackPlayerLocked(uint64 attackerId, uint64 targetId, uint32 s
 		break;
 	}
 
-	target->Hp = max(0, target->Hp - damage);
+	if (damage <= 0)
+	{
+		cout << "[HandleAttackPlayerLocked BLOCK] invalid damage skillId="
+			<< skillId << endl;
+		return;
+	}
 
-	Protocol::S_DAMAGE_PLAYER pkt;
-	pkt.set_object_id(targetId);
-	pkt.set_damage(damage);
-	Broadcast(ServerPacketHandler::MakeSendBuffer(pkt));
+	const int32 PrevHp = target->Hp;
+
+	target->Hp = max(0, target->Hp - damage);
+	target->playerInfo->set_hp(target->Hp);
+
+	cout << "[HandleAttackPlayerLocked DAMAGE]"
+		<< " targetId=" << targetId
+		<< " prevHp=" << PrevHp
+		<< " damage=" << damage
+		<< " newHp=" << target->Hp
+		<< " newInfoHp=" << target->playerInfo->hp()
+		<< endl;
+
+	Protocol::S_DAMAGE_PLAYER damagePkt;
+	damagePkt.set_object_id(targetId);
+	damagePkt.set_damage(damage);
+
+	Broadcast(ServerPacketHandler::MakeSendBuffer(damagePkt));
 
 	if (target->Hp <= 0)
 	{
+		target->Hp = 0;
+		target->playerInfo->set_hp(0);
+
 		target->DeathCount++;
 
 		if (attacker && attacker != target)
@@ -533,52 +603,115 @@ void Room::HandleAttackPlayerLocked(uint64 attackerId, uint64 targetId, uint32 s
 			attacker->KillCount++;
 		}
 
+		cout << "[PlayerDead]"
+			<< " targetId=" << targetId
+			<< " DeathCount=" << target->DeathCount
+			<< " attackerId=" << attackerId
+			<< " attackerKill=" << (attacker ? attacker->KillCount : 0)
+			<< endl;
+
 		Protocol::S_PLAYER_DEAD deadPkt;
 		deadPkt.set_object_id(targetId);
+
 		Broadcast(ServerPacketHandler::MakeSendBuffer(deadPkt));
 
 		if (attacker)
 		{
 			BroadcastPlayerStats(attacker);
+			GRoomManager.UpdatePlayerScore(attacker);
 		}
 
 		if (target)
 		{
 			BroadcastPlayerStats(target);
+			GRoomManager.UpdatePlayerScore(target);
 		}
+	}
+}
 
-		if (_roomType != RoomType::Battle)
-			return;
+void Room::HandleRespawnPlayerLocked(uint64 playerId)
+{
+	WRITE_LOCK;
 
-		vector<PlayerRef> playersToMove;
-		for (auto& item : _players)
+	auto it = _players.find(playerId);
+	if (it == _players.end())
+	{
+		cout << "[HandleRespawnPlayerLocked BLOCK] player not found playerId="
+			<< playerId << endl;
+		return;
+	}
+
+	PlayerRef player = it->second;
+	if (player == nullptr || player->playerInfo == nullptr)
+	{
+		cout << "[HandleRespawnPlayerLocked BLOCK] player null playerId="
+			<< playerId << endl;
+		return;
+	}
+
+	if (_roomType != RoomType::Battle)
+	{
+		cout << "[HandleRespawnPlayerLocked BLOCK] not battle room playerId="
+			<< playerId << endl;
+		return;
+	}
+
+	if (player->Hp > 0)
+	{
+		cout << "[HandleRespawnPlayerLocked BLOCK] already alive playerId="
+			<< playerId
+			<< " Hp=" << player->Hp
+			<< endl;
+		return;
+	}
+
+	player->Hp = 50;
+	player->playerInfo->set_hp(50);
+
+	cout << "[HandleRespawnPlayerLocked OK] playerId="
+		<< playerId
+		<< " Hp=" << player->Hp
+		<< " playerInfoHp=" << player->playerInfo->hp()
+		<< " Pos=("
+		<< player->playerInfo->x() << ", "
+		<< player->playerInfo->y() << ", "
+		<< player->playerInfo->z() << ")"
+		<< endl;
+
+	BroadcastPlayerStats(player);
+
+	Protocol::S_SPAWN spawnPkt;
+	Protocol::PlayerInfo* info = spawnPkt.add_players();
+	info->CopyFrom(*player->playerInfo);
+
+	SendBufferRef spawnBuffer = ServerPacketHandler::MakeSendBuffer(spawnPkt);
+
+	cout << "[Respawn SendSpawnToAll] respawnPlayerId="
+		<< playerId
+		<< " roomPlayers=" << _players.size()
+		<< endl;
+
+	for (auto& item : _players)
+	{
+		PlayerRef p = item.second;
+		if (p == nullptr || p->playerInfo == nullptr)
+			continue;
+
+		auto session = p->session.lock();
+		if (!session)
 		{
-			PlayerRef p = item.second;
-			if (p && p->Hp > 0)
-				playersToMove.push_back(p);
+			cout << "[Respawn SendSpawnToAll BLOCK] session null objId="
+				<< p->playerInfo->object_id()
+				<< endl;
+			continue;
 		}
 
-		cout << "[BattleEndCheck] aliveCount=" << playersToMove.size() << endl;
+		cout << "[Respawn SendSpawnToAll TARGET] sendToObjId="
+			<< p->playerInfo->object_id()
+			<< " respawnObjId=" << playerId
+			<< endl;
 
-		if (playersToMove.size() <= 1)
-		{
-			cout << "[BattleEnd] Move survivors to HuntingRoom" << endl;
-
-			for (auto& p : playersToMove)
-			{
-				GRoomManager.MoveToHuntingRoom(p);
-			}
-
-			Protocol::S_CHANGE_LEVEL changePkt;
-			changePkt.set_level_name("LandscapeMap");
-			SendBufferRef changeBuf = ServerPacketHandler::MakeSendBuffer(changePkt);
-
-			for (auto& p : playersToMove)
-			{
-				if (auto session = p->session.lock())
-					session->Send(changeBuf);
-			}
-		}
+		session->Send(spawnBuffer);
 	}
 }
 

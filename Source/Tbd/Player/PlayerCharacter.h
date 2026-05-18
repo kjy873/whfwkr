@@ -48,6 +48,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void PlayDeathAnimation();
 
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Animation")
+	void BP_PlayRespawnAnimation();
+
 	UFUNCTION(BlueprintImplementableEvent)
 	void PlayHitReaction();
 

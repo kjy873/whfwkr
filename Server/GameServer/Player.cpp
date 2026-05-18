@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Player.h"
 #include "Room.h"
+#include "RoomManager.h"
 
 Player::Player()
 {
@@ -14,10 +15,30 @@ Player::~Player()
 
 void Player::OnDamaged(PlayerRef attacker, int32 damage)
 {
+	if (Hp <= 0)
+	{
+		cout << "[OnDamaged BLOCK] already dead ObjId="
+			<< playerInfo->object_id()
+			<< " Hp=" << Hp
+			<< endl;
+		return;
+	}
+
+	int32 PrevHp = Hp;
 	Hp -= damage;
+
+	cout << "[OnDamaged] ObjId="
+		<< playerInfo->object_id()
+		<< " PrevHp=" << PrevHp
+		<< " Damage=" << damage
+		<< " NewHp=" << Hp
+		<< endl;
 
 	if (Hp <= 0)
 	{
+		Hp = 0;
+		playerInfo->set_hp(0);
+
 		DeathCount++;
 
 		if (attacker != nullptr && attacker != shared_from_this())
@@ -25,14 +46,19 @@ void Player::OnDamaged(PlayerRef attacker, int32 damage)
 			attacker->KillCount++;
 		}
 
-		RoomRef room = room;
-		if (room)
+		RoomRef currentRoom = this->room.lock();
+		if (currentRoom)
 		{
-			room->BroadcastPlayerStats(shared_from_this());
+			currentRoom->BroadcastPlayerStats(shared_from_this());
 
 			if (attacker)
-				room->BroadcastPlayerStats(attacker);
+				currentRoom->BroadcastPlayerStats(attacker);
 		}
+
+		GRoomManager.UpdatePlayerScore(shared_from_this());
+
+		if (attacker)
+			GRoomManager.UpdatePlayerScore(attacker);
 	}
 }
 

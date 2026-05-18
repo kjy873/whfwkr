@@ -47,9 +47,16 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 void APlayerCharacter::OnHitBySkill(APlayerCharacter* Attacker, int32 SkillId)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[OnHitBySkill] Called Target=%s Attacker=%s SkillId=%d"),
+	const uint64 TargetObjId = PlayerInfo.object_id();
+	const uint64 AttackerObjId = Attacker ? Attacker->PlayerInfo.object_id() : 0;
+
+	UE_LOG(LogTemp, Warning, TEXT("[OnHitBySkill] Called Target=%s TargetObjId=%llu TargetDead=%d Attacker=%s AttackerObjId=%llu AttackerIsMine=%d SkillId=%d"),
 		*GetName(),
+		(unsigned long long)TargetObjId,
+		bIsDead ? 1 : 0,
 		*GetNameSafe(Attacker),
+		(unsigned long long)AttackerObjId,
+		Attacker ? (Attacker->IsMyPlayer() ? 1 : 0) : -1,
 		SkillId);
 
 	if (Attacker == nullptr)
@@ -58,15 +65,29 @@ void APlayerCharacter::OnHitBySkill(APlayerCharacter* Attacker, int32 SkillId)
 	if (Attacker->IsMyPlayer() == false)
 		return;
 
+	if (TargetObjId == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[OnHitBySkill] BLOCK target objId is 0 Target=%s"),
+			*GetName());
+		return;
+	}
+
+	if (TargetObjId == AttackerObjId)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[OnHitBySkill] BLOCK self hit ObjId=%llu"),
+			(unsigned long long)TargetObjId);
+		return;
+	}
+
 	UE_LOG(LogTemp, Warning, TEXT("[OnHitBySkill] SendAttackPlayer target=%llu"),
-		PlayerInfo.object_id());
+		(unsigned long long)TargetObjId);
 
 	if (UMainGameInstance* GI = GetGameInstance<UMainGameInstance>())
 	{
-		GI->SendAttackPlayer(PlayerInfo.object_id(), SkillId);
+		GI->SendAttackPlayer(TargetObjId, SkillId);
 
 		UE_LOG(LogTemp, Warning, TEXT("[Client] Hit Player -> SendAttack target=%llu"),
-			PlayerInfo.object_id());
+			(unsigned long long)TargetObjId);
 	}
 }
 
@@ -83,33 +104,82 @@ void APlayerCharacter::SetDestInfo(const Protocol::PlayerInfo& Info)
 
 void APlayerCharacter::SetDead(bool bDead)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[SetDead] %s bDead=%d IsMine=%d"),
-		*GetName(), bDead ? 1 : 0, bIsMine ? 1 : 0);
+	UE_LOG(LogTemp, Warning, TEXT("[SetDead ENTER] Actor=%s ObjId=%llu bDead=%d CurrentDead=%d IsMine=%d"),
+		*GetNameSafe(this),
+		(unsigned long long)PlayerInfo.object_id(),
+		bDead ? 1 : 0,
+		bIsDead ? 1 : 0,
+		bIsMine ? 1 : 0);
 
+	// 이미 같은 상태일 때
 	if (bIsDead == bDead)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SetDead SAME STATE] Actor=%s ObjId=%llu bDead=%d CurrentDead=%d"),
+			*GetNameSafe(this),
+			(unsigned long long)PlayerInfo.object_id(),
+			bDead ? 1 : 0,
+			bIsDead ? 1 : 0);
+
+		// 중요:
+		// 이미 죽은 상태라도 서버에서 죽음 패킷이 다시 왔다면
+		// 죽음 애니메이션은 다시 재생해준다.
+		if (bDead)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[SetDead FORCE DEATH ANIM] Actor=%s ObjId=%llu"),
+				*GetNameSafe(this),
+				(unsigned long long)PlayerInfo.object_id());
+
+			if (GetCharacterMovement())
+			{
+				GetCharacterMovement()->StopMovementImmediately();
+			}
+
+			PlayDeathAnimation();
+		}
+
 		return;
+	}
 
 	bIsDead = bDead;
 
 	if (bIsDead)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[Client] Player Dead"));
+		UE_LOG(LogTemp, Warning, TEXT("[Client] Player Dead Actor=%s ObjId=%llu"),
+			*GetNameSafe(this),
+			(unsigned long long)PlayerInfo.object_id());
 
 		if (GetCharacterMovement())
 		{
 			GetCharacterMovement()->StopMovementImmediately();
-			//GetCharacterMovement()->DisableMovement();
 		}
 
 		PlayDeathAnimation();
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[Client] Player Respawn"));
+		UE_LOG(LogTemp, Warning, TEXT("[Client] Player Respawn Actor=%s ObjId=%llu"),
+			*GetNameSafe(this),
+			(unsigned long long)PlayerInfo.object_id());
+
+		SetActorHiddenInGame(false);
+		SetActorEnableCollision(true);
 
 		if (GetCharacterMovement())
 		{
 			GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+			GetCharacterMovement()->Activate(true);
+			GetCharacterMovement()->SetComponentTickEnabled(true);
+			GetCharacterMovement()->StopMovementImmediately();
+		}
+
+		if (GetMesh())
+		{
+			GetMesh()->SetHiddenInGame(false);
+		}
+
+		if (AttributeComponent)
+		{
+			AttributeComponent->SetHealth(50.f);
 		}
 	}
 }

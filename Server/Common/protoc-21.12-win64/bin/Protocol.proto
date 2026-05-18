@@ -47,6 +47,10 @@ message S_DESPAWN
 	repeated uint64 object_ids = 1;
 }
 
+message C_RESPAWN
+{
+}
+
 message C_MOVE
 {
 	PlayerInfo info = 1;

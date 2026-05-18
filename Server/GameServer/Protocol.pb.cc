@@ -122,6 +122,17 @@ struct S_DESPAWNDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 S_DESPAWNDefaultTypeInternal _S_DESPAWN_default_instance_;
+PROTOBUF_CONSTEXPR C_RESPAWN::C_RESPAWN(
+    ::_pbi::ConstantInitialized) {}
+struct C_RESPAWNDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR C_RESPAWNDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~C_RESPAWNDefaultTypeInternal() {}
+  union {
+    C_RESPAWN _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 C_RESPAWNDefaultTypeInternal _C_RESPAWN_default_instance_;
 PROTOBUF_CONSTEXPR C_MOVE::C_MOVE(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.info_)*/nullptr
@@ -519,7 +530,7 @@ struct S_START_SKILL_CHARGEDefaultTypeInternal {
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 S_START_SKILL_CHARGEDefaultTypeInternal _S_START_SKILL_CHARGE_default_instance_;
 }  // namespace Protocol
-static ::_pb::Metadata file_level_metadata_Protocol_2eproto[36];
+static ::_pb::Metadata file_level_metadata_Protocol_2eproto[37];
 static constexpr ::_pb::EnumDescriptor const** file_level_enum_descriptors_Protocol_2eproto = nullptr;
 static constexpr ::_pb::ServiceDescriptor const** file_level_service_descriptors_Protocol_2eproto = nullptr;
 
@@ -579,6 +590,12 @@ const uint32_t TableStruct_Protocol_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE
   ~0u,  // no _weak_field_map_
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::Protocol::S_DESPAWN, _impl_.object_ids_),
+  ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::Protocol::C_RESPAWN, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  ~0u,  // no _inlined_string_donated_
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::Protocol::C_MOVE, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -817,34 +834,35 @@ static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protode
   { 35, -1, -1, sizeof(::Protocol::S_LEAVE_GAME)},
   { 41, -1, -1, sizeof(::Protocol::S_SPAWN)},
   { 48, -1, -1, sizeof(::Protocol::S_DESPAWN)},
-  { 55, -1, -1, sizeof(::Protocol::C_MOVE)},
-  { 62, -1, -1, sizeof(::Protocol::S_MOVE)},
-  { 69, -1, -1, sizeof(::Protocol::C_CHAT)},
-  { 76, -1, -1, sizeof(::Protocol::S_CHAT)},
-  { 84, -1, -1, sizeof(::Protocol::S_PLAYER_STATS)},
-  { 94, -1, -1, sizeof(::Protocol::GameResultInfo)},
-  { 106, -1, -1, sizeof(::Protocol::S_GAME_RESULT)},
-  { 113, -1, -1, sizeof(::Protocol::C_ATTACK_PLAYER)},
-  { 121, -1, -1, sizeof(::Protocol::S_DAMAGE_PLAYER)},
-  { 129, -1, -1, sizeof(::Protocol::S_PLAYER_DEAD)},
-  { 136, -1, -1, sizeof(::Protocol::Vector3)},
-  { 145, -1, -1, sizeof(::Protocol::MobInfo)},
-  { 156, -1, -1, sizeof(::Protocol::S_SPAWN_MOB)},
-  { 163, -1, -1, sizeof(::Protocol::S_DESPAWN_MOB)},
-  { 170, -1, -1, sizeof(::Protocol::S_MOVE_MOB)},
-  { 177, -1, -1, sizeof(::Protocol::C_MOVE_MOB)},
-  { 186, -1, -1, sizeof(::Protocol::C_ATTACK_MOB)},
-  { 193, -1, -1, sizeof(::Protocol::C_USE_SKILL)},
-  { 205, -1, -1, sizeof(::Protocol::S_USE_SKILL)},
-  { 215, -1, -1, sizeof(::Protocol::S_DAMAGE_MOB)},
-  { 224, -1, -1, sizeof(::Protocol::C_MONSTER_KILL)},
-  { 231, -1, -1, sizeof(::Protocol::S_PROJECTILE_HIT)},
-  { 241, -1, -1, sizeof(::Protocol::S_PROJECTILE_DESTROY)},
-  { 248, -1, -1, sizeof(::Protocol::S_CHANGE_LEVEL)},
-  { 255, -1, -1, sizeof(::Protocol::C_DEMO_NEXT_LEVEL)},
-  { 262, -1, -1, sizeof(::Protocol::C_LEVEL_READY)},
-  { 268, -1, -1, sizeof(::Protocol::C_START_SKILL_CHARGE)},
-  { 275, -1, -1, sizeof(::Protocol::S_START_SKILL_CHARGE)},
+  { 55, -1, -1, sizeof(::Protocol::C_RESPAWN)},
+  { 61, -1, -1, sizeof(::Protocol::C_MOVE)},
+  { 68, -1, -1, sizeof(::Protocol::S_MOVE)},
+  { 75, -1, -1, sizeof(::Protocol::C_CHAT)},
+  { 82, -1, -1, sizeof(::Protocol::S_CHAT)},
+  { 90, -1, -1, sizeof(::Protocol::S_PLAYER_STATS)},
+  { 100, -1, -1, sizeof(::Protocol::GameResultInfo)},
+  { 112, -1, -1, sizeof(::Protocol::S_GAME_RESULT)},
+  { 119, -1, -1, sizeof(::Protocol::C_ATTACK_PLAYER)},
+  { 127, -1, -1, sizeof(::Protocol::S_DAMAGE_PLAYER)},
+  { 135, -1, -1, sizeof(::Protocol::S_PLAYER_DEAD)},
+  { 142, -1, -1, sizeof(::Protocol::Vector3)},
+  { 151, -1, -1, sizeof(::Protocol::MobInfo)},
+  { 162, -1, -1, sizeof(::Protocol::S_SPAWN_MOB)},
+  { 169, -1, -1, sizeof(::Protocol::S_DESPAWN_MOB)},
+  { 176, -1, -1, sizeof(::Protocol::S_MOVE_MOB)},
+  { 183, -1, -1, sizeof(::Protocol::C_MOVE_MOB)},
+  { 192, -1, -1, sizeof(::Protocol::C_ATTACK_MOB)},
+  { 199, -1, -1, sizeof(::Protocol::C_USE_SKILL)},
+  { 211, -1, -1, sizeof(::Protocol::S_USE_SKILL)},
+  { 221, -1, -1, sizeof(::Protocol::S_DAMAGE_MOB)},
+  { 230, -1, -1, sizeof(::Protocol::C_MONSTER_KILL)},
+  { 237, -1, -1, sizeof(::Protocol::S_PROJECTILE_HIT)},
+  { 247, -1, -1, sizeof(::Protocol::S_PROJECTILE_DESTROY)},
+  { 254, -1, -1, sizeof(::Protocol::S_CHANGE_LEVEL)},
+  { 261, -1, -1, sizeof(::Protocol::C_DEMO_NEXT_LEVEL)},
+  { 268, -1, -1, sizeof(::Protocol::C_LEVEL_READY)},
+  { 274, -1, -1, sizeof(::Protocol::C_START_SKILL_CHARGE)},
+  { 281, -1, -1, sizeof(::Protocol::S_START_SKILL_CHARGE)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
@@ -856,6 +874,7 @@ static const ::_pb::Message* const file_default_instances[] = {
   &::Protocol::_S_LEAVE_GAME_default_instance_._instance,
   &::Protocol::_S_SPAWN_default_instance_._instance,
   &::Protocol::_S_DESPAWN_default_instance_._instance,
+  &::Protocol::_C_RESPAWN_default_instance_._instance,
   &::Protocol::_C_MOVE_default_instance_._instance,
   &::Protocol::_S_MOVE_default_instance_._instance,
   &::Protocol::_C_CHAT_default_instance_._instance,
@@ -895,50 +914,51 @@ const char descriptor_table_protodef_Protocol_2eproto[] PROTOBUF_SECTION_VARIABL
   "\022$\n\006player\030\002 \001(\0132\024.Protocol.PlayerInfo\"\016"
   "\n\014C_LEAVE_GAME\"\016\n\014S_LEAVE_GAME\"0\n\007S_SPAW"
   "N\022%\n\007players\030\001 \003(\0132\024.Protocol.PlayerInfo"
-  "\"\037\n\tS_DESPAWN\022\022\n\nobject_ids\030\001 \003(\004\",\n\006C_M"
-  "OVE\022\"\n\004info\030\001 \001(\0132\024.Protocol.PlayerInfo\""
-  ",\n\006S_MOVE\022\"\n\004info\030\001 \001(\0132\024.Protocol.Playe"
-  "rInfo\"\025\n\006C_CHAT\022\013\n\003msg\030\001 \001(\t\"\'\n\006S_CHAT\022\020"
-  "\n\010playerId\030\001 \001(\004\022\013\n\003msg\030\002 \001(\t\"h\n\016S_PLAYE"
-  "R_STATS\022\021\n\tobject_id\030\001 \001(\004\022\022\n\nkill_count"
+  "\"\037\n\tS_DESPAWN\022\022\n\nobject_ids\030\001 \003(\004\"\013\n\tC_R"
+  "ESPAWN\",\n\006C_MOVE\022\"\n\004info\030\001 \001(\0132\024.Protoco"
+  "l.PlayerInfo\",\n\006S_MOVE\022\"\n\004info\030\001 \001(\0132\024.P"
+  "rotocol.PlayerInfo\"\025\n\006C_CHAT\022\013\n\003msg\030\001 \001("
+  "\t\"\'\n\006S_CHAT\022\020\n\010playerId\030\001 \001(\004\022\013\n\003msg\030\002 \001"
+  "(\t\"h\n\016S_PLAYER_STATS\022\021\n\tobject_id\030\001 \001(\004\022"
+  "\022\n\nkill_count\030\002 \001(\005\022\023\n\013death_count\030\003 \001(\005"
+  "\022\032\n\022monster_kill_count\030\004 \001(\005\"\212\001\n\016GameRes"
+  "ultInfo\022\021\n\tobject_id\030\001 \001(\004\022\022\n\nkill_count"
   "\030\002 \001(\005\022\023\n\013death_count\030\003 \001(\005\022\032\n\022monster_k"
-  "ill_count\030\004 \001(\005\"\212\001\n\016GameResultInfo\022\021\n\tob"
-  "ject_id\030\001 \001(\004\022\022\n\nkill_count\030\002 \001(\005\022\023\n\013dea"
-  "th_count\030\003 \001(\005\022\032\n\022monster_kill_count\030\004 \001"
-  "(\005\022\r\n\005score\030\005 \001(\005\022\021\n\tis_winner\030\006 \001(\010\":\n\r"
-  "S_GAME_RESULT\022)\n\007results\030\001 \003(\0132\030.Protoco"
-  "l.GameResultInfo\":\n\017C_ATTACK_PLAYER\022\026\n\016t"
-  "argetPlayerId\030\001 \001(\004\022\017\n\007skillId\030\002 \001(\r\"4\n\017"
-  "S_DAMAGE_PLAYER\022\021\n\tobject_id\030\001 \001(\004\022\016\n\006da"
-  "mage\030\002 \001(\005\"\"\n\rS_PLAYER_DEAD\022\021\n\tobject_id"
-  "\030\001 \001(\004\"*\n\007Vector3\022\t\n\001x\030\001 \001(\002\022\t\n\001y\030\002 \001(\002\022"
-  "\t\n\001z\030\003 \001(\002\"x\n\007MobInfo\022\r\n\005mobId\030\001 \001(\004\022\022\n\n"
-  "templateId\030\002 \001(\r\022\036\n\003pos\030\003 \001(\0132\021.Protocol"
-  ".Vector3\022\036\n\003dir\030\004 \001(\0132\021.Protocol.Vector3"
-  "\022\n\n\002hp\030\005 \001(\005\".\n\013S_SPAWN_MOB\022\037\n\004mobs\030\001 \003("
-  "\0132\021.Protocol.MobInfo\"\037\n\rS_DESPAWN_MOB\022\016\n"
-  "\006mobIds\030\001 \003(\004\",\n\nS_MOVE_MOB\022\036\n\003mob\030\001 \001(\013"
-  "2\021.Protocol.MobInfo\"[\n\nC_MOVE_MOB\022\r\n\005mob"
-  "Id\030\001 \001(\004\022\036\n\003pos\030\002 \001(\0132\021.Protocol.Vector3"
-  "\022\036\n\003dir\030\003 \001(\0132\021.Protocol.Vector3\"\035\n\014C_AT"
-  "TACK_MOB\022\r\n\005mobId\030\001 \001(\004\"\215\001\n\013C_USE_SKILL\022"
-  "\020\n\010playerId\030\001 \001(\004\022\017\n\007skillId\030\002 \001(\r\022\024\n\014cl"
-  "ientShotId\030\003 \001(\005\022\036\n\003dir\030\004 \001(\0132\021.Protocol"
-  ".Vector3\022\020\n\010targetId\030\005 \001(\004\022\023\n\013chargeScal"
-  "e\030\006 \001(\002\"W\n\013S_USE_SKILL\022\020\n\010playerId\030\001 \001(\004"
-  "\022\017\n\007skillId\030\002 \001(\r\022\020\n\010targetId\030\003 \001(\004\022\023\n\013c"
-  "hargeScale\030\004 \001(\002\"9\n\014S_DAMAGE_MOB\022\r\n\005mobI"
-  "d\030\001 \001(\004\022\016\n\006damage\030\002 \001(\005\022\n\n\002hp\030\003 \001(\005\"#\n\016C"
-  "_MONSTER_KILL\022\021\n\tplayer_id\030\001 \001(\004\"m\n\020S_PR"
-  "OJECTILE_HIT\022\024\n\014projectileId\030\001 \001(\005\022\020\n\010ta"
-  "rgetId\030\002 \001(\004\022!\n\006hitPos\030\003 \001(\0132\021.Protocol."
-  "Vector3\022\016\n\006damage\030\004 \001(\005\",\n\024S_PROJECTILE_"
-  "DESTROY\022\024\n\014projectileId\030\001 \001(\005\"$\n\016S_CHANG"
-  "E_LEVEL\022\022\n\nlevel_name\030\001 \001(\t\"(\n\021C_DEMO_NE"
-  "XT_LEVEL\022\023\n\013targetLevel\030\001 \001(\r\"\017\n\rC_LEVEL"
-  "_READY\"\'\n\024C_START_SKILL_CHARGE\022\017\n\007skilli"
-  "d\030\001 \001(\r\"9\n\024S_START_SKILL_CHARGE\022\020\n\010playe"
-  "rid\030\001 \001(\004\022\017\n\007skillid\030\002 \001(\rb\006proto3"
+  "ill_count\030\004 \001(\005\022\r\n\005score\030\005 \001(\005\022\021\n\tis_win"
+  "ner\030\006 \001(\010\":\n\rS_GAME_RESULT\022)\n\007results\030\001 "
+  "\003(\0132\030.Protocol.GameResultInfo\":\n\017C_ATTAC"
+  "K_PLAYER\022\026\n\016targetPlayerId\030\001 \001(\004\022\017\n\007skil"
+  "lId\030\002 \001(\r\"4\n\017S_DAMAGE_PLAYER\022\021\n\tobject_i"
+  "d\030\001 \001(\004\022\016\n\006damage\030\002 \001(\005\"\"\n\rS_PLAYER_DEAD"
+  "\022\021\n\tobject_id\030\001 \001(\004\"*\n\007Vector3\022\t\n\001x\030\001 \001("
+  "\002\022\t\n\001y\030\002 \001(\002\022\t\n\001z\030\003 \001(\002\"x\n\007MobInfo\022\r\n\005mo"
+  "bId\030\001 \001(\004\022\022\n\ntemplateId\030\002 \001(\r\022\036\n\003pos\030\003 \001"
+  "(\0132\021.Protocol.Vector3\022\036\n\003dir\030\004 \001(\0132\021.Pro"
+  "tocol.Vector3\022\n\n\002hp\030\005 \001(\005\".\n\013S_SPAWN_MOB"
+  "\022\037\n\004mobs\030\001 \003(\0132\021.Protocol.MobInfo\"\037\n\rS_D"
+  "ESPAWN_MOB\022\016\n\006mobIds\030\001 \003(\004\",\n\nS_MOVE_MOB"
+  "\022\036\n\003mob\030\001 \001(\0132\021.Protocol.MobInfo\"[\n\nC_MO"
+  "VE_MOB\022\r\n\005mobId\030\001 \001(\004\022\036\n\003pos\030\002 \001(\0132\021.Pro"
+  "tocol.Vector3\022\036\n\003dir\030\003 \001(\0132\021.Protocol.Ve"
+  "ctor3\"\035\n\014C_ATTACK_MOB\022\r\n\005mobId\030\001 \001(\004\"\215\001\n"
+  "\013C_USE_SKILL\022\020\n\010playerId\030\001 \001(\004\022\017\n\007skillI"
+  "d\030\002 \001(\r\022\024\n\014clientShotId\030\003 \001(\005\022\036\n\003dir\030\004 \001"
+  "(\0132\021.Protocol.Vector3\022\020\n\010targetId\030\005 \001(\004\022"
+  "\023\n\013chargeScale\030\006 \001(\002\"W\n\013S_USE_SKILL\022\020\n\010p"
+  "layerId\030\001 \001(\004\022\017\n\007skillId\030\002 \001(\r\022\020\n\010target"
+  "Id\030\003 \001(\004\022\023\n\013chargeScale\030\004 \001(\002\"9\n\014S_DAMAG"
+  "E_MOB\022\r\n\005mobId\030\001 \001(\004\022\016\n\006damage\030\002 \001(\005\022\n\n\002"
+  "hp\030\003 \001(\005\"#\n\016C_MONSTER_KILL\022\021\n\tplayer_id\030"
+  "\001 \001(\004\"m\n\020S_PROJECTILE_HIT\022\024\n\014projectileI"
+  "d\030\001 \001(\005\022\020\n\010targetId\030\002 \001(\004\022!\n\006hitPos\030\003 \001("
+  "\0132\021.Protocol.Vector3\022\016\n\006damage\030\004 \001(\005\",\n\024"
+  "S_PROJECTILE_DESTROY\022\024\n\014projectileId\030\001 \001"
+  "(\005\"$\n\016S_CHANGE_LEVEL\022\022\n\nlevel_name\030\001 \001(\t"
+  "\"(\n\021C_DEMO_NEXT_LEVEL\022\023\n\013targetLevel\030\001 \001"
+  "(\r\"\017\n\rC_LEVEL_READY\"\'\n\024C_START_SKILL_CHA"
+  "RGE\022\017\n\007skillid\030\001 \001(\r\"9\n\024S_START_SKILL_CH"
+  "ARGE\022\020\n\010playerid\030\001 \001(\004\022\017\n\007skillid\030\002 \001(\rb"
+  "\006proto3"
   ;
 static const ::_pbi::DescriptorTable* const descriptor_table_Protocol_2eproto_deps[2] = {
   &::descriptor_table_Enum_2eproto,
@@ -946,9 +966,9 @@ static const ::_pbi::DescriptorTable* const descriptor_table_Protocol_2eproto_de
 };
 static ::_pbi::once_flag descriptor_table_Protocol_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_Protocol_2eproto = {
-    false, false, 2074, descriptor_table_protodef_Protocol_2eproto,
+    false, false, 2087, descriptor_table_protodef_Protocol_2eproto,
     "Protocol.proto",
-    &descriptor_table_Protocol_2eproto_once, descriptor_table_Protocol_2eproto_deps, 2, 36,
+    &descriptor_table_Protocol_2eproto_once, descriptor_table_Protocol_2eproto_deps, 2, 37,
     schemas, file_default_instances, TableStruct_Protocol_2eproto::offsets,
     file_level_metadata_Protocol_2eproto, file_level_enum_descriptors_Protocol_2eproto,
     file_level_service_descriptors_Protocol_2eproto,
@@ -2087,6 +2107,46 @@ void S_DESPAWN::InternalSwap(S_DESPAWN* other) {
 
 // ===================================================================
 
+class C_RESPAWN::_Internal {
+ public:
+};
+
+C_RESPAWN::C_RESPAWN(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase(arena, is_message_owned) {
+  // @@protoc_insertion_point(arena_constructor:Protocol.C_RESPAWN)
+}
+C_RESPAWN::C_RESPAWN(const C_RESPAWN& from)
+  : ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase() {
+  C_RESPAWN* const _this = this; (void)_this;
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  // @@protoc_insertion_point(copy_constructor:Protocol.C_RESPAWN)
+}
+
+
+
+
+
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData C_RESPAWN::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyImpl,
+    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeImpl,
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*C_RESPAWN::GetClassData() const { return &_class_data_; }
+
+
+
+
+
+
+
+::PROTOBUF_NAMESPACE_ID::Metadata C_RESPAWN::GetMetadata() const {
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
+      file_level_metadata_Protocol_2eproto[8]);
+}
+
+// ===================================================================
+
 class C_MOVE::_Internal {
  public:
   static const ::Protocol::PlayerInfo& info(const C_MOVE* msg);
@@ -2281,7 +2341,7 @@ void C_MOVE::InternalSwap(C_MOVE* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata C_MOVE::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[8]);
+      file_level_metadata_Protocol_2eproto[9]);
 }
 
 // ===================================================================
@@ -2480,7 +2540,7 @@ void S_MOVE::InternalSwap(S_MOVE* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata S_MOVE::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[9]);
+      file_level_metadata_Protocol_2eproto[10]);
 }
 
 // ===================================================================
@@ -2683,7 +2743,7 @@ void C_CHAT::InternalSwap(C_CHAT* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata C_CHAT::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[10]);
+      file_level_metadata_Protocol_2eproto[11]);
 }
 
 // ===================================================================
@@ -2913,7 +2973,7 @@ void S_CHAT::InternalSwap(S_CHAT* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata S_CHAT::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[11]);
+      file_level_metadata_Protocol_2eproto[12]);
 }
 
 // ===================================================================
@@ -3172,7 +3232,7 @@ void S_PLAYER_STATS::InternalSwap(S_PLAYER_STATS* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata S_PLAYER_STATS::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[12]);
+      file_level_metadata_Protocol_2eproto[13]);
 }
 
 // ===================================================================
@@ -3479,7 +3539,7 @@ void GameResultInfo::InternalSwap(GameResultInfo* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata GameResultInfo::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[13]);
+      file_level_metadata_Protocol_2eproto[14]);
 }
 
 // ===================================================================
@@ -3664,7 +3724,7 @@ void S_GAME_RESULT::InternalSwap(S_GAME_RESULT* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata S_GAME_RESULT::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[14]);
+      file_level_metadata_Protocol_2eproto[15]);
 }
 
 // ===================================================================
@@ -3875,7 +3935,7 @@ void C_ATTACK_PLAYER::InternalSwap(C_ATTACK_PLAYER* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata C_ATTACK_PLAYER::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[15]);
+      file_level_metadata_Protocol_2eproto[16]);
 }
 
 // ===================================================================
@@ -4086,7 +4146,7 @@ void S_DAMAGE_PLAYER::InternalSwap(S_DAMAGE_PLAYER* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata S_DAMAGE_PLAYER::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[16]);
+      file_level_metadata_Protocol_2eproto[17]);
 }
 
 // ===================================================================
@@ -4264,7 +4324,7 @@ void S_PLAYER_DEAD::InternalSwap(S_PLAYER_DEAD* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata S_PLAYER_DEAD::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[17]);
+      file_level_metadata_Protocol_2eproto[18]);
 }
 
 // ===================================================================
@@ -4535,7 +4595,7 @@ void Vector3::InternalSwap(Vector3* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata Vector3::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[18]);
+      file_level_metadata_Protocol_2eproto[19]);
 }
 
 // ===================================================================
@@ -4852,7 +4912,7 @@ void MobInfo::InternalSwap(MobInfo* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata MobInfo::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[19]);
+      file_level_metadata_Protocol_2eproto[20]);
 }
 
 // ===================================================================
@@ -5037,7 +5097,7 @@ void S_SPAWN_MOB::InternalSwap(S_SPAWN_MOB* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata S_SPAWN_MOB::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[20]);
+      file_level_metadata_Protocol_2eproto[21]);
 }
 
 // ===================================================================
@@ -5230,7 +5290,7 @@ void S_DESPAWN_MOB::InternalSwap(S_DESPAWN_MOB* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata S_DESPAWN_MOB::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[21]);
+      file_level_metadata_Protocol_2eproto[22]);
 }
 
 // ===================================================================
@@ -5423,7 +5483,7 @@ void S_MOVE_MOB::InternalSwap(S_MOVE_MOB* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata S_MOVE_MOB::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[22]);
+      file_level_metadata_Protocol_2eproto[23]);
 }
 
 // ===================================================================
@@ -5688,7 +5748,7 @@ void C_MOVE_MOB::InternalSwap(C_MOVE_MOB* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata C_MOVE_MOB::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[23]);
+      file_level_metadata_Protocol_2eproto[24]);
 }
 
 // ===================================================================
@@ -5866,7 +5926,7 @@ void C_ATTACK_MOB::InternalSwap(C_ATTACK_MOB* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata C_ATTACK_MOB::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[24]);
+      file_level_metadata_Protocol_2eproto[25]);
 }
 
 // ===================================================================
@@ -6202,7 +6262,7 @@ void C_USE_SKILL::InternalSwap(C_USE_SKILL* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata C_USE_SKILL::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[25]);
+      file_level_metadata_Protocol_2eproto[26]);
 }
 
 // ===================================================================
@@ -6473,7 +6533,7 @@ void S_USE_SKILL::InternalSwap(S_USE_SKILL* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata S_USE_SKILL::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[26]);
+      file_level_metadata_Protocol_2eproto[27]);
 }
 
 // ===================================================================
@@ -6708,7 +6768,7 @@ void S_DAMAGE_MOB::InternalSwap(S_DAMAGE_MOB* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata S_DAMAGE_MOB::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[27]);
+      file_level_metadata_Protocol_2eproto[28]);
 }
 
 // ===================================================================
@@ -6886,7 +6946,7 @@ void C_MONSTER_KILL::InternalSwap(C_MONSTER_KILL* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata C_MONSTER_KILL::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[28]);
+      file_level_metadata_Protocol_2eproto[29]);
 }
 
 // ===================================================================
@@ -7162,7 +7222,7 @@ void S_PROJECTILE_HIT::InternalSwap(S_PROJECTILE_HIT* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata S_PROJECTILE_HIT::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[29]);
+      file_level_metadata_Protocol_2eproto[30]);
 }
 
 // ===================================================================
@@ -7340,7 +7400,7 @@ void S_PROJECTILE_DESTROY::InternalSwap(S_PROJECTILE_DESTROY* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata S_PROJECTILE_DESTROY::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[30]);
+      file_level_metadata_Protocol_2eproto[31]);
 }
 
 // ===================================================================
@@ -7543,7 +7603,7 @@ void S_CHANGE_LEVEL::InternalSwap(S_CHANGE_LEVEL* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata S_CHANGE_LEVEL::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[31]);
+      file_level_metadata_Protocol_2eproto[32]);
 }
 
 // ===================================================================
@@ -7721,7 +7781,7 @@ void C_DEMO_NEXT_LEVEL::InternalSwap(C_DEMO_NEXT_LEVEL* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata C_DEMO_NEXT_LEVEL::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[32]);
+      file_level_metadata_Protocol_2eproto[33]);
 }
 
 // ===================================================================
@@ -7761,7 +7821,7 @@ const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*C_LEVEL_READY::GetClassData() 
 ::PROTOBUF_NAMESPACE_ID::Metadata C_LEVEL_READY::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[33]);
+      file_level_metadata_Protocol_2eproto[34]);
 }
 
 // ===================================================================
@@ -7939,7 +7999,7 @@ void C_START_SKILL_CHARGE::InternalSwap(C_START_SKILL_CHARGE* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata C_START_SKILL_CHARGE::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[34]);
+      file_level_metadata_Protocol_2eproto[35]);
 }
 
 // ===================================================================
@@ -8150,7 +8210,7 @@ void S_START_SKILL_CHARGE::InternalSwap(S_START_SKILL_CHARGE* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata S_START_SKILL_CHARGE::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_Protocol_2eproto_getter, &descriptor_table_Protocol_2eproto_once,
-      file_level_metadata_Protocol_2eproto[35]);
+      file_level_metadata_Protocol_2eproto[36]);
 }
 
 // @@protoc_insertion_point(namespace_scope)
@@ -8187,6 +8247,10 @@ Arena::CreateMaybeMessage< ::Protocol::S_SPAWN >(Arena* arena) {
 template<> PROTOBUF_NOINLINE ::Protocol::S_DESPAWN*
 Arena::CreateMaybeMessage< ::Protocol::S_DESPAWN >(Arena* arena) {
   return Arena::CreateMessageInternal< ::Protocol::S_DESPAWN >(arena);
+}
+template<> PROTOBUF_NOINLINE ::Protocol::C_RESPAWN*
+Arena::CreateMaybeMessage< ::Protocol::C_RESPAWN >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::Protocol::C_RESPAWN >(arena);
 }
 template<> PROTOBUF_NOINLINE ::Protocol::C_MOVE*
 Arena::CreateMaybeMessage< ::Protocol::C_MOVE >(Arena* arena) {

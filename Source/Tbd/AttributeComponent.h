@@ -109,6 +109,14 @@ public:
 	void AddAgility(int Value);
 	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
 	void AddIntelligence(int Value);
+
+	UFUNCTION(BlueprintCallable, Category = "AttributeFunctions")
+	void SetHealth(float Value)
+	{
+		Attributes.SubtractHealth(999999.f);
+		Attributes.AddHealth(Value);
+		OnHealthChanged.Broadcast(Attributes.GetHealthPercent());
+	}
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

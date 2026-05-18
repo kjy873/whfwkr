@@ -81,6 +81,9 @@ extern C_MOVEDefaultTypeInternal _C_MOVE_default_instance_;
 class C_MOVE_MOB;
 struct C_MOVE_MOBDefaultTypeInternal;
 extern C_MOVE_MOBDefaultTypeInternal _C_MOVE_MOB_default_instance_;
+class C_RESPAWN;
+struct C_RESPAWNDefaultTypeInternal;
+extern C_RESPAWNDefaultTypeInternal _C_RESPAWN_default_instance_;
 class C_START_SKILL_CHARGE;
 struct C_START_SKILL_CHARGEDefaultTypeInternal;
 extern C_START_SKILL_CHARGEDefaultTypeInternal _C_START_SKILL_CHARGE_default_instance_;
@@ -169,6 +172,7 @@ template<> ::Protocol::C_LOGIN* Arena::CreateMaybeMessage<::Protocol::C_LOGIN>(A
 template<> ::Protocol::C_MONSTER_KILL* Arena::CreateMaybeMessage<::Protocol::C_MONSTER_KILL>(Arena*);
 template<> ::Protocol::C_MOVE* Arena::CreateMaybeMessage<::Protocol::C_MOVE>(Arena*);
 template<> ::Protocol::C_MOVE_MOB* Arena::CreateMaybeMessage<::Protocol::C_MOVE_MOB>(Arena*);
+template<> ::Protocol::C_RESPAWN* Arena::CreateMaybeMessage<::Protocol::C_RESPAWN>(Arena*);
 template<> ::Protocol::C_START_SKILL_CHARGE* Arena::CreateMaybeMessage<::Protocol::C_START_SKILL_CHARGE>(Arena*);
 template<> ::Protocol::C_USE_SKILL* Arena::CreateMaybeMessage<::Protocol::C_USE_SKILL>(Arena*);
 template<> ::Protocol::GameResultInfo* Arena::CreateMaybeMessage<::Protocol::GameResultInfo>(Arena*);
@@ -1356,6 +1360,124 @@ class S_DESPAWN final :
 };
 // -------------------------------------------------------------------
 
+class C_RESPAWN final :
+    public ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase /* @@protoc_insertion_point(class_definition:Protocol.C_RESPAWN) */ {
+ public:
+  inline C_RESPAWN() : C_RESPAWN(nullptr) {}
+  explicit PROTOBUF_CONSTEXPR C_RESPAWN(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  C_RESPAWN(const C_RESPAWN& from);
+  C_RESPAWN(C_RESPAWN&& from) noexcept
+    : C_RESPAWN() {
+    *this = ::std::move(from);
+  }
+
+  inline C_RESPAWN& operator=(const C_RESPAWN& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline C_RESPAWN& operator=(C_RESPAWN&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const C_RESPAWN& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const C_RESPAWN* internal_default_instance() {
+    return reinterpret_cast<const C_RESPAWN*>(
+               &_C_RESPAWN_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    8;
+
+  friend void swap(C_RESPAWN& a, C_RESPAWN& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(C_RESPAWN* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(C_RESPAWN* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  C_RESPAWN* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<C_RESPAWN>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyFrom;
+  inline void CopyFrom(const C_RESPAWN& from) {
+    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyImpl(*this, from);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeFrom;
+  void MergeFrom(const C_RESPAWN& from) {
+    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeImpl(*this, from);
+  }
+  public:
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "Protocol.C_RESPAWN";
+  }
+  protected:
+  explicit C_RESPAWN(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // @@protoc_insertion_point(class_scope:Protocol.C_RESPAWN)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+  };
+  friend struct ::TableStruct_Protocol_2eproto;
+};
+// -------------------------------------------------------------------
+
 class C_MOVE final :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:Protocol.C_MOVE) */ {
  public:
@@ -1404,7 +1526,7 @@ class C_MOVE final :
                &_C_MOVE_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    8;
+    9;
 
   friend void swap(C_MOVE& a, C_MOVE& b) {
     a.Swap(&b);
@@ -1561,7 +1683,7 @@ class S_MOVE final :
                &_S_MOVE_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    9;
+    10;
 
   friend void swap(S_MOVE& a, S_MOVE& b) {
     a.Swap(&b);
@@ -1718,7 +1840,7 @@ class C_CHAT final :
                &_C_CHAT_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    10;
+    11;
 
   friend void swap(C_CHAT& a, C_CHAT& b) {
     a.Swap(&b);
@@ -1871,7 +1993,7 @@ class S_CHAT final :
                &_S_CHAT_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    11;
+    12;
 
   friend void swap(S_CHAT& a, S_CHAT& b) {
     a.Swap(&b);
@@ -2035,7 +2157,7 @@ class S_PLAYER_STATS final :
                &_S_PLAYER_STATS_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    12;
+    13;
 
   friend void swap(S_PLAYER_STATS& a, S_PLAYER_STATS& b) {
     a.Swap(&b);
@@ -2216,7 +2338,7 @@ class GameResultInfo final :
                &_GameResultInfo_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    13;
+    14;
 
   friend void swap(GameResultInfo& a, GameResultInfo& b) {
     a.Swap(&b);
@@ -2419,7 +2541,7 @@ class S_GAME_RESULT final :
                &_S_GAME_RESULT_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    14;
+    15;
 
   friend void swap(S_GAME_RESULT& a, S_GAME_RESULT& b) {
     a.Swap(&b);
@@ -2576,7 +2698,7 @@ class C_ATTACK_PLAYER final :
                &_C_ATTACK_PLAYER_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    15;
+    16;
 
   friend void swap(C_ATTACK_PLAYER& a, C_ATTACK_PLAYER& b) {
     a.Swap(&b);
@@ -2735,7 +2857,7 @@ class S_DAMAGE_PLAYER final :
                &_S_DAMAGE_PLAYER_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    16;
+    17;
 
   friend void swap(S_DAMAGE_PLAYER& a, S_DAMAGE_PLAYER& b) {
     a.Swap(&b);
@@ -2894,7 +3016,7 @@ class S_PLAYER_DEAD final :
                &_S_PLAYER_DEAD_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    17;
+    18;
 
   friend void swap(S_PLAYER_DEAD& a, S_PLAYER_DEAD& b) {
     a.Swap(&b);
@@ -3042,7 +3164,7 @@ class Vector3 final :
                &_Vector3_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    18;
+    19;
 
   friend void swap(Vector3& a, Vector3& b) {
     a.Swap(&b);
@@ -3212,7 +3334,7 @@ class MobInfo final :
                &_MobInfo_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    19;
+    20;
 
   friend void swap(MobInfo& a, MobInfo& b) {
     a.Swap(&b);
@@ -3422,7 +3544,7 @@ class S_SPAWN_MOB final :
                &_S_SPAWN_MOB_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    20;
+    21;
 
   friend void swap(S_SPAWN_MOB& a, S_SPAWN_MOB& b) {
     a.Swap(&b);
@@ -3579,7 +3701,7 @@ class S_DESPAWN_MOB final :
                &_S_DESPAWN_MOB_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    21;
+    22;
 
   friend void swap(S_DESPAWN_MOB& a, S_DESPAWN_MOB& b) {
     a.Swap(&b);
@@ -3741,7 +3863,7 @@ class S_MOVE_MOB final :
                &_S_MOVE_MOB_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    22;
+    23;
 
   friend void swap(S_MOVE_MOB& a, S_MOVE_MOB& b) {
     a.Swap(&b);
@@ -3898,7 +4020,7 @@ class C_MOVE_MOB final :
                &_C_MOVE_MOB_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    23;
+    24;
 
   friend void swap(C_MOVE_MOB& a, C_MOVE_MOB& b) {
     a.Swap(&b);
@@ -4086,7 +4208,7 @@ class C_ATTACK_MOB final :
                &_C_ATTACK_MOB_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    24;
+    25;
 
   friend void swap(C_ATTACK_MOB& a, C_ATTACK_MOB& b) {
     a.Swap(&b);
@@ -4234,7 +4356,7 @@ class C_USE_SKILL final :
                &_C_USE_SKILL_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    25;
+    26;
 
   friend void swap(C_USE_SKILL& a, C_USE_SKILL& b) {
     a.Swap(&b);
@@ -4446,7 +4568,7 @@ class S_USE_SKILL final :
                &_S_USE_SKILL_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    26;
+    27;
 
   friend void swap(S_USE_SKILL& a, S_USE_SKILL& b) {
     a.Swap(&b);
@@ -4627,7 +4749,7 @@ class S_DAMAGE_MOB final :
                &_S_DAMAGE_MOB_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    27;
+    28;
 
   friend void swap(S_DAMAGE_MOB& a, S_DAMAGE_MOB& b) {
     a.Swap(&b);
@@ -4797,7 +4919,7 @@ class C_MONSTER_KILL final :
                &_C_MONSTER_KILL_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    28;
+    29;
 
   friend void swap(C_MONSTER_KILL& a, C_MONSTER_KILL& b) {
     a.Swap(&b);
@@ -4945,7 +5067,7 @@ class S_PROJECTILE_HIT final :
                &_S_PROJECTILE_HIT_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    29;
+    30;
 
   friend void swap(S_PROJECTILE_HIT& a, S_PROJECTILE_HIT& b) {
     a.Swap(&b);
@@ -5135,7 +5257,7 @@ class S_PROJECTILE_DESTROY final :
                &_S_PROJECTILE_DESTROY_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    30;
+    31;
 
   friend void swap(S_PROJECTILE_DESTROY& a, S_PROJECTILE_DESTROY& b) {
     a.Swap(&b);
@@ -5283,7 +5405,7 @@ class S_CHANGE_LEVEL final :
                &_S_CHANGE_LEVEL_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    31;
+    32;
 
   friend void swap(S_CHANGE_LEVEL& a, S_CHANGE_LEVEL& b) {
     a.Swap(&b);
@@ -5436,7 +5558,7 @@ class C_DEMO_NEXT_LEVEL final :
                &_C_DEMO_NEXT_LEVEL_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    32;
+    33;
 
   friend void swap(C_DEMO_NEXT_LEVEL& a, C_DEMO_NEXT_LEVEL& b) {
     a.Swap(&b);
@@ -5583,7 +5705,7 @@ class C_LEVEL_READY final :
                &_C_LEVEL_READY_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    33;
+    34;
 
   friend void swap(C_LEVEL_READY& a, C_LEVEL_READY& b) {
     a.Swap(&b);
@@ -5702,7 +5824,7 @@ class C_START_SKILL_CHARGE final :
                &_C_START_SKILL_CHARGE_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    34;
+    35;
 
   friend void swap(C_START_SKILL_CHARGE& a, C_START_SKILL_CHARGE& b) {
     a.Swap(&b);
@@ -5850,7 +5972,7 @@ class S_START_SKILL_CHARGE final :
                &_S_START_SKILL_CHARGE_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    35;
+    36;
 
   friend void swap(S_START_SKILL_CHARGE& a, S_START_SKILL_CHARGE& b) {
     a.Swap(&b);
@@ -6263,6 +6385,10 @@ S_DESPAWN::mutable_object_ids() {
   // @@protoc_insertion_point(field_mutable_list:Protocol.S_DESPAWN.object_ids)
   return _internal_mutable_object_ids();
 }
+
+// -------------------------------------------------------------------
+
+// C_RESPAWN
 
 // -------------------------------------------------------------------
 
@@ -8356,6 +8482,8 @@ inline void S_START_SKILL_CHARGE::set_skillid(uint32_t value) {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

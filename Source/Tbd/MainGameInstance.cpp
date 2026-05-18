@@ -25,6 +25,7 @@
 #include "EngineUtils.h"
 #include "Network/NetworkWorker.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/CapsuleComponent.h"
 
 void UMainGameInstance::ConnectToGameServer()
 {
@@ -487,6 +488,60 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 	UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] objId=%llu isMine=%d loc=(%.1f, %.1f, %.1f)"),
 		ObjectId, IsMine ? 1 : 0, SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z);
 
+	auto ResetCharacterAfterSpawn = [](APlayerCharacter* Character)
+		{
+			if (Character == nullptr)
+				return;
+
+			UE_LOG(LogTemp, Warning, TEXT("[ResetCharacterAfterSpawn ENTER] Actor=%s ObjId=%llu bIsDeadBefore=%d"),
+				*GetNameSafe(Character),
+				(unsigned long long)Character->PlayerInfo.object_id(),
+				Character->bIsDead ? 1 : 0);
+
+			const bool bWasDead = Character->bIsDead;
+
+			Character->SetDead(false);
+
+			Character->SetActorHiddenInGame(false);
+			Character->SetActorEnableCollision(true);
+
+			if (UCapsuleComponent* Capsule = Character->GetCapsuleComponent())
+			{
+				Capsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+				Capsule->SetGenerateOverlapEvents(true);
+			}
+
+			if (USkeletalMeshComponent* MeshComp = Character->GetMesh())
+			{
+				MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+				MeshComp->SetGenerateOverlapEvents(true);
+				MeshComp->SetHiddenInGame(false);
+			}
+
+			if (UCharacterMovementComponent* MoveComp = Character->GetCharacterMovement())
+			{
+				MoveComp->SetMovementMode(MOVE_Walking);
+				MoveComp->Activate(true);
+				MoveComp->SetComponentTickEnabled(true);
+				MoveComp->StopMovementImmediately();
+			}
+
+			if (bWasDead)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[RespawnAnimation] Play Respawn Anim Actor=%s ObjId=%llu"),
+					*GetNameSafe(Character),
+					(unsigned long long)Character->PlayerInfo.object_id());
+
+				Character->BP_PlayRespawnAnimation();
+			}
+
+			UE_LOG(LogTemp, Warning, TEXT("[ResetCharacterAfterSpawn END] Actor=%s ObjId=%llu bWasDead=%d bIsDeadAfter=%d"),
+				*GetNameSafe(Character),
+				(unsigned long long)Character->PlayerInfo.object_id(),
+				bWasDead ? 1 : 0,
+				Character->bIsDead ? 1 : 0);
+		};
+
 	if (IsMine)
 	{
 		APlayerCharacter* LocalPlayer = nullptr;
@@ -535,8 +590,16 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 		LocalPlayer->bIsMine = true;
 		LocalPlayer->SetPlayerInfo(PlayerInfo);
 
+		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn SetPlayerInfo] Actor=%s ObjectId=%llu PlayerInfoObjId=%llu IsMine=%d"),
+			*GetNameSafe(LocalPlayer),
+			ObjectId,
+			(unsigned long long)LocalPlayer->PlayerInfo.object_id(),
+			IsMine ? 1 : 0);
+
 		LocalPlayer->SetActorLocation(SpawnLocation);
 		LocalPlayer->SetActorRotation(SpawnRotation);
+
+		ResetCharacterAfterSpawn(LocalPlayer);
 
 		UUpgradeComponent* UpgradeComp = LocalPlayer->FindComponentByClass<UUpgradeComponent>();
 		if (UpgradeComp)
@@ -545,13 +608,24 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 			UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Applied upgrades for my objId=%llu"), ObjectId);
 		}
 
-		/*if (UCharacterMovementComponent* MoveComp = LocalPlayer->GetCharacterMovement())
-		{
-			MoveComp->StopMovementImmediately();
-		}*/
-
 		MyObjectId = ObjectId;
 		Players.FindOrAdd(ObjectId) = LocalPlayer;
+
+		if (UC_NetworkPlayerComponent* NetComp = LocalPlayer->FindComponentByClass<UC_NetworkPlayerComponent>())
+		{
+			NetComp->SetObjectId(ObjectId);
+			NetComp->StartMoveSendTimer();
+
+			UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] StartMoveSendTimer called objId=%llu player=%s"),
+				ObjectId,
+				*GetNameSafe(LocalPlayer));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] UC_NetworkPlayerComponent not found objId=%llu player=%s"),
+				ObjectId,
+				*GetNameSafe(LocalPlayer));
+		}
 
 		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] MyPlayer set/update objId=%llu loc=(%.1f, %.1f, %.1f)"),
 			ObjectId, SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z);
@@ -585,6 +659,8 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 		TargetActor->bIsMine = false;
 		TargetActor->SetPlayerInfo(PlayerInfo);
 
+		ResetCharacterAfterSpawn(TargetActor);
+
 		if (!bZeroSpawn)
 		{
 			TargetActor->SetActorLocation(SpawnLocation);
@@ -607,6 +683,9 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 		{
 			NewOther->bIsMine = false;
 			NewOther->SetPlayerInfo(PlayerInfo);
+
+			ResetCharacterAfterSpawn(NewOther);
+
 			Players.Add(ObjectId, NewOther);
 		}
 	}
@@ -626,7 +705,22 @@ void UMainGameInstance::HandleSpawn(const Protocol::S_SPAWN& SpawnPkt)
 {
 	for (const auto& PlayerInfo : SpawnPkt.players())
 	{
-		HandleSpawn(PlayerInfo, false);
+		const uint64 ObjectId = PlayerInfo.object_id();
+
+		if (MyObjectId != 0 && ObjectId == MyObjectId)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn S_SPAWN] Handle my spawn objId=%llu as IsMine=true"),
+				ObjectId);
+
+			HandleSpawn(PlayerInfo, true);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn S_SPAWN] Handle other spawn objId=%llu"),
+				ObjectId);
+
+			HandleSpawn(PlayerInfo, false);
+		}
 	}
 }
 
@@ -670,10 +764,14 @@ void UMainGameInstance::HandleMove(const Protocol::S_MOVE& MovePkt)
 
 	TWeakObjectPtr<APlayerCharacter>* FindActor = Players.Find(ObjectId);
 	if (FindActor == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[HandleMove] Player not found ObjId=%llu"), ObjectId);
 		return;
+	}
 
 	if (!FindActor->IsValid())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[HandleMove] Invalid actor ObjId=%llu remove"), ObjectId);
 		Players.Remove(ObjectId);
 		return;
 	}
@@ -681,6 +779,14 @@ void UMainGameInstance::HandleMove(const Protocol::S_MOVE& MovePkt)
 	APlayerCharacter* Player = FindActor->Get();
 	if (Player == nullptr)
 		return;
+
+	if (!Player->bIsMine && Player->bIsDead)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[HandleMove] Ignore move for dead player ObjId=%llu Actor=%s"),
+			ObjectId,
+			*GetNameSafe(Player));
+		return;
+	}
 
 	Player->SetDestInfo(MovePkt.info());
 }
@@ -971,27 +1077,59 @@ void UMainGameInstance::HandleDie(const Protocol::S_PLAYER_DEAD& Pkt)
 {
 	uint64 ObjectId = Pkt.object_id();
 
-	UE_LOG(LogTemp, Warning, TEXT("[HandleDie] this=%p ObjId=%llu Players.Num=%d"),
-		this, ObjectId, Players.Num());
+	UE_LOG(LogTemp, Warning, TEXT("[HandleDie ENTER] World=%s ObjId=%llu MyObjectId=%llu Players.Num=%d"),
+		*GetNameSafe(GetWorld()),
+		ObjectId,
+		MyObjectId,
+		Players.Num());
 
 	TWeakObjectPtr<APlayerCharacter>* FoundActor = Players.Find(ObjectId);
 	if (FoundActor == nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[HandleDie] Player not found. ObjId=%llu"), ObjectId);
+		UE_LOG(LogTemp, Error, TEXT("[HandleDie BLOCK] Player not found ObjId=%llu MyObjectId=%llu Players.Num=%d"),
+			ObjectId,
+			MyObjectId,
+			Players.Num());
+		return;
+	}
+
+	if (!FoundActor->IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("[HandleDie BLOCK] FoundActor invalid ObjId=%llu"),
+			ObjectId);
+
+		Players.Remove(ObjectId);
 		return;
 	}
 
 	APlayerCharacter* TargetCharacter = FoundActor->Get();
 	if (TargetCharacter == nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[HandleDie] TargetCharacter nullptr. ObjId=%llu"), ObjectId);
+		UE_LOG(LogTemp, Error, TEXT("[HandleDie BLOCK] TargetCharacter nullptr ObjId=%llu"), ObjectId);
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("[HandleDie] Actor=%s IsMine=%d"),
-		*GetNameSafe(TargetCharacter), TargetCharacter->bIsMine ? 1 : 0);
+	UE_LOG(LogTemp, Warning, TEXT("[HandleDie BEFORE SetDead] World=%s Actor=%s ObjId=%llu IsMine=%d bIsDead=%d"),
+		*GetNameSafe(GetWorld()),
+		*GetNameSafe(TargetCharacter),
+		ObjectId,
+		TargetCharacter->bIsMine ? 1 : 0,
+		TargetCharacter->bIsDead ? 1 : 0);
 
 	TargetCharacter->SetDead(true);
+
+	UE_LOG(LogTemp, Warning, TEXT("[HandleDie AFTER SetDead] World=%s Actor=%s ObjId=%llu IsMine=%d bIsDead=%d"),
+		*GetNameSafe(GetWorld()),
+		*GetNameSafe(TargetCharacter),
+		ObjectId,
+		TargetCharacter->bIsMine ? 1 : 0,
+		TargetCharacter->bIsDead ? 1 : 0);
+
+	if (ObjectId == MyObjectId)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[HandleDie] My player dead. Show death UI ObjId=%llu"), ObjectId);
+		BP_OnMyPlayerDead();
+	}
 }
 
 void UMainGameInstance::SendAttackPlayer(uint64 TargetId, uint32 SkillId)
@@ -1009,6 +1147,24 @@ void UMainGameInstance::SendAttackPlayer(uint64 TargetId, uint32 SkillId)
 
 	UE_LOG(LogTemp, Warning, TEXT("[Client] SendAttackPlayer target=%llu skill=%d"),
 		TargetId, SkillId);
+}
+
+void UMainGameInstance::SendRespawn()
+{
+	if (MyObjectId == 0 || Socket == nullptr || !GameServerSession.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SendRespawn BLOCK] MyObjectId=%llu Socket=%d Session=%d"),
+			MyObjectId,
+			Socket != nullptr ? 1 : 0,
+			GameServerSession.IsValid() ? 1 : 0);
+		return;
+	}
+
+	Protocol::C_RESPAWN pkt;
+
+	SendPacket(ClientPacketHandler::MakeSendBuffer(pkt));
+
+	UE_LOG(LogTemp, Warning, TEXT("[SendRespawn] MyObjectId=%llu"), MyObjectId);
 }
 
 void UMainGameInstance::OnRecvUseSkill(const Protocol::S_USE_SKILL& pkt)

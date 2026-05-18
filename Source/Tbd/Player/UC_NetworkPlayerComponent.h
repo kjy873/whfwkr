@@ -16,9 +16,16 @@ public:
 
 protected:
     virtual void BeginPlay() override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:
     void SetObjectId(uint64 InObjectId) { MyObjectId = InObjectId; }
+
+    UFUNCTION(BlueprintCallable)
+    void StartMoveSendTimer();
+
+    UFUNCTION(BlueprintCallable)
+    void StopMoveSendTimer();
 
     UFUNCTION(BlueprintCallable)
     void SendMoveToServer(const FVector& Location, float Yaw);
@@ -26,6 +33,7 @@ public:
     void SendMyMovement();
 
 private:
+    UPROPERTY()
     UMainGameInstance* CachedGameInstance = nullptr;
 
     uint64 MyObjectId = 0;

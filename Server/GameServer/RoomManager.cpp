@@ -72,12 +72,6 @@ void RoomManager::Update(float deltaTime)
 
         bool bPhaseEnded = false;
 
-        if (_isBattlePhase && alivePlayers.size() <= 1)
-        {
-            cout << "[PVP End] winner decided. aliveCount=" << alivePlayers.size() << endl;
-            bPhaseEnded = true;
-        }
-
         if (_roundTimer >= 60.0f)
         {
             cout << "[Phase Timer End] isBattlePhase=" << _isBattlePhase << endl;
@@ -170,7 +164,7 @@ void RoomManager::MoveRoundPlayersToBattle()
         WRITE_LOCK;
         for (auto& p : _roundPlayers)
         {
-            if (p && p->Hp > 0)
+            if (p)
                 playersToMove.push_back(p);
         }
     }
@@ -187,7 +181,7 @@ void RoomManager::MoveRoundPlayersToHunting()
         WRITE_LOCK;
         for (auto& p : _roundPlayers)
         {
-            if (p && p->Hp > 0)
+            if (p)
                 playersToMove.push_back(p);
         }
     }
@@ -239,14 +233,12 @@ void RoomManager::MoveToDemoLevel(uint32 targetLevel)
             }
             else
             {
-                // 이미 PVE 상태에서 PVE로 이동하는 건 라운드 증가 X
                 _isBattlePhase = false;
                 shouldMoveToPVE = true;
             }
         }
         else if (targetLevel == 2)
         {
-            // PVE -> PVP 는 라운드 시작일 뿐, 라운드 완료 아님
             _isBattlePhase = true;
             shouldMoveToPVP = true;
         }
@@ -272,6 +264,46 @@ void RoomManager::MoveToDemoLevel(uint32 targetLevel)
         cout << "[Demo] Move to PVP" << endl;
         MoveRoundPlayersToBattle();
     }
+}
+
+void RoomManager::RespawnRoundPlayer(PlayerRef player)
+{
+    if (player == nullptr || player->playerInfo == nullptr)
+        return;
+
+    player->Hp = 50;
+
+    RoomRef currentRoom = player->room.lock();
+    if (currentRoom)
+    {
+        currentRoom->BroadcastPlayerStats(player);
+    }
+
+    cout << "[RespawnRoundPlayer] ObjId="
+        << player->playerInfo->object_id()
+        << " Hp=" << player->Hp
+        << endl;
+}
+
+void RoomManager::ResetPlayerForPhase(PlayerRef player, bool bMoveToPVE)
+{
+    if (player == nullptr || player->playerInfo == nullptr)
+        return;
+
+    if (bMoveToPVE)
+    {
+        player->Hp = 100;
+    }
+    else
+    {
+        player->Hp = 50;
+    }
+
+    cout << "[ResetPlayerForPhase] ObjId="
+        << player->playerInfo->object_id()
+        << " Hp=" << player->Hp
+        << " MoveToPVE=" << bMoveToPVE
+        << endl;
 }
 
 void RoomManager::UpdatePlayerScore(PlayerRef player)
@@ -371,8 +403,28 @@ void RoomManager::MoveToBattleRoom(PlayerRef player)
     battleRoom->DoAsync([battleRoom, player, session]()
         {
             battleRoom->SetRoomType(RoomType::Battle);
-            //battleRoom->ApplySpawnByRoomType(player);
+
+            if (player->Hp <= 0)
+            {
+                player->Hp = 50;
+
+                cout << "[Battle Respawn] ObjId="
+                    << player->playerInfo->object_id()
+                    << " Hp=50"
+                    << endl;
+            }
+            else
+            {
+                cout << "[Battle Enter Keep Hp] ObjId="
+                    << player->playerInfo->object_id()
+                    << " Hp=" << player->Hp
+                    << endl;
+            }
+
+            battleRoom->ApplySpawnByRoomType(player);
             battleRoom->HandleEnterPlayerLocked(player, battleRoom);
+
+            battleRoom->BroadcastPlayerStats(player);
 
             Protocol::S_CHANGE_LEVEL pkt;
             pkt.set_level_name("NewMap");
@@ -387,6 +439,8 @@ void RoomManager::MoveToHuntingRoom(PlayerRef player)
     auto session = player->session.lock();
     if (!session)
         return;
+
+    ResetPlayerForPhase(player, true);
 
     RoomRef oldRoom = player->room.lock();
 
@@ -403,7 +457,10 @@ void RoomManager::MoveToHuntingRoom(PlayerRef player)
 
                 huntingRoom->DoAsync([huntingRoom, player, session]()
                     {
+                        huntingRoom->ApplySpawnByRoomType(player);
                         huntingRoom->HandleEnterPlayerLocked(player, huntingRoom);
+
+                        huntingRoom->BroadcastPlayerStats(player);
 
                         Protocol::S_CHANGE_LEVEL pkt;
                         pkt.set_level_name("LandscapeMap");
@@ -418,6 +475,8 @@ void RoomManager::MoveToHuntingRoom(PlayerRef player)
         huntingRoom->DoAsync([huntingRoom, player, session]()
             {
                 huntingRoom->HandleEnterPlayerLocked(player, huntingRoom);
+
+                huntingRoom->BroadcastPlayerStats(player);
 
                 Protocol::S_CHANGE_LEVEL pkt;
                 pkt.set_level_name("LandscapeMap");
