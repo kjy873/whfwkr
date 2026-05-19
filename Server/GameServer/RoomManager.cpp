@@ -421,16 +421,15 @@ void RoomManager::MoveToBattleRoom(PlayerRef player)
                     << endl;
             }
 
-            battleRoom->ApplySpawnByRoomType(player);
-            battleRoom->HandleEnterPlayerLocked(player, battleRoom);
-
-            battleRoom->BroadcastPlayerStats(player);
-
             Protocol::S_CHANGE_LEVEL pkt;
-            pkt.set_level_name("NewMap");
+            pkt.set_level_name("/Game/Level/NewMap");
 
             auto sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
             session->Send(sendBuffer);
+
+            battleRoom->ApplySpawnByRoomType(player);
+            battleRoom->HandleEnterPlayerLocked(player, battleRoom);
+            battleRoom->BroadcastPlayerStats(player);
         });
 }
 
@@ -457,16 +456,15 @@ void RoomManager::MoveToHuntingRoom(PlayerRef player)
 
                 huntingRoom->DoAsync([huntingRoom, player, session]()
                     {
-                        huntingRoom->ApplySpawnByRoomType(player);
-                        huntingRoom->HandleEnterPlayerLocked(player, huntingRoom);
-
-                        huntingRoom->BroadcastPlayerStats(player);
-
                         Protocol::S_CHANGE_LEVEL pkt;
-                        pkt.set_level_name("LandscapeMap");
+                        pkt.set_level_name("/Game/Level/LandscapeMap");
 
                         auto sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
                         session->Send(sendBuffer);
+
+                        //huntingRoom->ApplySpawnByRoomType(player);
+                        //huntingRoom->HandleEnterPlayerLocked(player, huntingRoom);
+                        //huntingRoom->BroadcastPlayerStats(player);
                     });
             });
     }
@@ -474,15 +472,15 @@ void RoomManager::MoveToHuntingRoom(PlayerRef player)
     {
         huntingRoom->DoAsync([huntingRoom, player, session]()
             {
-                huntingRoom->HandleEnterPlayerLocked(player, huntingRoom);
-
-                huntingRoom->BroadcastPlayerStats(player);
-
                 Protocol::S_CHANGE_LEVEL pkt;
-                pkt.set_level_name("LandscapeMap");
+                pkt.set_level_name("/Game/Level/LandscapeMap");
 
                 auto sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
                 session->Send(sendBuffer);
+
+               // huntingRoom->ApplySpawnByRoomType(player);
+                //huntingRoom->HandleEnterPlayerLocked(player, huntingRoom);
+               // huntingRoom->BroadcastPlayerStats(player);
             });
     }
 }

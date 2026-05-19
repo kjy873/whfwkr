@@ -693,10 +693,20 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 
 void UMainGameInstance::HandleSpawn(const Protocol::S_ENTER_GAME& EnterGamePkt)
 {
-	if (MyObjectId != 0)
-		return;
+	const uint64 NewObjectId = EnterGamePkt.player().object_id();
 
-	MyObjectId = EnterGamePkt.player().object_id();
+	if (MyObjectId != 0 && MyObjectId != NewObjectId)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn S_ENTER_GAME] ObjectId changed Old=%llu New=%llu"),
+			MyObjectId,
+			NewObjectId);
+	}
+
+	MyObjectId = NewObjectId;
+
+	UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn S_ENTER_GAME] MyObjectId=%llu bChangingLevel=%d"),
+		MyObjectId,
+		bChangingLevel ? 1 : 0);
 
 	HandleSpawn(EnterGamePkt.player(), true);
 }
@@ -739,7 +749,16 @@ void UMainGameInstance::HandleDespawn(uint64 ObjectId)
 	if (MyObjectId == ObjectId)
 	{
 		MyPlayer.Reset();
-		MyObjectId = 0;
+
+		if (!bChangingLevel)
+		{
+			MyObjectId = 0;
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT("[HandleDespawn] My despawn ObjId=%llu bChangingLevel=%d MyObjectIdNow=%llu"),
+			ObjectId,
+			bChangingLevel ? 1 : 0,
+			MyObjectId);
 	}
 }
 

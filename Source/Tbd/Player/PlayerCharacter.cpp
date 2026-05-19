@@ -30,7 +30,6 @@ void APlayerCharacter::BeginPlay()
 	{
 		if (UMainGameInstance* GI = GetGameInstance<UMainGameInstance>())
 		{
-			GI->SendLevelReady();
 			UE_LOG(LogTemp, Warning, TEXT("[Client] SendLevelReady from BeginPlay"));
 		}
 	}

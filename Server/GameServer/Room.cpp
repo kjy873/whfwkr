@@ -261,7 +261,7 @@ void Room::CheckBattleEnd()
 	}
 
 	Protocol::S_CHANGE_LEVEL pkt;
-	pkt.set_level_name("LandscapeMap");
+	pkt.set_level_name("/Game/Level/LandscapeMap");
 	SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
 	Broadcast(sendBuffer);
 

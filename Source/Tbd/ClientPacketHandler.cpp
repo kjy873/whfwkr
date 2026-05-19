@@ -339,7 +339,6 @@ bool Handle_S_CHANGE_LEVEL(PacketSessionRef& session, Protocol::S_CHANGE_LEVEL& 
 			if (UMainGameInstance* GI = GetMainGameInstance())
 			{
 				GI->MyPlayer = nullptr;
-				GI->MyObjectId = 0;
 				GI->Players.Empty();
 
 				UE_LOG(LogTemp, Warning, TEXT("[ChangeLevel] Cleared player state before OpenLevel -> %s"), *LevelName);
