@@ -260,12 +260,6 @@ void Room::HandleMoveLocked(Protocol::C_MOVE& pkt)
 
 	player->playerInfo->CopyFrom(pkt.info());
 
-	cout << "[HandleMoveLocked APPLY]"
-		<< " RoomType=" << static_cast<int32>(_roomType)
-		<< " ObjId=" << objectId
-		<< " Move=(" << x << ", " << y << ", " << z << ")"
-		<< endl;
-
 	Protocol::S_MOVE movePkt;
 	Protocol::PlayerInfo* info = movePkt.mutable_info();
 	info->CopyFrom(pkt.info());

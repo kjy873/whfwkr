@@ -378,6 +378,8 @@ bool Handle_S_CHANGE_LEVEL(PacketSessionRef& session, Protocol::S_CHANGE_LEVEL& 
 
 			GI->ClearPlayerStateForLevelChange();
 
+			GI->ResetLevelTransitionState();
+
 			UWorld* World = GI->GetWorld();
 			if (World == nullptr)
 			{

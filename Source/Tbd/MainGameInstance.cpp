@@ -164,17 +164,36 @@ void UMainGameInstance::Init()
 
 	ClientPacketHandler::Init();
 
+	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(
+		this,
+		&UMainGameInstance::OnPostLoadMapWithWorld
+	);
+
+	UE_LOG(LogTemp, Warning, TEXT("[MainGameInstance::Init] PostLoadMapWithWorld registered"));
+
 	UE_LOG(LogTemp, Warning, TEXT("[MainGameInstance::Init] Init complete. RecvPackets timer NOT started here. this=%p"),
 		this);
 }
 
 void UMainGameInstance::Shutdown()
 {
+	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
+	FCoreDelegates::OnPreExit.RemoveAll(this);
+
 	DisconnectToGameServer();
 
 	StopServerProcess();
 
 	Super::Shutdown();
+}
+
+void UMainGameInstance::ResetLevelTransitionState()
+{
+	bWaitingLevelReady = true;
+	bLevelReadySent = false;
+
+	UE_LOG(LogTemp, Warning, TEXT("[ResetLevelTransitionState] WaitingLevelReady=1 Sent=0 MyObjectId=%llu"),
+		MyObjectId);
 }
 
 void UMainGameInstance::SendStartSkillCharge(int32 SkillId)
@@ -289,6 +308,25 @@ void UMainGameInstance::StopServerProcess()
 	bStartedServer = false;
 }
 
+void UMainGameInstance::OnPostLoadMapWithWorld(UWorld* LoadedWorld)
+{
+	UE_LOG(LogTemp, Warning, TEXT("[OnPostLoadMapWithWorld] World=%s MyObjectId=%llu Waiting=%d Sent=%d"),
+		*GetNameSafe(LoadedWorld),
+		MyObjectId,
+		bWaitingLevelReady ? 1 : 0,
+		bLevelReadySent ? 1 : 0);
+
+	StartRecvPacketsTimer();
+
+	if (!bWaitingLevelReady)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[OnPostLoadMapWithWorld IGNORE] not waiting level ready"));
+		return;
+	}
+
+	SendLevelReady();
+}
+
 void UMainGameInstance::HandleRecvPackets()
 {
 	if (Socket == nullptr || GameServerSession == nullptr)
@@ -393,17 +431,24 @@ void UMainGameInstance::SendPacket(SendBufferRef SendBuffer)
 
 void UMainGameInstance::SendLevelReady()
 {
-	UE_LOG(LogTemp, Error, TEXT("[SendLevelReady ENTER] this=%p MyObjectId=%llu bChangingLevel=%d Socket=%d Session=%d"),
-		this,
-		(unsigned long long)MyObjectId,
+	UE_LOG(LogTemp, Warning, TEXT("[SendLevelReady TRY] Waiting=%d Sent=%d Changing=%d MyObjectId=%llu"),
+		bWaitingLevelReady ? 1 : 0,
+		bLevelReadySent ? 1 : 0,
 		bChangingLevel ? 1 : 0,
-		Socket != nullptr ? 1 : 0,
-		GameServerSession.IsValid() ? 1 : 0);
+		(unsigned long long)MyObjectId);
 
-	if (bChangingLevel)
+	if (!bWaitingLevelReady)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[SendLevelReady] bChangingLevel was true -> NotifyLevelLoadFinished first"));
-		NotifyLevelLoadFinished();
+		UE_LOG(LogTemp, Warning, TEXT("[SendLevelReady BLOCK] not waiting level ready MyObjectId=%llu"),
+			(unsigned long long)MyObjectId);
+		return;
+	}
+
+	if (bLevelReadySent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SendLevelReady BLOCK] already sent MyObjectId=%llu"),
+			(unsigned long long)MyObjectId);
+		return;
 	}
 
 	if (MyObjectId == 0)
@@ -418,22 +463,53 @@ void UMainGameInstance::SendLevelReady()
 		return;
 	}
 
+	bLevelReadySent = true;
+	bWaitingLevelReady = false;
+
+	if (bChangingLevel)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SendLevelReady] bChangingLevel was true -> NotifyLevelLoadFinished first"));
+		NotifyLevelLoadFinished();
+	}
+
 	ResetIceSkillState();
 
 	Protocol::C_LEVEL_READY pkt;
+
+	FVector Loc = FVector::ZeroVector;
+
+	if (MyPlayer.IsValid())
+	{
+		Loc = MyPlayer->GetActorLocation();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SendLevelReady] MyPlayer invalid. Send zero pos."));
+	}
+
+
 	auto SendBuffer = ClientPacketHandler::MakeSendBuffer(pkt);
 	SendPacket(SendBuffer);
 
 	if (UWorld* World = GetWorld())
 	{
-		UE_LOG(LogTemp, Error, TEXT("[SendLevelReady SENT] map=%s MyObjectId=%llu"),
-			*World->GetMapName(),
-			(unsigned long long)MyObjectId);
+		FString MapName = World->GetMapName();
+		MapName.RemoveFromStart(World->StreamingLevelsPrefix);
+
+		UE_LOG(LogTemp, Error, TEXT("[SendLevelReady SENT] map=%s MyObjectId=%llu Pos=(%.2f, %.2f, %.2f)"),
+			*MapName,
+			(unsigned long long)MyObjectId,
+			Loc.X,
+			Loc.Y,
+			Loc.Z);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("[SendLevelReady SENT] World nullptr MyObjectId=%llu"),
-			(unsigned long long)MyObjectId);
+		UE_LOG(LogTemp, Error, TEXT("[SendLevelReady SENT] World nullptr MyObjectId=%llu Pos=(%.2f, %.2f, %.2f)"),
+			(unsigned long long)MyObjectId,
+			Loc.X,
+			Loc.Y,
+			Loc.Z);
 	}
 }
 

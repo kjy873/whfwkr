@@ -25,15 +25,6 @@ void APlayerCharacter::BeginPlay()
 	UE_LOG(LogTemp, Warning, TEXT("[PlayerCharacter BeginPlay] %s / ObjId=%lld"),
 		*GetName(),
 		(int64)PlayerInfo.object_id());
-
-	if (IsLocallyControlled())
-	{
-		if (UMainGameInstance* GI = GetGameInstance<UMainGameInstance>())
-		{
-			GI->SendLevelReady();
-			UE_LOG(LogTemp, Warning, TEXT("[Client] SendLevelReady from BeginPlay"));
-		}
-	}
 }
 
 // Called every frame

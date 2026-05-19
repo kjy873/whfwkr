@@ -86,6 +86,8 @@ public:
 	virtual void Init() override;
 	virtual void Shutdown() override;
 
+	void ResetLevelTransitionState();
+
 	UPROPERTY()
 	uint64 MyObjectId = 0;
 
@@ -220,6 +222,9 @@ private:
 	FProcHandle ServerProcHandle;
 	bool bStartedServer = false;
 
+	UFUNCTION()
+	void OnPostLoadMapWithWorld(UWorld* LoadedWorld);
+
 private:
 	TMap<FName, int> LocalPlayerUpgradeMap;
 	TMap<uint64, bool> NextIceRightHandMap;
@@ -228,6 +233,10 @@ private:
 	bool bForceNextIceRightHand = false;
 	bool bLocalIceRequestAfterLevelReset = false;
 	float IceComboResetTime = 1.5f;
+
+	bool bWaitingLevelReady = false;
+	bool bLevelReadySent = false;
+
 public:
 	UFUNCTION(BlueprintCallable, Category = "Upgrade")
 	const TMap<FName, int>& GetLocalPlayerUpgradeMap() const { return LocalPlayerUpgradeMap; }
