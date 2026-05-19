@@ -63,7 +63,6 @@ void UMainGameInstance::ConnectToGameServer()
 
 	Players.Empty();
 	MyPlayer = nullptr;
-	MyObjectId = 0;
 
 	Socket = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(TEXT("Stream"), TEXT("Client Socket"));
 	if (Socket == nullptr)
@@ -139,6 +138,10 @@ void UMainGameInstance::DisconnectToGameServer()
 		ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->DestroySocket(Socket);
 		Socket = nullptr;
 	}
+
+	MyObjectId = 0;
+	MyPlayer.Reset();
+	Players.Empty();
 
 	UE_LOG(LogTemp, Warning, TEXT("[DisconnectToGameServer] Done"));
 }
@@ -390,6 +393,31 @@ void UMainGameInstance::SendPacket(SendBufferRef SendBuffer)
 
 void UMainGameInstance::SendLevelReady()
 {
+	UE_LOG(LogTemp, Error, TEXT("[SendLevelReady ENTER] this=%p MyObjectId=%llu bChangingLevel=%d Socket=%d Session=%d"),
+		this,
+		(unsigned long long)MyObjectId,
+		bChangingLevel ? 1 : 0,
+		Socket != nullptr ? 1 : 0,
+		GameServerSession.IsValid() ? 1 : 0);
+
+	if (bChangingLevel)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SendLevelReady] bChangingLevel was true -> NotifyLevelLoadFinished first"));
+		NotifyLevelLoadFinished();
+	}
+
+	if (MyObjectId == 0)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[SendLevelReady BLOCK] MyObjectId is 0. Do not send level ready."));
+		return;
+	}
+
+	if (Socket == nullptr || !GameServerSession.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("[SendLevelReady BLOCK] Socket or Session invalid"));
+		return;
+	}
+
 	ResetIceSkillState();
 
 	Protocol::C_LEVEL_READY pkt;
@@ -398,16 +426,14 @@ void UMainGameInstance::SendLevelReady()
 
 	if (UWorld* World = GetWorld())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[SendLevelReady] map=%s MyObjectId=%llu ForceNextIceRight=%d"),
+		UE_LOG(LogTemp, Error, TEXT("[SendLevelReady SENT] map=%s MyObjectId=%llu"),
 			*World->GetMapName(),
-			MyObjectId,
-			bForceNextIceRightHand ? 1 : 0);
+			(unsigned long long)MyObjectId);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[SendLevelReady] World nullptr MyObjectId=%llu ForceNextIceRight=%d"),
-			MyObjectId,
-			bForceNextIceRightHand ? 1 : 0);
+		UE_LOG(LogTemp, Error, TEXT("[SendLevelReady SENT] World nullptr MyObjectId=%llu"),
+			(unsigned long long)MyObjectId);
 	}
 }
 
@@ -465,6 +491,14 @@ void UMainGameInstance::StopRecvPacketsTimer()
 
 void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool IsMine)
 {
+	if (IsMine)
+	{
+		MyObjectId = PlayerInfo.object_id();
+
+		UE_LOG(LogTemp, Error, TEXT("[HandleSpawn] Preserve MyObjectId=%llu before any return"),
+			(unsigned long long)MyObjectId);
+	}
+
 	if (bChangingLevel)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Deferred: changing level objId=%llu"), PlayerInfo.object_id());
@@ -562,14 +596,40 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 			APawn* Pawn = PC->GetPawn();
 			if (!Pawn)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Pawn nullptr"));
+				UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Pawn nullptr -> Retry next tick ObjId=%llu Loc=%s"),
+					(unsigned long long)ObjectId,
+					*SpawnLocation.ToString());
+
+				Protocol::PlayerInfo RetryInfo = PlayerInfo;
+
+				World->GetTimerManager().SetTimerForNextTick(
+					FTimerDelegate::CreateLambda([this, RetryInfo]()
+						{
+							this->HandleSpawn(RetryInfo, true);
+						})
+				);
+
 				return;
 			}
 
 			LocalPlayer = Cast<APlayerCharacter>(Pawn);
 			if (!LocalPlayer)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] LocalPlayer cast failed"));
+				UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] LocalPlayer cast failed Pawn=%s Class=%s -> Retry next tick ObjId=%llu Loc=%s"),
+					*GetNameSafe(Pawn),
+					*GetNameSafe(Pawn->GetClass()),
+					(unsigned long long)ObjectId,
+					*SpawnLocation.ToString());
+
+				Protocol::PlayerInfo RetryInfo = PlayerInfo;
+
+				World->GetTimerManager().SetTimerForNextTick(
+					FTimerDelegate::CreateLambda([this, RetryInfo]()
+						{
+							this->HandleSpawn(RetryInfo, true);
+						})
+				);
+
 				return;
 			}
 
@@ -596,8 +656,13 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 			(unsigned long long)LocalPlayer->PlayerInfo.object_id(),
 			IsMine ? 1 : 0);
 
-		LocalPlayer->SetActorLocation(SpawnLocation);
-		LocalPlayer->SetActorRotation(SpawnRotation);
+		LocalPlayer->SetActorLocation(SpawnLocation, false, nullptr, ETeleportType::TeleportPhysics);
+		LocalPlayer->SetActorRotation(SpawnRotation, ETeleportType::TeleportPhysics);
+
+		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn AfterSetLocation] Actor=%s ActualLoc=%s TargetLoc=%s"),
+			*GetNameSafe(LocalPlayer),
+			*LocalPlayer->GetActorLocation().ToString(),
+			*SpawnLocation.ToString());
 
 		ResetCharacterAfterSpawn(LocalPlayer);
 
@@ -693,10 +758,20 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 
 void UMainGameInstance::HandleSpawn(const Protocol::S_ENTER_GAME& EnterGamePkt)
 {
-	if (MyObjectId != 0)
-		return;
+	const uint64 NewObjectId = EnterGamePkt.player().object_id();
 
-	MyObjectId = EnterGamePkt.player().object_id();
+	if (MyObjectId != 0 && MyObjectId != NewObjectId)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn S_ENTER_GAME] ObjectId changed Old=%llu New=%llu"),
+			MyObjectId,
+			NewObjectId);
+	}
+
+	MyObjectId = NewObjectId;
+
+	UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn S_ENTER_GAME] MyObjectId=%llu bChangingLevel=%d"),
+		MyObjectId,
+		bChangingLevel ? 1 : 0);
 
 	HandleSpawn(EnterGamePkt.player(), true);
 }
@@ -739,7 +814,11 @@ void UMainGameInstance::HandleDespawn(uint64 ObjectId)
 	if (MyObjectId == ObjectId)
 	{
 		MyPlayer.Reset();
-		MyObjectId = 0;
+
+		UE_LOG(LogTemp, Warning, TEXT("[HandleDespawn] My despawn ObjId=%llu bChangingLevel=%d MyObjectId kept=%llu"),
+			ObjectId,
+			bChangingLevel ? 1 : 0,
+			MyObjectId);
 	}
 }
 
@@ -984,7 +1063,10 @@ void UMainGameInstance::ClearPlayerStateForLevelChange()
 
 	ResetIceSkillState();
 
-	UE_LOG(LogTemp, Warning, TEXT("[ClearPlayerStateForLevelChange] Cleared player refs (MyObjectId=%llu kept)"), MyObjectId);
+	UE_LOG(LogTemp, Error, TEXT("[ClearPlayerStateForLevelChange] GI=%p MyObjectId kept=%llu bChangingLevel=%d"),
+		this,
+		(unsigned long long)MyObjectId,
+		bChangingLevel ? 1 : 0);
 }
 
 void UMainGameInstance::NotifyLevelLoadFinished()
@@ -999,7 +1081,17 @@ void UMainGameInstance::NotifyLevelLoadFinished()
 
 	for (const auto& Info : SavedSpawns)
 	{
-		HandleSpawn(Info, false);
+		const bool bIsMine = (MyObjectId != 0 && Info.object_id() == MyObjectId);
+
+		UE_LOG(LogTemp, Warning, TEXT("[NotifyLevelLoadFinished] Process PendingSpawn ObjId=%llu MyObjectId=%llu IsMine=%d Loc=(%.1f, %.1f, %.1f)"),
+			(unsigned long long)Info.object_id(),
+			(unsigned long long)MyObjectId,
+			bIsMine ? 1 : 0,
+			Info.x(),
+			Info.y(),
+			Info.z());
+
+		HandleSpawn(Info, bIsMine);
 	}
 }
 

@@ -199,6 +199,16 @@ void RoomManager::MoveToDemoLevel(uint32 targetLevel)
     {
         WRITE_LOCK;
 
+        if (!_pendingMoveRoom.empty())
+        {
+            cout << "[MoveToDemoLevel BLOCK] already waiting level ready. pending="
+                << _pendingMoveRoom.size()
+                << " targetLevel=" << targetLevel
+                << endl;
+
+            return;
+        }
+
         if (_gameFinished)
             return;
 
@@ -306,6 +316,51 @@ void RoomManager::ResetPlayerForPhase(PlayerRef player, bool bMoveToPVE)
         << endl;
 }
 
+void RoomManager::HandleLevelReady(PlayerRef player)
+{
+    if (player == nullptr || player->playerInfo == nullptr)
+        return;
+
+    const uint64 objectId = player->playerInfo->object_id();
+
+    RoomRef targetRoom = nullptr;
+
+    {
+        WRITE_LOCK;
+
+        auto it = _pendingMoveRoom.find(objectId);
+        if (it != _pendingMoveRoom.end())
+        {
+            targetRoom = it->second;
+            _pendingMoveRoom.erase(it);
+
+            cout << "[HandleLevelReady] Found pending room ObjId="
+                << objectId
+                << endl;
+        }
+    }
+
+    if (targetRoom == nullptr)
+    {
+        RoomRef curRoom = player->room.lock();
+
+        cout << "[HandleLevelReady BLOCK] pending room not found ObjId="
+            << objectId
+            << " CurrentRoom=" << (curRoom ? static_cast<int32>(curRoom->GetRoomType()) : -1)
+            << " Pos=("
+            << player->playerInfo->x() << ", "
+            << player->playerInfo->y() << ", "
+            << player->playerInfo->z() << ")"
+            << endl;
+        return;
+    }
+
+    targetRoom->DoAsync([targetRoom, player]()
+        {
+            targetRoom->HandleClientLevelReady(player);
+        });
+}
+
 void RoomManager::UpdatePlayerScore(PlayerRef player)
 {
     if (player == nullptr || player->playerInfo == nullptr)
@@ -400,6 +455,16 @@ void RoomManager::MoveToBattleRoom(PlayerRef player)
 
     RoomRef battleRoom = GetOrCreateBattleRoom();
 
+    {
+        WRITE_LOCK;
+        _pendingMoveRoom[player->playerInfo->object_id()] = battleRoom;
+
+        cout << "[PendingMoveRoom SET] ObjId="
+            << player->playerInfo->object_id()
+            << " TargetRoom=Battle"
+            << endl;
+    }
+
     battleRoom->DoAsync([battleRoom, player, session]()
         {
             battleRoom->SetRoomType(RoomType::Battle);
@@ -421,13 +486,8 @@ void RoomManager::MoveToBattleRoom(PlayerRef player)
                     << endl;
             }
 
-            battleRoom->ApplySpawnByRoomType(player);
-            battleRoom->HandleEnterPlayerLocked(player, battleRoom);
-
-            battleRoom->BroadcastPlayerStats(player);
-
             Protocol::S_CHANGE_LEVEL pkt;
-            pkt.set_level_name("NewMap");
+            pkt.set_level_name("/Game/Level/NewMap");
 
             auto sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
             session->Send(sendBuffer);
@@ -449,6 +509,16 @@ void RoomManager::MoveToHuntingRoom(PlayerRef player)
 
     _rooms.push_back(huntingRoom);
 
+    {
+        WRITE_LOCK;
+        _pendingMoveRoom[player->playerInfo->object_id()] = huntingRoom;
+
+        cout << "[PendingMoveRoom SET] ObjId="
+            << player->playerInfo->object_id()
+            << " TargetRoom=Hunting"
+            << endl;
+    }
+
     if (oldRoom)
     {
         oldRoom->DoAsync([oldRoom, huntingRoom, player, session]()
@@ -457,13 +527,8 @@ void RoomManager::MoveToHuntingRoom(PlayerRef player)
 
                 huntingRoom->DoAsync([huntingRoom, player, session]()
                     {
-                        huntingRoom->ApplySpawnByRoomType(player);
-                        huntingRoom->HandleEnterPlayerLocked(player, huntingRoom);
-
-                        huntingRoom->BroadcastPlayerStats(player);
-
                         Protocol::S_CHANGE_LEVEL pkt;
-                        pkt.set_level_name("LandscapeMap");
+                        pkt.set_level_name("/Game/Level/LandscapeMap");
 
                         auto sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
                         session->Send(sendBuffer);
@@ -474,12 +539,8 @@ void RoomManager::MoveToHuntingRoom(PlayerRef player)
     {
         huntingRoom->DoAsync([huntingRoom, player, session]()
             {
-                huntingRoom->HandleEnterPlayerLocked(player, huntingRoom);
-
-                huntingRoom->BroadcastPlayerStats(player);
-
                 Protocol::S_CHANGE_LEVEL pkt;
-                pkt.set_level_name("LandscapeMap");
+                pkt.set_level_name("/Game/Level/LandscapeMap");
 
                 auto sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
                 session->Send(sendBuffer);

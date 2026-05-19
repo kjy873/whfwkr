@@ -126,6 +126,8 @@ public:
 	int32 MyResultMonsterKill = 0;
 
 	void SendPacket(SendBufferRef SendBuffer);
+
+	UFUNCTION(BlueprintCallable, Category = "Network")
 	void SendLevelReady();
 
 	UFUNCTION(BlueprintCallable)

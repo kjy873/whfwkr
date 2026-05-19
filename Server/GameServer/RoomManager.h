@@ -32,6 +32,11 @@ public:
     static RoomRef _battleRoom;
     static RoomRef _lobbyRoom;
 
+    void HandleLevelReady(PlayerRef player);
+
+private:
+    unordered_map<uint64, RoomRef> _pendingMoveRoom;
+
 public:
     void UpdatePlayerScore(PlayerRef player);
     void BroadcastGameResult();

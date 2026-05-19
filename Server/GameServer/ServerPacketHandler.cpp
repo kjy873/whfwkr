@@ -52,6 +52,8 @@ bool Handle_C_ENTER_GAME(PacketSessionRef& session, Protocol::C_ENTER_GAME& pkt)
 
 	room->DoAsync([room, player, gameSession]()
 		{
+			room->ApplySpawnByRoomType(player);
+
 			Protocol::S_ENTER_GAME enterPkt;
 			enterPkt.mutable_player()->CopyFrom(*player->playerInfo);
 
@@ -255,17 +257,34 @@ bool Handle_C_ATTACK_PLAYER(PacketSessionRef& session, Protocol::C_ATTACK_PLAYER
 
 bool Handle_C_LEVEL_READY(PacketSessionRef& session, Protocol::C_LEVEL_READY& pkt)
 {
-	auto gameSession = static_pointer_cast<GameSession>(session);
+	cout << "[Handle_C_LEVEL_READY] ENTER" << endl;
+
+	GameSessionRef gameSession = static_pointer_cast<GameSession>(session);
+
+	if (gameSession == nullptr)
+	{
+		cout << "[Handle_C_LEVEL_READY BLOCK] gameSession null" << endl;
+		return false;
+	}
 
 	PlayerRef player = gameSession->player.load();
-	if (!player)
-		return false;
 
-	RoomRef room = player->room.lock();
-	if (!room)
+	if (player == nullptr)
+	{
+		cout << "[Handle_C_LEVEL_READY BLOCK] player null" << endl;
 		return false;
+	}
 
-	room->HandleClientLevelReady(player);
+	cout << "[Handle_C_LEVEL_READY] ObjId="
+		<< player->playerInfo->object_id()
+		<< " Pos=("
+		<< player->playerInfo->x() << ", "
+		<< player->playerInfo->y() << ", "
+		<< player->playerInfo->z() << ")"
+		<< endl;
+
+	GRoomManager.HandleLevelReady(player);
+
 	return true;
 }
 

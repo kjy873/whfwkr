@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 using UnrealBuildTool;
+using System.IO;
 
 public class Tbd : ModuleRules
 {
@@ -24,6 +25,11 @@ public class Tbd : ModuleRules
         {
             PrivateDependencyModuleNames.Add("LandscapeEditor");
         }
+
+        PublicSystemLibraries.Add("wininet.lib");
+
+		PublicSystemLibraryPaths.Add(
+            @"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\um\x64");
 
         PrivateDependencyModuleNames.AddRange(new string[] { });
 

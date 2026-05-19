@@ -50,18 +50,33 @@ bool Handle_S_ENTER_GAME(PacketSessionRef& session, Protocol::S_ENTER_GAME& pkt)
 {
 	Protocol::PlayerInfo PlayerCopy = pkt.player();
 
-	if (auto* GI = GetMainGameInstance())
-	{
-		if (GI->bChangingLevel)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("[Handle_S_ENTER_GAME] Skip: changing level"));
-			return true;
-		}
+	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_ENTER_GAME] Received ObjId=%llu Loc=(%.1f, %.1f, %.1f)"),
+		(unsigned long long)PlayerCopy.object_id(),
+		PlayerCopy.x(),
+		PlayerCopy.y(),
+		PlayerCopy.z());
 
+	if (UMainGameInstance* GI = session->GetOwnerGameInstance())
+	{
 		AsyncTask(ENamedThreads::GameThread, [GI, PlayerCopy]()
 			{
-				if (GI == nullptr || GI->bChangingLevel)
+				if (GI == nullptr)
 					return;
+
+				UE_LOG(LogTemp, Warning, TEXT("[Handle_S_ENTER_GAME GameThread] bChangingLevel=%d ObjId=%llu Loc=(%.1f, %.1f, %.1f)"),
+					GI->bChangingLevel ? 1 : 0,
+					(unsigned long long)PlayerCopy.object_id(),
+					PlayerCopy.x(),
+					PlayerCopy.y(),
+					PlayerCopy.z());
+
+				GI->MyObjectId = PlayerCopy.object_id();
+
+				UE_LOG(LogTemp, Error, TEXT("[Handle_S_ENTER_GAME] SET MyObjectId=%llu Loc=(%.1f, %.1f, %.1f)"),
+					(unsigned long long)GI->MyObjectId,
+					PlayerCopy.x(),
+					PlayerCopy.y(),
+					PlayerCopy.z());
 
 				GI->HandleSpawn(PlayerCopy, true);
 			});
@@ -82,27 +97,37 @@ bool Handle_S_SPAWN(PacketSessionRef& session, Protocol::S_SPAWN& pkt)
 	PlayerCopies.Reserve(pkt.players_size());
 
 	for (const auto& Info : pkt.players())
+	{
 		PlayerCopies.Add(Info);
 
-	if (auto* GI = GetMainGameInstance())
-	{
-		if (GI->bChangingLevel)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("[Handle_S_SPAWN] Skip: changing level"));
-			return true;
-		}
+		UE_LOG(LogTemp, Warning, TEXT("[Handle_S_SPAWN] Received ObjId=%llu Loc=(%.1f, %.1f, %.1f)"),
+			(unsigned long long)Info.object_id(),
+			Info.x(),
+			Info.y(),
+			Info.z());
+	}
 
+	if (UMainGameInstance* GI = session->GetOwnerGameInstance())
+	{
 		AsyncTask(ENamedThreads::GameThread, [GI, PlayerCopies]()
 			{
-				if (GI == nullptr || GI->bChangingLevel)
+				if (GI == nullptr)
 					return;
 
 				for (const auto& Info : PlayerCopies)
 				{
-					if (Info.object_id() == GI->MyObjectId)
-						continue;
+					const bool bIsMine = (GI->MyObjectId != 0 && Info.object_id() == GI->MyObjectId);
 
-					GI->HandleSpawn(Info, false);
+					UE_LOG(LogTemp, Warning, TEXT("[Handle_S_SPAWN GameThread] bChangingLevel=%d ObjId=%llu MyObjectId=%llu IsMine=%d Loc=(%.1f, %.1f, %.1f)"),
+						GI->bChangingLevel ? 1 : 0,
+						(unsigned long long)Info.object_id(),
+						(unsigned long long)GI->MyObjectId,
+						bIsMine ? 1 : 0,
+						Info.x(),
+						Info.y(),
+						Info.z());
+
+					GI->HandleSpawn(Info, bIsMine);
 				}
 			});
 	}
@@ -166,21 +191,6 @@ bool Handle_S_GAME_RESULT(PacketSessionRef& session, Protocol::S_GAME_RESULT& pk
 {
 	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_GAME_RESULT] ENTER ResultCount=%d"), pkt.results_size());
 
-	for (int32 i = 0; i < pkt.results_size(); i++)
-	{
-		const Protocol::GameResultInfo& Result = pkt.results(i);
-
-		UE_LOG(LogTemp, Warning,
-			TEXT("[Handle_S_GAME_RESULT] ObjId=%llu K=%d D=%d M=%d Score=%d Winner=%d"),
-			Result.object_id(),
-			Result.kill_count(),
-			Result.death_count(),
-			Result.monster_kill_count(),
-			Result.score(),
-			Result.is_winner() ? 1 : 0
-		);
-	}
-
 	if (session == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("[Handle_S_GAME_RESULT] session nullptr"));
@@ -194,10 +204,19 @@ bool Handle_S_GAME_RESULT(PacketSessionRef& session, Protocol::S_GAME_RESULT& pk
 		return true;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_GAME_RESULT] Call HandleGameResult MyObjectId=%llu"),
-		GameInstance->MyObjectId);
+	Protocol::S_GAME_RESULT ResultCopy = pkt;
 
-	GameInstance->HandleGameResult(pkt);
+	AsyncTask(ENamedThreads::GameThread, [GameInstance, ResultCopy]()
+		{
+			if (GameInstance == nullptr)
+				return;
+
+			UE_LOG(LogTemp, Warning, TEXT("[Handle_S_GAME_RESULT GameThread] Call HandleGameResult MyObjectId=%llu ResultCount=%d"),
+				(unsigned long long)GameInstance->MyObjectId,
+				ResultCopy.results_size());
+
+			GameInstance->HandleGameResult(ResultCopy);
+		});
 
 	return true;
 }
@@ -330,25 +349,43 @@ bool Handle_S_CHANGE_LEVEL(PacketSessionRef& session, Protocol::S_CHANGE_LEVEL& 
 {
 	FString LevelName = UTF8_TO_TCHAR(pkt.level_name().c_str());
 
-	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_CHANGE_LEVEL] RECEIVED level=%s"), *LevelName);
+	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_CHANGE_LEVEL] RECEIVED level=%s session=%p"),
+		*LevelName,
+		session.Get());
 
-	AsyncTask(ENamedThreads::GameThread, [LevelName]()
+	if (session == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Handle_S_CHANGE_LEVEL] session nullptr"));
+		return true;
+	}
+
+	UMainGameInstance* GI = session->GetOwnerGameInstance();
+	if (GI == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Handle_S_CHANGE_LEVEL] OwnerGameInstance nullptr"));
+		return true;
+	}
+
+	AsyncTask(ENamedThreads::GameThread, [GI, LevelName]()
 		{
-			UE_LOG(LogTemp, Warning, TEXT("[Handle_S_CHANGE_LEVEL] OpenLevel %s"), *LevelName);
+			if (GI == nullptr)
+				return;
 
-			if (UMainGameInstance* GI = GetMainGameInstance())
+			UE_LOG(LogTemp, Warning, TEXT("[Handle_S_CHANGE_LEVEL GameThread] GI=%p MyObjectId=%llu OpenLevel=%s"),
+				GI,
+				(unsigned long long)GI->MyObjectId,
+				*LevelName);
+
+			GI->ClearPlayerStateForLevelChange();
+
+			UWorld* World = GI->GetWorld();
+			if (World == nullptr)
 			{
-				GI->MyPlayer = nullptr;
-				GI->MyObjectId = 0;
-				GI->Players.Empty();
-
-				UE_LOG(LogTemp, Warning, TEXT("[ChangeLevel] Cleared player state before OpenLevel -> %s"), *LevelName);
+				UE_LOG(LogTemp, Error, TEXT("[Handle_S_CHANGE_LEVEL] GI->GetWorld nullptr GI=%p"), GI);
+				return;
 			}
 
-			if (UWorld* World = GEngine->GetWorldFromContextObject(GetMainGameInstance(), EGetWorldErrorMode::LogAndReturnNull))
-			{
-				UGameplayStatics::OpenLevel(World, FName(*LevelName));
-			}
+			UGameplayStatics::OpenLevel(World, FName(*LevelName));
 		});
 
 	return true;

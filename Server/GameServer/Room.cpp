@@ -75,6 +75,14 @@ void Room::ApplySpawnByRoomType(PlayerRef player)
 	player->playerInfo->set_y(centerY);
 	player->playerInfo->set_z(centerZ);
 	player->playerInfo->set_yaw(Utils::GetRandom(0.f, 360.f));
+
+	cout << "[ApplySpawnByRoomType] RoomType=" << static_cast<int32>(_roomType)
+		<< " ObjId=" << player->playerInfo->object_id()
+		<< " X=" << player->playerInfo->x()
+		<< " Y=" << player->playerInfo->y()
+		<< " Z=" << player->playerInfo->z()
+		<< " Yaw=" << player->playerInfo->yaw()
+		<< endl;
 }
 
 void Room::HandleMonsterKill(uint64 playerId)
@@ -114,17 +122,20 @@ void Room::HandleClientLevelReady(PlayerRef player)
 	if (player == nullptr || player->playerInfo == nullptr)
 		return;
 
-	if (_roomType == RoomType::Battle || _roomType == RoomType::Hunting)
-	{
-		ApplySpawnByRoomType(player);
-	}
+	const uint64 objectId = player->playerInfo->object_id();
 
-	else if (player->playerInfo->x() == 0.f &&
-		player->playerInfo->y() == 0.f &&
-		player->playerInfo->z() == 0.f)
-	{
-		ApplySpawnByRoomType(player);
-	}
+	_players[objectId] = player;
+	player->room = static_pointer_cast<Room>(shared_from_this());
+
+	ApplySpawnByRoomType(player);
+
+	cout << "[HandleClientLevelReady] RoomType="
+		<< static_cast<int32>(_roomType)
+		<< " ObjId=" << objectId
+		<< " X=" << player->playerInfo->x()
+		<< " Y=" << player->playerInfo->y()
+		<< " Z=" << player->playerInfo->z()
+		<< endl;
 
 	{
 		Protocol::S_ENTER_GAME enterGamePkt;
@@ -135,7 +146,9 @@ void Room::HandleClientLevelReady(PlayerRef player)
 		enterGamePkt.set_allocated_player(selfInfo);
 
 		if (auto session = player->session.lock())
+		{
 			session->Send(ServerPacketHandler::MakeSendBuffer(enterGamePkt));
+		}
 	}
 
 	{
@@ -143,18 +156,11 @@ void Room::HandleClientLevelReady(PlayerRef player)
 
 		for (auto& item : _players)
 		{
-			if (item.first == player->playerInfo->object_id())
+			if (item.first == objectId)
 				continue;
 
 			if (item.second == nullptr || item.second->playerInfo == nullptr)
 				continue;
-
-			if (item.second->playerInfo->x() == 0.f &&
-				item.second->playerInfo->y() == 0.f &&
-				item.second->playerInfo->z() == 0.f)
-			{
-				continue;
-			}
 
 			auto* info = spawnPkt.add_players();
 			info->CopyFrom(*item.second->playerInfo);
@@ -163,16 +169,19 @@ void Room::HandleClientLevelReady(PlayerRef player)
 		if (spawnPkt.players_size() > 0)
 		{
 			if (auto session = player->session.lock())
+			{
 				session->Send(ServerPacketHandler::MakeSendBuffer(spawnPkt));
+			}
 		}
 	}
 
 	{
 		Protocol::S_SPAWN broadcastPkt;
+
 		auto* broadcastInfo = broadcastPkt.add_players();
 		broadcastInfo->CopyFrom(*player->playerInfo);
 
-		Broadcast(ServerPacketHandler::MakeSendBuffer(broadcastPkt), player->playerInfo->object_id());
+		Broadcast(ServerPacketHandler::MakeSendBuffer(broadcastPkt), objectId);
 	}
 }
 
@@ -214,13 +223,48 @@ void Room::HandleMoveLocked(Protocol::C_MOVE& pkt)
 
 	const uint64 objectId = pkt.info().object_id();
 
-	if (_players.find(objectId) == _players.end())
+	auto it = _players.find(objectId);
+	if (it == _players.end())
 	{
+		cout << "[HandleMoveLocked BLOCK] player not found ObjId="
+			<< objectId << endl;
 		return;
 	}
 
-	PlayerRef& player = _players[objectId];
+	PlayerRef& player = it->second;
+	if (player == nullptr || player->playerInfo == nullptr)
+		return;
+
+	const float x = pkt.info().x();
+	const float y = pkt.info().y();
+	const float z = pkt.info().z();
+
+	const bool bZeroMove =
+		x > -500.f && x < 500.f &&
+		y > -500.f && y < 500.f &&
+		z > -500.f && z < 500.f;
+
+	if ((_roomType == RoomType::Hunting || _roomType == RoomType::Battle) && bZeroMove)
+	{
+		cout << "[HandleMoveLocked IGNORE ZERO MOVE]"
+			<< " RoomType=" << static_cast<int32>(_roomType)
+			<< " ObjId=" << objectId
+			<< " Move=(" << x << ", " << y << ", " << z << ")"
+			<< " Current=("
+			<< player->playerInfo->x() << ", "
+			<< player->playerInfo->y() << ", "
+			<< player->playerInfo->z() << ")"
+			<< endl;
+		return;
+	}
+
 	player->playerInfo->CopyFrom(pkt.info());
+
+	cout << "[HandleMoveLocked APPLY]"
+		<< " RoomType=" << static_cast<int32>(_roomType)
+		<< " ObjId=" << objectId
+		<< " Move=(" << x << ", " << y << ", " << z << ")"
+		<< endl;
 
 	Protocol::S_MOVE movePkt;
 	Protocol::PlayerInfo* info = movePkt.mutable_info();
@@ -260,12 +304,7 @@ void Room::CheckBattleEnd()
 		_isBattlePhase = false;
 	}
 
-	Protocol::S_CHANGE_LEVEL pkt;
-	pkt.set_level_name("LandscapeMap");
-	SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
-	Broadcast(sendBuffer);
-
-	cout << "[Room] Broadcast S_CHANGE_LEVEL -> HuntingMap" << endl;
+	cout << "[Room] BattleEnd -> MoveToHuntingRoom" << endl;
 
 	for (auto& player : alivePlayers)
 	{
