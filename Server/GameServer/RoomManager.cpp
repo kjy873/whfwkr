@@ -336,6 +336,7 @@ void RoomManager::HandleLevelReady(PlayerRef player)
 
             cout << "[HandleLevelReady] Found pending room ObjId="
                 << objectId
+                << " TargetRoom=" << static_cast<int32>(targetRoom->GetRoomType())
                 << endl;
         }
     }
@@ -352,6 +353,7 @@ void RoomManager::HandleLevelReady(PlayerRef player)
             << player->playerInfo->y() << ", "
             << player->playerInfo->z() << ")"
             << endl;
+
         return;
     }
 
@@ -450,13 +452,20 @@ void RoomManager::ClearScoreMap()
 
 void RoomManager::MoveToBattleRoom(PlayerRef player)
 {
+    if (player == nullptr || player->playerInfo == nullptr)
+        return;
+
     auto session = player->session.lock();
-    if (!session) return;
+    if (!session)
+        return;
+
+    RoomRef oldRoom = player->room.lock();
 
     RoomRef battleRoom = GetOrCreateBattleRoom();
 
     {
         WRITE_LOCK;
+
         _pendingMoveRoom[player->playerInfo->object_id()] = battleRoom;
 
         cout << "[PendingMoveRoom SET] ObjId="
@@ -465,37 +474,90 @@ void RoomManager::MoveToBattleRoom(PlayerRef player)
             << endl;
     }
 
-    battleRoom->DoAsync([battleRoom, player, session]()
-        {
-            battleRoom->SetRoomType(RoomType::Battle);
-
-            if (player->Hp <= 0)
+    if (oldRoom)
+    {
+        oldRoom->DoAsync([oldRoom, battleRoom, player, session]()
             {
-                player->Hp = 50;
+                // 레벨 이동 중에는 S_LEAVE_GAME / S_DESPAWN 보내지 말고
+                // 이전 방 목록에서만 조용히 제거
+                oldRoom->RemovePlayerOnly(player->playerInfo->object_id());
 
-                cout << "[Battle Respawn] ObjId="
-                    << player->playerInfo->object_id()
-                    << " Hp=50"
-                    << endl;
-            }
-            else
+                battleRoom->DoAsync([battleRoom, player, session]()
+                    {
+                        battleRoom->SetRoomType(RoomType::Battle);
+
+                        if (player->Hp <= 0)
+                        {
+                            player->Hp = 50;
+                            player->playerInfo->set_hp(50);
+
+                            cout << "[Battle Respawn] ObjId="
+                                << player->playerInfo->object_id()
+                                << " Hp=50"
+                                << endl;
+                        }
+                        else
+                        {
+                            cout << "[Battle Enter Keep Hp] ObjId="
+                                << player->playerInfo->object_id()
+                                << " Hp=" << player->Hp
+                                << endl;
+                        }
+
+                        Protocol::S_CHANGE_LEVEL pkt;
+                        pkt.set_level_name("/Game/Level/NewMap");
+
+                        auto sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
+                        session->Send(sendBuffer);
+
+                        cout << "[MoveToBattleRoom] Send S_CHANGE_LEVEL ObjId="
+                            << player->playerInfo->object_id()
+                            << endl;
+                    });
+            });
+    }
+    else
+    {
+        battleRoom->DoAsync([battleRoom, player, session]()
             {
-                cout << "[Battle Enter Keep Hp] ObjId="
+                battleRoom->SetRoomType(RoomType::Battle);
+
+                if (player->Hp <= 0)
+                {
+                    player->Hp = 50;
+                    player->playerInfo->set_hp(50);
+
+                    cout << "[Battle Respawn] ObjId="
+                        << player->playerInfo->object_id()
+                        << " Hp=50"
+                        << endl;
+                }
+                else
+                {
+                    cout << "[Battle Enter Keep Hp] ObjId="
+                        << player->playerInfo->object_id()
+                        << " Hp=" << player->Hp
+                        << endl;
+                }
+
+                Protocol::S_CHANGE_LEVEL pkt;
+                pkt.set_level_name("/Game/Level/NewMap");
+
+                auto sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
+                session->Send(sendBuffer);
+
+                cout << "[MoveToBattleRoom] Send S_CHANGE_LEVEL ObjId="
                     << player->playerInfo->object_id()
-                    << " Hp=" << player->Hp
                     << endl;
-            }
-
-            Protocol::S_CHANGE_LEVEL pkt;
-            pkt.set_level_name("/Game/Level/NewMap");
-
-            auto sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
-            session->Send(sendBuffer);
-        });
+            });
+    }
 }
 
 void RoomManager::MoveToHuntingRoom(PlayerRef player)
 {
+    if (player == nullptr || player->playerInfo == nullptr)
+        return;
+
     auto session = player->session.lock();
     if (!session)
         return;
@@ -507,10 +569,11 @@ void RoomManager::MoveToHuntingRoom(PlayerRef player)
     RoomRef huntingRoom = make_shared<Room>(RoomType::Hunting);
     huntingRoom->Init();
 
-    _rooms.push_back(huntingRoom);
-
     {
         WRITE_LOCK;
+
+        _rooms.push_back(huntingRoom);
+
         _pendingMoveRoom[player->playerInfo->object_id()] = huntingRoom;
 
         cout << "[PendingMoveRoom SET] ObjId="
@@ -523,7 +586,9 @@ void RoomManager::MoveToHuntingRoom(PlayerRef player)
     {
         oldRoom->DoAsync([oldRoom, huntingRoom, player, session]()
             {
-                oldRoom->HandleLeavePlayerLocked(player);
+                // 레벨 이동 중에는 S_LEAVE_GAME / S_DESPAWN 보내면 안 됨
+                // 서버 방 목록에서만 조용히 제거
+                oldRoom->RemovePlayerOnly(player->playerInfo->object_id());
 
                 huntingRoom->DoAsync([huntingRoom, player, session]()
                     {
@@ -532,6 +597,10 @@ void RoomManager::MoveToHuntingRoom(PlayerRef player)
 
                         auto sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
                         session->Send(sendBuffer);
+
+                        cout << "[MoveToHuntingRoom] Send S_CHANGE_LEVEL ObjId="
+                            << player->playerInfo->object_id()
+                            << endl;
                     });
             });
     }
@@ -544,6 +613,10 @@ void RoomManager::MoveToHuntingRoom(PlayerRef player)
 
                 auto sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
                 session->Send(sendBuffer);
+
+                cout << "[MoveToHuntingRoom] Send S_CHANGE_LEVEL ObjId="
+                    << player->playerInfo->object_id()
+                    << endl;
             });
     }
 }

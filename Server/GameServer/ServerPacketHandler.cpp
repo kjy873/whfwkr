@@ -173,6 +173,7 @@ bool Handle_C_USE_SKILL(PacketSessionRef& session, Protocol::C_USE_SKILL& pkt)
 
 	uint32 skillId = pkt.skillid();
 	float chargeScale = pkt.chargescale();
+	uint64 targetId = pkt.targetid();
 
 	if (!player->CanUseSkill(skillId))
 	{
@@ -186,6 +187,7 @@ bool Handle_C_USE_SKILL(PacketSessionRef& session, Protocol::C_USE_SKILL& pkt)
 		&Room::BroadcastUseSkill,
 		player->playerInfo->object_id(),
 		skillId,
+		targetId,
 		chargeScale
 	);
 

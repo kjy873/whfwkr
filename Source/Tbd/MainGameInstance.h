@@ -244,4 +244,6 @@ public:
 	void SetLocalPlayerUpgradeMap(const TMap<FName, int>& NewMap) { LocalPlayerUpgradeMap = NewMap; }
 	UFUNCTION(BlueprintCallable, Category = "Upgrade")
 	void AddUpgrade(const FName& UpgradeName) { LocalPlayerUpgradeMap.FindOrAdd(UpgradeName)++; }
+
+	FTimerHandle LevelReadyRetryTimerHandle;
 };

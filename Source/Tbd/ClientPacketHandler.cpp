@@ -78,6 +78,12 @@ bool Handle_S_ENTER_GAME(PacketSessionRef& session, Protocol::S_ENTER_GAME& pkt)
 					PlayerCopy.y(),
 					PlayerCopy.z());
 
+				if (GI->bChangingLevel)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("[Handle_S_ENTER_GAME] Finish level transition before HandleSpawn"));
+					GI->NotifyLevelLoadFinished();
+				}
+
 				GI->HandleSpawn(PlayerCopy, true);
 			});
 	}
@@ -314,20 +320,36 @@ bool Handle_S_DAMAGE_MOB(PacketSessionRef& session, Protocol::S_DAMAGE_MOB& pkt)
 
 bool Handle_S_USE_SKILL(PacketSessionRef& session, Protocol::S_USE_SKILL& pkt)
 {
-	if (GWorld == nullptr)
+	if (session == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Handle_S_USE_SKILL] session nullptr"));
 		return false;
+	}
 
-	UMainGameInstance* GI = Cast<UMainGameInstance>(GWorld->GetGameInstance());
+	UMainGameInstance* GI = session->GetOwnerGameInstance();
 	if (GI == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Handle_S_USE_SKILL] OwnerGameInstance nullptr"));
 		return false;
+	}
 
-	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_USE_SKILL] MyId=%lld FromPlayerId=%lld SkillId=%d ChargeScale=%f"),
-		(int64)GI->MyObjectId,
-		(int64)pkt.playerid(),
-		(int32)pkt.skillid(),
-		pkt.chargescale());
+	Protocol::S_USE_SKILL PktCopy = pkt;
 
-	GI->OnRecvUseSkill(pkt);
+	AsyncTask(ENamedThreads::GameThread, [GI, PktCopy]()
+		{
+			if (GI == nullptr)
+				return;
+
+			UE_LOG(LogTemp, Warning, TEXT("[Handle_S_USE_SKILL GameThread] MyId=%llu FromPlayerId=%llu SkillId=%d TargetId=%llu ChargeScale=%f"),
+				(unsigned long long)GI->MyObjectId,
+				(unsigned long long)PktCopy.playerid(),
+				(int32)PktCopy.skillid(),
+				(unsigned long long)PktCopy.targetid(),
+				PktCopy.chargescale());
+
+			GI->OnRecvUseSkill(PktCopy);
+		});
+
 	return true;
 }
 
@@ -395,13 +417,28 @@ bool Handle_S_CHANGE_LEVEL(PacketSessionRef& session, Protocol::S_CHANGE_LEVEL& 
 
 bool Handle_S_START_SKILL_CHARGE(PacketSessionRef& session, Protocol::S_START_SKILL_CHARGE& pkt)
 {
-	if (GWorld == nullptr)
+	if (session == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Handle_S_START_SKILL_CHARGE] session nullptr"));
 		return false;
+	}
 
-	UMainGameInstance* GI = Cast<UMainGameInstance>(GWorld->GetGameInstance());
+	UMainGameInstance* GI = session->GetOwnerGameInstance();
 	if (GI == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Handle_S_START_SKILL_CHARGE] OwnerGameInstance nullptr"));
 		return false;
+	}
 
-	GI->OnRecvStartSkillCharge(pkt);
+	Protocol::S_START_SKILL_CHARGE PktCopy = pkt;
+
+	AsyncTask(ENamedThreads::GameThread, [GI, PktCopy]()
+		{
+			if (GI == nullptr)
+				return;
+
+			GI->OnRecvStartSkillCharge(PktCopy);
+		});
+
 	return true;
 }

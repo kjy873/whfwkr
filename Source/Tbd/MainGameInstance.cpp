@@ -451,62 +451,60 @@ void UMainGameInstance::SendLevelReady()
 		return;
 	}
 
-	if (MyObjectId == 0)
+	if (MyObjectId == 0 || Socket == nullptr || !GameServerSession.IsValid())
 	{
-		UE_LOG(LogTemp, Error, TEXT("[SendLevelReady BLOCK] MyObjectId is 0. Do not send level ready."));
+		UE_LOG(LogTemp, Error,
+			TEXT("[SendLevelReady RETRY] ObjId=%llu Socket=%s Session=%s"),
+			(unsigned long long)MyObjectId,
+			Socket ? TEXT("Valid") : TEXT("NULL"),
+			GameServerSession.IsValid() ? TEXT("Valid") : TEXT("Invalid"));
+
+		if (UWorld* World = GetWorld())
+		{
+			World->GetTimerManager().SetTimer(
+				LevelReadyRetryTimerHandle,
+				this,
+				&UMainGameInstance::SendLevelReady,
+				1.0f,
+				false
+			);
+		}
+
 		return;
-	}
-
-	if (Socket == nullptr || !GameServerSession.IsValid())
-	{
-		UE_LOG(LogTemp, Error, TEXT("[SendLevelReady BLOCK] Socket or Session invalid"));
-		return;
-	}
-
-	bLevelReadySent = true;
-	bWaitingLevelReady = false;
-
-	if (bChangingLevel)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[SendLevelReady] bChangingLevel was true -> NotifyLevelLoadFinished first"));
-		NotifyLevelLoadFinished();
 	}
 
 	ResetIceSkillState();
 
 	Protocol::C_LEVEL_READY pkt;
 
-	FVector Loc = FVector::ZeroVector;
-
-	if (MyPlayer.IsValid())
-	{
-		Loc = MyPlayer->GetActorLocation();
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[SendLevelReady] MyPlayer invalid. Send zero pos."));
-	}
-
+	FVector Loc = MyPlayer.IsValid() ? MyPlayer->GetActorLocation() : FVector::ZeroVector;
 
 	auto SendBuffer = ClientPacketHandler::MakeSendBuffer(pkt);
 	SendPacket(SendBuffer);
+
+	bLevelReadySent = true;
+	bWaitingLevelReady = false;
 
 	if (UWorld* World = GetWorld())
 	{
 		FString MapName = World->GetMapName();
 		MapName.RemoveFromStart(World->StreamingLevelsPrefix);
 
-		UE_LOG(LogTemp, Error, TEXT("[SendLevelReady SENT] map=%s MyObjectId=%llu Pos=(%.2f, %.2f, %.2f)"),
+		UE_LOG(LogTemp, Error,
+			TEXT("[SendLevelReady SENT] map=%s MyObjectId=%llu MyPlayer=%s Pos=(%.2f, %.2f, %.2f)"),
 			*MapName,
 			(unsigned long long)MyObjectId,
+			MyPlayer.IsValid() ? TEXT("Valid") : TEXT("Invalid"),
 			Loc.X,
 			Loc.Y,
 			Loc.Z);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("[SendLevelReady SENT] World nullptr MyObjectId=%llu Pos=(%.2f, %.2f, %.2f)"),
+		UE_LOG(LogTemp, Error,
+			TEXT("[SendLevelReady SENT] World nullptr MyObjectId=%llu MyPlayer=%s Pos=(%.2f, %.2f, %.2f)"),
 			(unsigned long long)MyObjectId,
+			MyPlayer.IsValid() ? TEXT("Valid") : TEXT("Invalid"),
 			Loc.X,
 			Loc.Y,
 			Loc.Z);

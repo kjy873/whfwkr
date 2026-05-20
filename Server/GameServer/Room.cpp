@@ -102,6 +102,32 @@ void Room::HandleMonsterKill(uint64 playerId)
 	BroadcastPlayerStats(player);
 }
 
+bool Room::RemovePlayerOnly(uint64 objectId)
+{
+	WRITE_LOCK;
+
+	auto it = _players.find(objectId);
+	if (it == _players.end())
+		return false;
+
+	PlayerRef player = it->second;
+
+	if (player)
+	{
+		if (auto curRoom = player->room.lock())
+		{
+			if (curRoom.get() == this)
+				player->room.reset();
+		}
+	}
+
+	_players.erase(it);
+
+	cout << "[RemovePlayerOnly] ObjId=" << objectId << endl;
+
+	return true;
+}
+
 bool Room::HandleEnterPlayerLocked(PlayerRef player, RoomRef self)
 {
 	WRITE_LOCK;
@@ -117,71 +143,83 @@ bool Room::HandleEnterPlayerLocked(PlayerRef player, RoomRef self)
 
 void Room::HandleClientLevelReady(PlayerRef player)
 {
-	WRITE_LOCK;
-
 	if (player == nullptr || player->playerInfo == nullptr)
 		return;
 
 	const uint64 objectId = player->playerInfo->object_id();
 
-	_players[objectId] = player;
-	player->room = static_pointer_cast<Room>(shared_from_this());
-
-	ApplySpawnByRoomType(player);
-
-	cout << "[HandleClientLevelReady] RoomType="
-		<< static_cast<int32>(_roomType)
-		<< " ObjId=" << objectId
-		<< " X=" << player->playerInfo->x()
-		<< " Y=" << player->playerInfo->y()
-		<< " Z=" << player->playerInfo->z()
-		<< endl;
+	SendBufferRef enterGameBuffer;
+	SendBufferRef existingSpawnBuffer;
+	SendBufferRef broadcastSpawnBuffer;
 
 	{
-		Protocol::S_ENTER_GAME enterGamePkt;
-		enterGamePkt.set_success(true);
+		WRITE_LOCK;
 
-		auto* selfInfo = new Protocol::PlayerInfo();
-		selfInfo->CopyFrom(*player->playerInfo);
-		enterGamePkt.set_allocated_player(selfInfo);
+		_players[objectId] = player;
+		player->room = static_pointer_cast<Room>(shared_from_this());
 
-		if (auto session = player->session.lock())
+		ApplySpawnByRoomType(player);
+
+		cout << "[HandleClientLevelReady] RoomType="
+			<< static_cast<int32>(_roomType)
+			<< " ObjId=" << objectId
+			<< " X=" << player->playerInfo->x()
+			<< " Y=" << player->playerInfo->y()
+			<< " Z=" << player->playerInfo->z()
+			<< endl;
+
 		{
-			session->Send(ServerPacketHandler::MakeSendBuffer(enterGamePkt));
-		}
-	}
+			Protocol::S_ENTER_GAME enterGamePkt;
+			enterGamePkt.set_success(true);
 
-	{
-		Protocol::S_SPAWN spawnPkt;
+			auto* selfInfo = new Protocol::PlayerInfo();
+			selfInfo->CopyFrom(*player->playerInfo);
+			enterGamePkt.set_allocated_player(selfInfo);
 
-		for (auto& item : _players)
-		{
-			if (item.first == objectId)
-				continue;
-
-			if (item.second == nullptr || item.second->playerInfo == nullptr)
-				continue;
-
-			auto* info = spawnPkt.add_players();
-			info->CopyFrom(*item.second->playerInfo);
+			enterGameBuffer = ServerPacketHandler::MakeSendBuffer(enterGamePkt);
 		}
 
-		if (spawnPkt.players_size() > 0)
 		{
-			if (auto session = player->session.lock())
+			Protocol::S_SPAWN spawnPkt;
+
+			for (auto& item : _players)
 			{
-				session->Send(ServerPacketHandler::MakeSendBuffer(spawnPkt));
+				if (item.first == objectId)
+					continue;
+
+				if (item.second == nullptr || item.second->playerInfo == nullptr)
+					continue;
+
+				auto* info = spawnPkt.add_players();
+				info->CopyFrom(*item.second->playerInfo);
 			}
+
+			if (spawnPkt.players_size() > 0)
+				existingSpawnBuffer = ServerPacketHandler::MakeSendBuffer(spawnPkt);
+		}
+
+		{
+			Protocol::S_SPAWN broadcastPkt;
+
+			auto* broadcastInfo = broadcastPkt.add_players();
+			broadcastInfo->CopyFrom(*player->playerInfo);
+
+			broadcastSpawnBuffer = ServerPacketHandler::MakeSendBuffer(broadcastPkt);
 		}
 	}
 
+	if (auto session = player->session.lock())
 	{
-		Protocol::S_SPAWN broadcastPkt;
+		if (enterGameBuffer)
+			session->Send(enterGameBuffer);
 
-		auto* broadcastInfo = broadcastPkt.add_players();
-		broadcastInfo->CopyFrom(*player->playerInfo);
+		if (existingSpawnBuffer)
+			session->Send(existingSpawnBuffer);
+	}
 
-		Broadcast(ServerPacketHandler::MakeSendBuffer(broadcastPkt), objectId);
+	if (broadcastSpawnBuffer)
+	{
+		Broadcast(broadcastSpawnBuffer, objectId);
 	}
 }
 
@@ -463,17 +501,21 @@ void Room::Broadcast(SendBufferRef sendBuffer, uint64 exceptId)
 	}
 }
 
-void Room::BroadcastUseSkill(uint64 playerId, uint32 skillId, float chargeScale)
+void Room::BroadcastUseSkill(uint64 playerId, uint32 skillId, uint64 targetId, float chargeScale)
 {
 	Protocol::S_USE_SKILL pkt;
 	pkt.set_playerid(playerId);
 	pkt.set_skillid(skillId);
-	pkt.set_targetid(0);
+	pkt.set_targetid(targetId);
 	pkt.set_chargescale(chargeScale);
 
 	SendBufferRef send = ServerPacketHandler::MakeSendBuffer(pkt);
 
-	PacketHeader* header = reinterpret_cast<PacketHeader*>(send->Buffer());
+	cout << "[BroadcastUseSkill] PlayerId=" << playerId
+		<< " SkillId=" << skillId
+		<< " TargetId=" << targetId
+		<< " ChargeScale=" << chargeScale
+		<< endl;
 
 	Broadcast(send, 0);
 }
