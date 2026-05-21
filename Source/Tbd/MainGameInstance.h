@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Projectile.h"
+#include "Tickable.h"
 #include "Engine/GameInstance.h"
 #include "Tbd.h"
 #include "HAL/PlatformProcess.h"
@@ -33,7 +34,7 @@ struct FPlayerStatsData
 };
 
 UCLASS()
-class TBD_API UMainGameInstance : public UGameInstance
+class TBD_API UMainGameInstance : public UGameInstance, public FTickableGameObject
 {
 	GENERATED_BODY()
 
@@ -90,6 +91,13 @@ public:
 
 	virtual void Init() override;
 	virtual void Shutdown() override;
+
+	virtual void Tick(float DeltaTime) override;
+	virtual TStatId GetStatId() const override;
+	virtual bool IsTickable() const override;
+	virtual bool IsTickableWhenPaused() const override;
+
+	void ProcessRecvPackets();
 
 	void ResetLevelTransitionState();
 

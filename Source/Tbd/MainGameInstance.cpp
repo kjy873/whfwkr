@@ -99,9 +99,7 @@ void UMainGameInstance::ConnectToGameServer()
 		GameServerSession->SetOwnerGameInstance(this);
 		GameServerSession->Run();
 
-		StartRecvPacketsTimer();
-
-		UE_LOG(LogTemp, Warning, TEXT("[ConnectToGameServer] Connected. RecvTimer started. this=%p Socket=%p SessionValid=%d"),
+		UE_LOG(LogTemp, Warning, TEXT("[ConnectToGameServer] Connected. Tick recv processing enabled. this=%p Socket=%p SessionValid=%d"),
 			this,
 			Socket,
 			GameServerSession.IsValid());
@@ -290,6 +288,34 @@ void UMainGameInstance::Shutdown()
 	Super::Shutdown();
 }
 
+void UMainGameInstance::Tick(float DeltaTime)
+{
+	ProcessRecvPackets();
+}
+
+TStatId UMainGameInstance::GetStatId() const
+{
+	RETURN_QUICK_DECLARE_CYCLE_STAT(UMainGameInstance, STATGROUP_Tickables);
+}
+
+bool UMainGameInstance::IsTickable() const
+{
+	return !IsTemplate();
+}
+
+bool UMainGameInstance::IsTickableWhenPaused() const
+{
+	return true;
+}
+
+void UMainGameInstance::ProcessRecvPackets()
+{
+	if (Socket == nullptr || !GameServerSession.IsValid())
+		return;
+
+	GameServerSession->HandleRecvPackets();
+}
+
 void UMainGameInstance::ResetLevelTransitionState()
 {
 	bWaitingLevelReady = true;
@@ -418,8 +444,6 @@ void UMainGameInstance::OnPostLoadMapWithWorld(UWorld* LoadedWorld)
 		MyObjectId,
 		bWaitingLevelReady ? 1 : 0,
 		bLevelReadySent ? 1 : 0);
-
-	StartRecvPacketsTimer();
 
 	if (!bWaitingLevelReady)
 	{
