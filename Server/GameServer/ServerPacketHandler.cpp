@@ -115,6 +115,14 @@ bool Handle_C_RESPAWN(PacketSessionRef& session, Protocol::C_RESPAWN& pkt)
 
 bool Handle_C_MOVE(PacketSessionRef& session, Protocol::C_MOVE& pkt)
 {
+	cout << "[Handle_C_MOVE] ENTER ObjId="
+		<< pkt.info().object_id()
+		<< " X=" << pkt.info().x()
+		<< " Y=" << pkt.info().y()
+		<< " Z=" << pkt.info().z()
+		<< " Yaw=" << pkt.info().yaw()
+		<< endl;
+
 	auto gameSession = static_pointer_cast<GameSession>(session);
 	if (gameSession == nullptr)
 	{

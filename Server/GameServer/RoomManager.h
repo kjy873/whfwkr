@@ -33,6 +33,7 @@ public:
     static RoomRef _lobbyRoom;
 
     void HandleLevelReady(PlayerRef player);
+    void ClearPendingMoveForPlayer(uint64 objectId);
 
 private:
     unordered_map<uint64, RoomRef> _pendingMoveRoom;

@@ -219,7 +219,7 @@ void RoomManager::MoveToDemoLevel(uint32 targetLevel)
 
         if (targetLevel == 1)
         {
-            // PVP -> PVE ·Î ³Ñ¾î°¡´Â ¼ø°£ = PVP Á¾·á = 1¶ó¿îµå ¿Ï·á
+            // PVP -> PVE ï¿½ï¿½ ï¿½Ñ¾î°¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ = PVP ï¿½ï¿½ï¿½ï¿½ = 1ï¿½ï¿½ï¿½ï¿½ ï¿½Ï·ï¿½
             if (_isBattlePhase == true)
             {
                 _currentRound++;
@@ -316,6 +316,17 @@ void RoomManager::ResetPlayerForPhase(PlayerRef player, bool bMoveToPVE)
         << endl;
 }
 
+
+void RoomManager::ClearPendingMoveForPlayer(uint64 objectId)
+{
+    WRITE_LOCK;
+    const auto erased = _pendingMoveRoom.erase(objectId);
+    if (erased > 0)
+    {
+        cout << "[ClearPendingMoveForPlayer] ObjId=" << objectId << endl;
+    }
+}
+
 void RoomManager::HandleLevelReady(PlayerRef player)
 {
     if (player == nullptr || player->playerInfo == nullptr)
@@ -345,16 +356,28 @@ void RoomManager::HandleLevelReady(PlayerRef player)
     {
         RoomRef curRoom = player->room.lock();
 
-        cout << "[HandleLevelReady BLOCK] pending room not found ObjId="
-            << objectId
-            << " CurrentRoom=" << (curRoom ? static_cast<int32>(curRoom->GetRoomType()) : -1)
-            << " Pos=("
-            << player->playerInfo->x() << ", "
-            << player->playerInfo->y() << ", "
-            << player->playerInfo->z() << ")"
-            << endl;
+        if (curRoom)
+        {
+            cout << "[HandleLevelReady RETRY] pending not found, use current room ObjId="
+                << objectId
+                << " CurrentRoom=" << static_cast<int32>(curRoom->GetRoomType())
+                << endl;
 
-        return;
+            targetRoom = curRoom;
+        }
+        else
+        {
+            cout << "[HandleLevelReady BLOCK] pending room not found ObjId="
+                << objectId
+                << " CurrentRoom=-1"
+                << " Pos=("
+                << player->playerInfo->x() << ", "
+                << player->playerInfo->y() << ", "
+                << player->playerInfo->z() << ")"
+                << endl;
+
+            return;
+        }
     }
 
     targetRoom->DoAsync([targetRoom, player]()
@@ -478,8 +501,6 @@ void RoomManager::MoveToBattleRoom(PlayerRef player)
     {
         oldRoom->DoAsync([oldRoom, battleRoom, player, session]()
             {
-                // ·¹º§ ÀÌµ¿ Áß¿¡´Â S_LEAVE_GAME / S_DESPAWN º¸³»Áö ¸»°í
-                // ÀÌÀü ¹æ ¸ñ·Ï¿¡¼­¸¸ Á¶¿ëÈ÷ Á¦°Å
                 oldRoom->RemovePlayerOnly(player->playerInfo->object_id());
 
                 battleRoom->DoAsync([battleRoom, player, session]()
@@ -586,8 +607,8 @@ void RoomManager::MoveToHuntingRoom(PlayerRef player)
     {
         oldRoom->DoAsync([oldRoom, huntingRoom, player, session]()
             {
-                // ·¹º§ ÀÌµ¿ Áß¿¡´Â S_LEAVE_GAME / S_DESPAWN º¸³»¸é ¾È µÊ
-                // ¼­¹ö ¹æ ¸ñ·Ï¿¡¼­¸¸ Á¶¿ëÈ÷ Á¦°Å
+                // ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ ï¿½ß¿ï¿½ï¿½ï¿½ S_LEAVE_GAME / S_DESPAWN ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½
+                // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Ï¿ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 oldRoom->RemovePlayerOnly(player->playerInfo->object_id());
 
                 huntingRoom->DoAsync([huntingRoom, player, session]()

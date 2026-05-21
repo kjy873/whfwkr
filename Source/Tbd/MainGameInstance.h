@@ -44,6 +44,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void DisconnectToGameServer();
 
+	UFUNCTION()
+	void BeginLevelTransition();
+
 	UFUNCTION(BlueprintCallable)
 	void HandleRecvPackets();
 
@@ -64,6 +67,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void NotifyLevelLoadFinished();
+
+	void AbortLevelTransition();
 
 	UFUNCTION(BlueprintCallable)
 	void StartGameConnection();
@@ -236,6 +241,18 @@ private:
 
 	bool bWaitingLevelReady = false;
 	bool bLevelReadySent = false;
+
+	void ClearLevelTransitionTimeout();
+	void ScheduleLevelTransitionTimeout();
+	void OnLevelTransitionTimeout();
+
+	int32 LevelReadyAttemptCount = 0;
+	static constexpr int32 MaxLevelReadyAttempts = 5;
+	static constexpr float LevelTransitionTimeoutSeconds = 8.0f;
+
+	FTimerHandle LevelTransitionTimeoutHandle;
+
+	int32 LocalSpawnPcRetryCount = 0;
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Upgrade")

@@ -99,13 +99,10 @@ bool Handle_S_LEAVE_GAME(PacketSessionRef& session, Protocol::S_LEAVE_GAME& pkt)
 
 bool Handle_S_SPAWN(PacketSessionRef& session, Protocol::S_SPAWN& pkt)
 {
-	TArray<Protocol::PlayerInfo> PlayerCopies;
-	PlayerCopies.Reserve(pkt.players_size());
+	Protocol::S_SPAWN SpawnCopy = pkt;
 
-	for (const auto& Info : pkt.players())
+	for (const auto& Info : SpawnCopy.players())
 	{
-		PlayerCopies.Add(Info);
-
 		UE_LOG(LogTemp, Warning, TEXT("[Handle_S_SPAWN] Received ObjId=%llu Loc=(%.1f, %.1f, %.1f)"),
 			(unsigned long long)Info.object_id(),
 			Info.x(),
@@ -115,26 +112,17 @@ bool Handle_S_SPAWN(PacketSessionRef& session, Protocol::S_SPAWN& pkt)
 
 	if (UMainGameInstance* GI = session->GetOwnerGameInstance())
 	{
-		AsyncTask(ENamedThreads::GameThread, [GI, PlayerCopies]()
+		AsyncTask(ENamedThreads::GameThread, [GI, SpawnCopy]()
 			{
 				if (GI == nullptr)
 					return;
 
-				for (const auto& Info : PlayerCopies)
-				{
-					const bool bIsMine = (GI->MyObjectId != 0 && Info.object_id() == GI->MyObjectId);
+				UE_LOG(LogTemp, Warning, TEXT("[Handle_S_SPAWN GameThread] bChangingLevel=%d MyObjectId=%llu players=%d"),
+					GI->bChangingLevel ? 1 : 0,
+					(unsigned long long)GI->MyObjectId,
+					SpawnCopy.players_size());
 
-					UE_LOG(LogTemp, Warning, TEXT("[Handle_S_SPAWN GameThread] bChangingLevel=%d ObjId=%llu MyObjectId=%llu IsMine=%d Loc=(%.1f, %.1f, %.1f)"),
-						GI->bChangingLevel ? 1 : 0,
-						(unsigned long long)Info.object_id(),
-						(unsigned long long)GI->MyObjectId,
-						bIsMine ? 1 : 0,
-						Info.x(),
-						Info.y(),
-						Info.z());
-
-					GI->HandleSpawn(Info, bIsMine);
-				}
+				GI->HandleSpawn(SpawnCopy);
 			});
 	}
 
@@ -150,12 +138,23 @@ bool Handle_S_DESPAWN(PacketSessionRef& session, Protocol::S_DESPAWN& pkt)
 
 bool Handle_S_MOVE(PacketSessionRef& session, Protocol::S_MOVE& pkt)
 {
+	const uint64 ObjId = pkt.info().object_id();
+
 	UE_LOG(LogTemp, Warning, TEXT("[Handle_S_MOVE] packet received objId=%llu"),
-		static_cast<unsigned long long>(pkt.info().object_id()));
+		static_cast<unsigned long long>(ObjId));
 
 	if (auto* GameInstance = GetMainGameInstance())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[Handle_S_MOVE] GameInstance valid"));
+		UE_LOG(LogTemp, Warning, TEXT("[Handle_S_MOVE] GameInstance valid MyObjectId=%llu"),
+			static_cast<unsigned long long>(GameInstance->MyObjectId));
+
+		if (ObjId == GameInstance->MyObjectId)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[Handle_S_MOVE] Ignore my own move ObjId=%llu"),
+				static_cast<unsigned long long>(ObjId));
+			return true;
+		}
+
 		GameInstance->HandleMove(pkt);
 	}
 	else
@@ -402,10 +401,13 @@ bool Handle_S_CHANGE_LEVEL(PacketSessionRef& session, Protocol::S_CHANGE_LEVEL& 
 
 			GI->ResetLevelTransitionState();
 
+			GI->BeginLevelTransition();
+
 			UWorld* World = GI->GetWorld();
 			if (World == nullptr)
 			{
 				UE_LOG(LogTemp, Error, TEXT("[Handle_S_CHANGE_LEVEL] GI->GetWorld nullptr GI=%p"), GI);
+				GI->AbortLevelTransition();
 				return;
 			}
 

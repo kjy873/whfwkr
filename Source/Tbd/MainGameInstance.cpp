@@ -146,6 +146,107 @@ void UMainGameInstance::DisconnectToGameServer()
 	UE_LOG(LogTemp, Warning, TEXT("[DisconnectToGameServer] Done"));
 }
 
+void UMainGameInstance::BeginLevelTransition()
+{
+	UE_LOG(LogTemp, Warning, TEXT("[BeginLevelTransition] Before Waiting=%d Sent=%d Changing=%d MyObjectId=%llu"),
+		bWaitingLevelReady ? 1 : 0,
+		bLevelReadySent ? 1 : 0,
+		bChangingLevel ? 1 : 0,
+		(unsigned long long)MyObjectId);
+
+	bChangingLevel = true;
+	bWaitingLevelReady = true;
+	bLevelReadySent = false;
+	LevelReadyAttemptCount = 0;
+	LocalSpawnPcRetryCount = 0;
+	ClearLevelTransitionTimeout();
+
+	UE_LOG(LogTemp, Warning, TEXT("[BeginLevelTransition] After Waiting=%d Sent=%d Changing=%d MyObjectId=%llu"),
+		bWaitingLevelReady ? 1 : 0,
+		bLevelReadySent ? 1 : 0,
+		bChangingLevel ? 1 : 0,
+		(unsigned long long)MyObjectId);
+}
+
+void UMainGameInstance::ClearLevelTransitionTimeout()
+{
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(LevelTransitionTimeoutHandle);
+	}
+}
+
+void UMainGameInstance::ScheduleLevelTransitionTimeout()
+{
+	UWorld* World = GetWorld();
+	if (World == nullptr || !bChangingLevel)
+	{
+		return;
+	}
+
+	ClearLevelTransitionTimeout();
+
+	World->GetTimerManager().SetTimer(
+		LevelTransitionTimeoutHandle,
+		this,
+		&UMainGameInstance::OnLevelTransitionTimeout,
+		LevelTransitionTimeoutSeconds,
+		false
+	);
+}
+
+void UMainGameInstance::OnLevelTransitionTimeout()
+{
+	if (!bChangingLevel)
+	{
+		return;
+	}
+
+	LevelReadyAttemptCount++;
+
+	UE_LOG(LogTemp, Error,
+		TEXT("[OnLevelTransitionTimeout] attempt=%d/%d Waiting=%d Sent=%d MyObjectId=%llu"),
+		LevelReadyAttemptCount,
+		MaxLevelReadyAttempts,
+		bWaitingLevelReady ? 1 : 0,
+		bLevelReadySent ? 1 : 0,
+		(unsigned long long)MyObjectId);
+
+	if (LevelReadyAttemptCount < MaxLevelReadyAttempts)
+	{
+		bLevelReadySent = false;
+		bWaitingLevelReady = true;
+		SendLevelReady();
+		return;
+	}
+
+	AbortLevelTransition();
+}
+
+void UMainGameInstance::AbortLevelTransition()
+{
+	UE_LOG(LogTemp, Error,
+		TEXT("[AbortLevelTransition] Force reset. PendingSpawns=%d MyObjectId=%llu"),
+		PendingSpawns.Num(),
+		(unsigned long long)MyObjectId);
+
+	ClearLevelTransitionTimeout();
+	LevelReadyAttemptCount = 0;
+	bWaitingLevelReady = false;
+	bLevelReadySent = false;
+
+	if (bChangingLevel)
+	{
+		NotifyLevelLoadFinished();
+	}
+	else
+	{
+		bChangingLevel = false;
+		PendingSpawns.Empty();
+	}
+}
+
+
 void UMainGameInstance::Init()
 {
 	Super::Init();
@@ -177,6 +278,8 @@ void UMainGameInstance::Init()
 
 void UMainGameInstance::Shutdown()
 {
+	ClearLevelTransitionTimeout();
+
 	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
 	FCoreDelegates::OnPreExit.RemoveAll(this);
 
@@ -459,6 +562,8 @@ void UMainGameInstance::SendLevelReady()
 			Socket ? TEXT("Valid") : TEXT("NULL"),
 			GameServerSession.IsValid() ? TEXT("Valid") : TEXT("Invalid"));
 
+		ScheduleLevelTransitionTimeout();
+
 		if (UWorld* World = GetWorld())
 		{
 			World->GetTimerManager().SetTimer(
@@ -483,7 +588,7 @@ void UMainGameInstance::SendLevelReady()
 	SendPacket(SendBuffer);
 
 	bLevelReadySent = true;
-	bWaitingLevelReady = false;
+	ScheduleLevelTransitionTimeout();
 
 	if (UWorld* World = GetWorld())
 	{
@@ -531,11 +636,14 @@ void UMainGameInstance::StartRecvPacketsTimer()
 
 	if (World->GetTimerManager().IsTimerActive(RecvPacketsTimerHandle))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[RecvTimer] Already active. Skip. this=%p World=%s"),
+		World->GetTimerManager().ClearTimer(RecvPacketsTimerHandle);
+
+		UE_LOG(LogTemp, Warning, TEXT("[RecvTimer] Existing timer cleared. this=%p World=%s"),
 			this,
 			*GetNameSafe(World));
-		return;
 	}
+
+	RecvPacketsTimerHandle.Invalidate();
 
 	World->GetTimerManager().SetTimer(
 		RecvPacketsTimerHandle,
@@ -565,9 +673,11 @@ void UMainGameInstance::StopRecvPacketsTimer()
 
 void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool IsMine)
 {
+	const uint64 ObjectId = PlayerInfo.object_id();
+
 	if (IsMine)
 	{
-		MyObjectId = PlayerInfo.object_id();
+		MyObjectId = ObjectId;
 
 		UE_LOG(LogTemp, Error, TEXT("[HandleSpawn] Preserve MyObjectId=%llu before any return"),
 			(unsigned long long)MyObjectId);
@@ -575,16 +685,24 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 
 	if (bChangingLevel)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Deferred: changing level objId=%llu"), PlayerInfo.object_id());
+		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn DEFER] changing level objId=%llu isMine=%d PendingBefore=%d"),
+			(unsigned long long)ObjectId,
+			IsMine ? 1 : 0,
+			PendingSpawns.Num());
+
 		PendingSpawns.Add(PlayerInfo);
 		return;
 	}
 
 	UWorld* World = GetWorld();
-	if (!World)
+	if (World == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[HandleSpawn BLOCK] World nullptr objId=%llu isMine=%d"),
+			(unsigned long long)ObjectId,
+			IsMine ? 1 : 0);
 		return;
+	}
 
-	const uint64 ObjectId = PlayerInfo.object_id();
 	FVector SpawnLocation(PlayerInfo.x(), PlayerInfo.y(), PlayerInfo.z());
 	FRotator SpawnRotation(0.f, PlayerInfo.yaw(), 0.f);
 
@@ -593,8 +711,13 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 		FMath::IsNearlyZero(SpawnLocation.Y) &&
 		FMath::IsNearlyZero(SpawnLocation.Z);
 
-	UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] objId=%llu isMine=%d loc=(%.1f, %.1f, %.1f)"),
-		ObjectId, IsMine ? 1 : 0, SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z);
+	UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn ENTER] objId=%llu isMine=%d loc=(%.1f, %.1f, %.1f) yaw=%.1f"),
+		(unsigned long long)ObjectId,
+		IsMine ? 1 : 0,
+		SpawnLocation.X,
+		SpawnLocation.Y,
+		SpawnLocation.Z,
+		SpawnRotation.Yaw);
 
 	auto ResetCharacterAfterSpawn = [](APlayerCharacter* Character)
 		{
@@ -657,65 +780,99 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 		if (MyPlayer.IsValid())
 		{
 			LocalPlayer = MyPlayer.Get();
+
+			UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn Mine] Use existing MyPlayer Actor=%s ObjId=%llu"),
+				*GetNameSafe(LocalPlayer),
+				(unsigned long long)ObjectId);
 		}
-		else
+
+		APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
+		if (PC == nullptr)
 		{
-			APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
-			if (!PC)
+			if (LocalSpawnPcRetryCount < 30)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] PC nullptr"));
-				return;
-			}
-
-			APawn* Pawn = PC->GetPawn();
-			if (!Pawn)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Pawn nullptr -> Retry next tick ObjId=%llu Loc=%s"),
-					(unsigned long long)ObjectId,
-					*SpawnLocation.ToString());
+				LocalSpawnPcRetryCount++;
+				UE_LOG(LogTemp, Warning,
+					TEXT("[HandleSpawn RETRY] PC nullptr, retry %d/30 objId=%llu"),
+					LocalSpawnPcRetryCount,
+					(unsigned long long)ObjectId);
 
 				Protocol::PlayerInfo RetryInfo = PlayerInfo;
-
-				World->GetTimerManager().SetTimerForNextTick(
-					FTimerDelegate::CreateLambda([this, RetryInfo]()
-						{
-							this->HandleSpawn(RetryInfo, true);
-						})
-				);
-
-				return;
+				World->GetTimerManager().SetTimerForNextTick([this, RetryInfo, IsMine]()
+					{
+						HandleSpawn(RetryInfo, IsMine);
+					});
 			}
-
-			LocalPlayer = Cast<APlayerCharacter>(Pawn);
-			if (!LocalPlayer)
+			else
 			{
-				UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] LocalPlayer cast failed Pawn=%s Class=%s -> Retry next tick ObjId=%llu Loc=%s"),
-					*GetNameSafe(Pawn),
-					*GetNameSafe(Pawn->GetClass()),
-					(unsigned long long)ObjectId,
-					*SpawnLocation.ToString());
-
-				Protocol::PlayerInfo RetryInfo = PlayerInfo;
-
-				World->GetTimerManager().SetTimerForNextTick(
-					FTimerDelegate::CreateLambda([this, RetryInfo]()
-						{
-							this->HandleSpawn(RetryInfo, true);
-						})
-				);
-
-				return;
+				LocalSpawnPcRetryCount = 0;
+				UE_LOG(LogTemp, Error, TEXT("[HandleSpawn BLOCK] PC nullptr gave up objId=%llu"),
+					(unsigned long long)ObjectId);
 			}
-
-			MyPlayer = LocalPlayer;
+			return;
 		}
+
+		LocalSpawnPcRetryCount = 0;
+
+		if (LocalPlayer == nullptr)
+		{
+			APawn* CurrentPawn = PC->GetPawn();
+			LocalPlayer = Cast<APlayerCharacter>(CurrentPawn);
+
+			if (LocalPlayer)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn Mine] Use current possessed pawn Actor=%s ObjId=%llu"),
+					*GetNameSafe(LocalPlayer),
+					(unsigned long long)ObjectId);
+			}
+		}
+
+		if (LocalPlayer == nullptr)
+		{
+			if (OtherPlayerClass == nullptr)
+			{
+				UE_LOG(LogTemp, Error, TEXT("[HandleSpawn FAIL] OtherPlayerClass nullptr. Cannot spawn local player objId=%llu"),
+					(unsigned long long)ObjectId);
+				return;
+			}
+
+			UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn Mine] No valid local pawn. Spawn local player objId=%llu"),
+				(unsigned long long)ObjectId);
+
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+			LocalPlayer = World->SpawnActor<APlayerCharacter>(
+				OtherPlayerClass,
+				SpawnLocation,
+				SpawnRotation,
+				SpawnParams
+			);
+
+			if (LocalPlayer == nullptr)
+			{
+				UE_LOG(LogTemp, Error, TEXT("[HandleSpawn FAIL] Spawn local player failed objId=%llu"),
+					(unsigned long long)ObjectId);
+				return;
+			}
+		}
+
+		PC->Possess(LocalPlayer);
+		PC->SetViewTarget(LocalPlayer);
+
+		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn Mine] Possess done PC=%s Actor=%s IsLocal=%d ObjId=%llu"),
+			*GetNameSafe(PC),
+			*GetNameSafe(LocalPlayer),
+			LocalPlayer->IsLocallyControlled() ? 1 : 0,
+			(unsigned long long)ObjectId);
 
 		if (TWeakObjectPtr<APlayerCharacter>* FoundPtr = Players.Find(ObjectId))
 		{
 			if (FoundPtr->IsValid() && FoundPtr->Get() != LocalPlayer)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Destroy duplicate actor for my objId=%llu actor=%s"),
-					ObjectId, *GetNameSafe(FoundPtr->Get()));
+				UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn Mine] Destroy duplicate actor for my objId=%llu actor=%s"),
+					(unsigned long long)ObjectId,
+					*GetNameSafe(FoundPtr->Get()));
 
 				FoundPtr->Get()->Destroy();
 			}
@@ -726,7 +883,7 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 
 		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn SetPlayerInfo] Actor=%s ObjectId=%llu PlayerInfoObjId=%llu IsMine=%d"),
 			*GetNameSafe(LocalPlayer),
-			ObjectId,
+			(unsigned long long)ObjectId,
 			(unsigned long long)LocalPlayer->PlayerInfo.object_id(),
 			IsMine ? 1 : 0);
 
@@ -740,14 +897,22 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 
 		ResetCharacterAfterSpawn(LocalPlayer);
 
-		UUpgradeComponent* UpgradeComp = LocalPlayer->FindComponentByClass<UUpgradeComponent>();
-		if (UpgradeComp)
+		if (UUpgradeComponent* UpgradeComp = LocalPlayer->FindComponentByClass<UUpgradeComponent>())
 		{
 			UpgradeComp->SetUpgrades(LocalPlayerUpgradeMap);
-			UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Applied upgrades for my objId=%llu"), ObjectId);
+
+			UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Applied upgrades for my objId=%llu"),
+				(unsigned long long)ObjectId);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] UUpgradeComponent not found objId=%llu actor=%s"),
+				(unsigned long long)ObjectId,
+				*GetNameSafe(LocalPlayer));
 		}
 
 		MyObjectId = ObjectId;
+		MyPlayer = LocalPlayer;
 		Players.FindOrAdd(ObjectId) = LocalPlayer;
 
 		if (UC_NetworkPlayerComponent* NetComp = LocalPlayer->FindComponentByClass<UC_NetworkPlayerComponent>())
@@ -756,24 +921,28 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 			NetComp->StartMoveSendTimer();
 
 			UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] StartMoveSendTimer called objId=%llu player=%s"),
-				ObjectId,
+				(unsigned long long)ObjectId,
 				*GetNameSafe(LocalPlayer));
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] UC_NetworkPlayerComponent not found objId=%llu player=%s"),
-				ObjectId,
+			UE_LOG(LogTemp, Error, TEXT("[HandleSpawn] UC_NetworkPlayerComponent not found objId=%llu player=%s"),
+				(unsigned long long)ObjectId,
 				*GetNameSafe(LocalPlayer));
 		}
 
-		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] MyPlayer set/update objId=%llu loc=(%.1f, %.1f, %.1f)"),
-			ObjectId, SpawnLocation.X, SpawnLocation.Y, SpawnLocation.Z);
+		UE_LOG(LogTemp, Error, TEXT("[HandleSpawn END] objId=%llu isMine=1 actor=%s loc=%s"),
+			(unsigned long long)ObjectId,
+			*GetNameSafe(LocalPlayer),
+			*LocalPlayer->GetActorLocation().ToString());
+
 		return;
 	}
 
 	if (ObjectId == MyObjectId && MyObjectId != 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Skip other spawn for my objId=%llu"), ObjectId);
+		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Skip other spawn for my objId=%llu"),
+			(unsigned long long)ObjectId);
 		return;
 	}
 
@@ -793,7 +962,9 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 
 	if (TargetActor)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Update existing other objId=%llu"), ObjectId);
+		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn Other] Update existing other objId=%llu actor=%s"),
+			(unsigned long long)ObjectId,
+			*GetNameSafe(TargetActor));
 
 		TargetActor->bIsMine = false;
 		TargetActor->SetPlayerInfo(PlayerInfo);
@@ -802,32 +973,70 @@ void UMainGameInstance::HandleSpawn(const Protocol::PlayerInfo& PlayerInfo, bool
 
 		if (!bZeroSpawn)
 		{
-			TargetActor->SetActorLocation(SpawnLocation);
-			TargetActor->SetActorRotation(SpawnRotation);
+			TargetActor->SetActorLocation(SpawnLocation, false, nullptr, ETeleportType::TeleportPhysics);
+			TargetActor->SetActorRotation(SpawnRotation, ETeleportType::TeleportPhysics);
+
+			UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn Other] Updated location objId=%llu loc=%s"),
+				(unsigned long long)ObjectId,
+				*TargetActor->GetActorLocation().ToString());
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Ignore zero update objId=%llu"), ObjectId);
+			UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn Other] Ignore zero update objId=%llu"),
+				(unsigned long long)ObjectId);
 		}
+
+		UE_LOG(LogTemp, Error, TEXT("[HandleSpawn END] objId=%llu isMine=0 updated existing"),
+			(unsigned long long)ObjectId);
+
+		return;
 	}
-	else if (OtherPlayerClass)
+
+	if (OtherPlayerClass == nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn] Spawn new other objId=%llu"), ObjectId);
-
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-		APlayerCharacter* NewOther = World->SpawnActor<APlayerCharacter>(OtherPlayerClass, SpawnLocation, SpawnRotation, SpawnParams);
-		if (NewOther)
-		{
-			NewOther->bIsMine = false;
-			NewOther->SetPlayerInfo(PlayerInfo);
-
-			ResetCharacterAfterSpawn(NewOther);
-
-			Players.Add(ObjectId, NewOther);
-		}
+		UE_LOG(LogTemp, Error, TEXT("[HandleSpawn Other FAIL] OtherPlayerClass nullptr objId=%llu"),
+			(unsigned long long)ObjectId);
+		return;
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn Other] Spawn new other objId=%llu"),
+		(unsigned long long)ObjectId);
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	APlayerCharacter* NewOther = World->SpawnActor<APlayerCharacter>(
+		OtherPlayerClass,
+		SpawnLocation,
+		SpawnRotation,
+		SpawnParams
+	);
+
+	if (NewOther == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[HandleSpawn Other FAIL] SpawnActor failed objId=%llu"),
+			(unsigned long long)ObjectId);
+		return;
+	}
+
+	if (NewOther == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[HandleSpawn Other FAIL] SpawnActor failed objId=%llu"),
+			(unsigned long long)ObjectId);
+		return;
+	}
+
+	NewOther->bIsMine = false;
+	NewOther->SetPlayerInfo(PlayerInfo);
+
+	ResetCharacterAfterSpawn(NewOther);
+
+	Players.Add(ObjectId, NewOther);
+
+	UE_LOG(LogTemp, Error, TEXT("[HandleSpawn END] objId=%llu isMine=0 new actor=%s loc=%s"),
+		(unsigned long long)ObjectId,
+		*GetNameSafe(NewOther),
+		*NewOther->GetActorLocation().ToString());
 }
 
 void UMainGameInstance::HandleSpawn(const Protocol::S_ENTER_GAME& EnterGamePkt)
@@ -858,18 +1067,18 @@ void UMainGameInstance::HandleSpawn(const Protocol::S_SPAWN& SpawnPkt)
 
 		if (MyObjectId != 0 && ObjectId == MyObjectId)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn S_SPAWN] Handle my spawn objId=%llu as IsMine=true"),
-				ObjectId);
+			UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn S_SPAWN] Ignore my own spawn objId=%llu MyObjectId=%llu"),
+				(unsigned long long)ObjectId,
+				(unsigned long long)MyObjectId);
 
-			HandleSpawn(PlayerInfo, true);
+			continue;
 		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn S_SPAWN] Handle other spawn objId=%llu"),
-				ObjectId);
 
-			HandleSpawn(PlayerInfo, false);
-		}
+		UE_LOG(LogTemp, Warning, TEXT("[HandleSpawn S_SPAWN] Handle other spawn objId=%llu MyObjectId=%llu"),
+			(unsigned long long)ObjectId,
+			(unsigned long long)MyObjectId);
+
+		HandleSpawn(PlayerInfo, false);
 	}
 }
 
@@ -984,18 +1193,18 @@ void UMainGameInstance::HandleMoveMob(const Protocol::S_MOVE_MOB& Pkt)
 	if (MobActor == nullptr)
 		return;
 
-	// Character인 경우 XY만 업데이트하고 Z는 중력에 맡김
+	// Character??경우 XY�??�데?�트?�고 Z??중력??맡�?
 	if (ACharacter* Character = Cast<ACharacter>(MobActor))
 	{
 		FVector CurrentPos = Character->GetActorLocation();
-		FVector NewPos(MobInfo.pos().x(), MobInfo.pos().y(), CurrentPos.Z); // Z는 현재 위치 유지
+		FVector NewPos(MobInfo.pos().x(), MobInfo.pos().y(), CurrentPos.Z); // Z???�재 ?�치 ?��?
 		
-		// XY만 업데이트 (Z는 중력이 처리)
+		// XY�??�데?�트 (Z??중력??처리)
 		Character->SetActorLocation(NewPos, false, nullptr, ETeleportType::None);
 	}
 	else
 	{
-		// Character가 아닌 경우 전체 위치 업데이트
+		// Character가 ?�닌 경우 ?�체 ?�치 ?�데?�트
 		FVector NewPos(MobInfo.pos().x(), MobInfo.pos().y(), MobInfo.pos().z());
 		MobActor->SetActorLocation(NewPos);
 	}
@@ -1129,22 +1338,40 @@ void UMainGameInstance::SendEnterGamePacket()
 
 void UMainGameInstance::ClearPlayerStateForLevelChange()
 {
-	bChangingLevel = true;
+	UE_LOG(LogTemp, Error, TEXT("[ClearPlayerStateForLevelChange ENTER] GI=%p MyObjectId kept=%llu bChangingLevel=%d"),
+		this,
+		(unsigned long long)MyObjectId,
+		bChangingLevel ? 1 : 0);
 
-	MyPlayer.Reset();
+	if (MyPlayer.IsValid())
+	{
+		APlayerCharacter* LocalPlayer = MyPlayer.Get();
+
+		if (UC_NetworkPlayerComponent* NetComp = LocalPlayer->FindComponentByClass<UC_NetworkPlayerComponent>())
+		{
+			NetComp->StopMoveSendTimer();
+
+			UE_LOG(LogTemp, Warning, TEXT("[ClearPlayerStateForLevelChange] StopMoveSendTimer MyPlayer=%s"),
+				*GetNameSafe(LocalPlayer));
+		}
+	}
+
+	MyPlayer = nullptr;
 	Players.Empty();
 	PendingSpawns.Empty();
 
 	ResetIceSkillState();
 
-	UE_LOG(LogTemp, Error, TEXT("[ClearPlayerStateForLevelChange] GI=%p MyObjectId kept=%llu bChangingLevel=%d"),
-		this,
-		(unsigned long long)MyObjectId,
-		bChangingLevel ? 1 : 0);
+	UE_LOG(LogTemp, Error, TEXT("[ClearPlayerStateForLevelChange END] MyObjectId kept=%llu"),
+		(unsigned long long)MyObjectId);
 }
 
 void UMainGameInstance::NotifyLevelLoadFinished()
 {
+	ClearLevelTransitionTimeout();
+	LevelReadyAttemptCount = 0;
+	bWaitingLevelReady = false;
+	bLevelReadySent = false;
 	bChangingLevel = false;
 	ResetIceSkillState();
 
@@ -1195,7 +1422,6 @@ void UMainGameInstance::HandleDamage(const Protocol::S_DAMAGE_PLAYER& pkt)
 		ObjectId,
 		Damage);
 
-	// 내가 맞은 경우
 	if (ObjectId == MyObjectId)
 	{
 		Actor = MyPlayer.Get();
@@ -1206,7 +1432,7 @@ void UMainGameInstance::HandleDamage(const Protocol::S_DAMAGE_PLAYER& pkt)
 			return;
 		}
 	}
-	// 다른 플레이어가 맞은 경우
+
 	else
 	{
 		TWeakObjectPtr<APlayerCharacter>* FoundActor = Players.Find(ObjectId);

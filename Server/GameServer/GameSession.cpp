@@ -4,6 +4,7 @@
 #include "ServerPacketHandler.h"
 #include "Room.h"
 #include "Player.h"
+#include "RoomManager.h"
 
 void GameSession::OnConnected()
 {
@@ -16,6 +17,11 @@ void GameSession::OnDisconnected()
 	PlayerRef currentPlayer = player.load();
 	if (currentPlayer != nullptr)
 	{
+		if (currentPlayer->playerInfo != nullptr)
+		{
+			GRoomManager.ClearPendingMoveForPlayer(currentPlayer->playerInfo->object_id());
+		}
+
 		RoomRef room = currentPlayer->room.lock();
 		if (room != nullptr)
 		{

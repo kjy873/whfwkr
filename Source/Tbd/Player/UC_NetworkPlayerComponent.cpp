@@ -102,32 +102,19 @@ void UC_NetworkPlayerComponent::StopMoveSendTimer()
 void UC_NetworkPlayerComponent::SendMyMovement()
 {
     if (CachedGameInstance == nullptr)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[SendMyMovement] CachedGameInstance is null"));
         return;
-    }
 
     const uint64 ObjectId = CachedGameInstance->MyObjectId;
     if (ObjectId == 0)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[SendMyMovement] MyObjectId is 0"));
         return;
-    }
 
     AActor* Owner = GetOwner();
     if (Owner == nullptr)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[SendMyMovement] Owner is null"));
         return;
-    }
 
     APawn* OwnerPawn = Cast<APawn>(Owner);
     if (OwnerPawn && !OwnerPawn->IsLocallyControlled())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[SendMyMovement] Not locally controlled: %s"),
-            *GetNameSafe(OwnerPawn));
         return;
-    }
 
     const FVector Location = Owner->GetActorLocation();
     const float Yaw = Owner->GetActorRotation().Yaw;
@@ -145,26 +132,17 @@ void UC_NetworkPlayerComponent::SendMyMovement()
     LastSentYaw = Yaw;
     bHasSentInitialMove = true;
 
-    UE_LOG(LogTemp, Warning, TEXT("[SendMyMovement] Send ObjId=%llu Loc=%s Yaw=%f"),
-        (unsigned long long)ObjectId,
-        *Location.ToString(),
-        Yaw);
-
     SendMoveToServer(Location, Yaw);
 }
 
 void UC_NetworkPlayerComponent::SendMoveToServer(const FVector& Location, float Yaw)
 {
     if (CachedGameInstance == nullptr)
-    {
         return;
-    }
 
     const uint64 SendObjectId = CachedGameInstance->MyObjectId;
     if (SendObjectId == 0)
-    {
         return;
-    }
 
     Protocol::C_MOVE MovePkt;
     Protocol::PlayerInfo* Info = MovePkt.mutable_info();
@@ -175,5 +153,6 @@ void UC_NetworkPlayerComponent::SendMoveToServer(const FVector& Location, float 
     Info->set_z(Location.Z);
     Info->set_yaw(Yaw);
 
-    SEND_PACKET(MovePkt);
+    SendBufferRef SendBuffer = ClientPacketHandler::MakeSendBuffer(MovePkt);
+    CachedGameInstance->SendPacket(SendBuffer);
 }

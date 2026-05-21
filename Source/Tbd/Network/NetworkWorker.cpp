@@ -44,6 +44,16 @@ uint32 RecvWorker::Run()
 				}
 
 				Session->RecvPacketQueue.Enqueue(Packet);
+
+				TWeakPtr<PacketSession> WeakSession = SessionRef;
+
+				AsyncTask(ENamedThreads::GameThread, [WeakSession]()
+					{
+						if (TSharedPtr<PacketSession> PinnedSession = WeakSession.Pin())
+						{
+							PinnedSession->HandleRecvPackets();
+						}
+					});
 			}
 		}
 
